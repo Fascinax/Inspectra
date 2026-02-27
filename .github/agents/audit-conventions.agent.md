@@ -1,8 +1,6 @@
 ---
 name: audit-conventions
-description: >
-  Code conventions audit agent. Checks naming patterns, file lengths, TODO/FIXME hygiene,
-  and coding style consistency. Produces a domain report following the Inspectra finding schema.
+description: Code conventions audit agent. Checks naming patterns, file lengths, TODO/FIXME hygiene, and coding style consistency. Produces a domain report.
 tools:
   - read
   - search
@@ -13,7 +11,7 @@ mcp-servers:
   inspectra:
     type: local
     command: node
-    args: ['../../mcp/dist/index.js']
+    args: ['./mcp/dist/index.js']
     tools: ['check-naming', 'check-file-lengths', 'check-todos']
 ---
 

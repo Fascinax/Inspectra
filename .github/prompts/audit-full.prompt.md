@@ -1,39 +1,30 @@
 ---
 description: "Run a full multi-domain audit on the target project"
+agent: agent
 ---
 
-# Full Audit
+Run a comprehensive code audit on the project in the current workspace, covering all domains: **security**, **tests**, **architecture**, and **conventions**.
 
-Run a comprehensive code audit covering all domains: **security**, **tests**, **architecture**, and **conventions**.
+## Workflow
 
-## Target
+1. Delegate to `audit-security` — scan secrets, vulnerable dependencies, security anti-patterns
+2. Delegate to `audit-tests` — analyze coverage, test failures, missing tests
+3. Delegate to `audit-architecture` — check layer violations and dependency health
+4. Delegate to `audit-conventions` — verify naming, file lengths, TODO/FIXME markers
+5. Call `inspectra/merge-domain-reports` with all domain reports
+6. Produce the final consolidated Markdown report
 
-Audit the project in the current workspace.
+## Policy Context
 
-## Instructions
+- Scoring rules: #file:../../policies/scoring-rules.yml
+- Severity matrix: #file:../../policies/severity-matrix.yml
+- Profile: `java-angular-playwright` (adapt to detected stack)
 
-Use the `audit-orchestrator` agent to coordinate the full audit.
+## Output Format
 
-The orchestrator should:
-1. Invoke `audit-security` to scan for secrets, vulnerabilities, and security anti-patterns
-2. Invoke `audit-tests` to analyze coverage, test failures, and missing tests
-3. Invoke `audit-architecture` to check layer violations and dependency health
-4. Invoke `audit-conventions` to verify naming, file lengths, and tech debt markers
-5. Merge all domain reports using `merge-domain-reports`
-6. Produce a consolidated Markdown report
-
-## Context
-
-- Policy profile: `java-angular-playwright` (adjust based on detected stack)
-- Severity matrix: see [severity-matrix.yml](../../policies/severity-matrix.yml)
-- Scoring rules: see [scoring-rules.yml](../../policies/scoring-rules.yml)
-- Output schemas: see [schemas/](../../schemas/)
-
-## Expected Output
-
-A single Markdown report including:
-- Executive summary with overall score and grade
-- Domain score table
-- Top 10 priority findings
-- Per-domain detailed findings
-- Prioritized recommendations
+A Markdown report with:
+- Executive summary: overall score, grade, finding counts
+- Domain score table (security, tests, architecture, conventions)
+- Top 10 priority findings with file references and recommendations
+- Per-domain detailed findings grouped by severity
+- Prioritized action plan

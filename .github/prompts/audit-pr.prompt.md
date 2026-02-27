@@ -1,51 +1,44 @@
 ---
 description: "Audit only the files changed in a pull request"
+agent: agent
 ---
 
-# PR Audit
+Run a focused audit on the files changed in this pull request only.
 
-Run a focused audit on the files changed in the current pull request.
+## Workflow
 
-## Instructions
-
-Use the `audit-orchestrator` agent with a reduced scope:
-
-1. Identify the changed files in the PR.
-2. Determine which audit domains are relevant based on changed files:
-   - Changed auth/config/API files → invoke `audit-security`
-   - Changed test files or source files with tests → invoke `audit-tests`
-   - Changed module structure or imports → invoke `audit-architecture`
-   - Any changed source files → invoke `audit-conventions`
-3. Pass only the changed file paths to each agent.
-4. Merge results and produce a focused PR report.
+1. Identify the changed files in the PR using `git diff` or the GitHub MCP tool
+2. Determine which domains are relevant based on the diff:
+   - Auth/config/API files changed → invoke `audit-security`
+   - Source files with or without tests changed → invoke `audit-tests`
+   - Module structure or import paths changed → invoke `audit-architecture`
+   - Any source file changed → invoke `audit-conventions`
+3. Pass only the changed file paths to each relevant agent
+4. Call `inspectra/merge-domain-reports` with the collected domain reports
+5. Produce a concise PR review report
 
 ## Scope Rules
 
-- Only audit files that are part of the diff.
-- Reduce noise: use `confidence >= 0.7` as the minimum threshold for findings.
-- Skip `info`-level findings for PR reviews.
-- Focus on **actionable** issues the PR author can fix immediately.
+- Only audit files that are part of the diff — do not scan the full project
+- Minimum confidence threshold: `0.7` — skip low-confidence findings
+- Skip `info`-level findings — focus on actionable issues only
 
-## Expected Output
-
-A concise Markdown report suitable as a PR comment:
+## Output Format
 
 ```markdown
 ## Inspectra PR Audit
 
-**Score**: XX/100 | **Findings**: X issues
+**Score**: XX/100 | **Findings**: X critical, X high, X medium
 
 ### Issues Found
 
 | # | Severity | Domain | File | Title |
 |---|----------|--------|------|-------|
-| 1 | high     | security | src/auth.ts | Hardcoded API key |
+| 1 | high | security | src/auth.ts | Hardcoded API key |
 
 ### Details
+(for each finding: evidence with line, recommendation, effort)
 
-(for each finding: title, evidence, recommendation)
-
-### Summary
-
-(1-2 sentences on overall PR quality)
+### Verdict
+(1-2 sentences — merge-ready or needs fixes)
 ```

@@ -1,8 +1,6 @@
 ---
 name: audit-tests
-description: >
-  Test quality audit agent. Analyzes test coverage, test failures, missing tests,
-  and test hygiene. Produces a domain report following the Inspectra finding schema.
+description: Test quality audit agent. Analyzes test coverage, test failures, missing tests, and test hygiene. Produces a domain report.
 tools:
   - read
   - search
@@ -14,7 +12,7 @@ mcp-servers:
   inspectra:
     type: local
     command: node
-    args: ['../../mcp/dist/index.js']
+    args: ['./mcp/dist/index.js']
     tools: ['parse-coverage', 'parse-test-results', 'detect-missing-tests']
 ---
 

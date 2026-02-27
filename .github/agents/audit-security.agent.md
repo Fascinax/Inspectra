@@ -1,8 +1,6 @@
 ---
 name: audit-security
-description: >
-  Security audit agent. Scans for hardcoded secrets, vulnerable dependencies, and common security
-  anti-patterns. Produces a domain report following the Inspectra finding schema.
+description: Security audit agent. Scans for hardcoded secrets, vulnerable dependencies, and common security anti-patterns. Produces a domain report.
 tools:
   - read
   - search
@@ -13,7 +11,7 @@ mcp-servers:
   inspectra:
     type: local
     command: node
-    args: ['../../mcp/dist/index.js']
+    args: ['./mcp/dist/index.js']
     tools: ['scan-secrets', 'check-deps-vulns']
 ---
 

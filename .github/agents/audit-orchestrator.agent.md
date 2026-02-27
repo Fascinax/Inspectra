@@ -1,19 +1,22 @@
 ---
 name: audit-orchestrator
-description: >
-  Master orchestrator for Inspectra multi-domain code audits. Delegates audit tasks to specialized agents,
-  collects their domain reports, merges findings, and produces the final consolidated audit report.
+description: Master orchestrator for Inspectra. Delegates to specialized agents, merges findings, and produces the final consolidated audit report.
 tools:
   - agent
   - read
   - search
   - inspectra/merge-domain-reports
   - inspectra/score-findings
+handoffs:
+  - audit-security
+  - audit-tests
+  - audit-architecture
+  - audit-conventions
 mcp-servers:
   inspectra:
     type: local
     command: node
-    args: ['../../mcp/dist/index.js']
+    args: ['./mcp/dist/index.js']
     tools: ['merge-domain-reports', 'score-findings']
 ---
 

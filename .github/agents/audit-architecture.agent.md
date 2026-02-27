@@ -1,8 +1,6 @@
 ---
 name: audit-architecture
-description: >
-  Architecture audit agent. Analyzes project structure, dependency layers, module boundaries,
-  and architectural patterns. Produces a domain report following the Inspectra finding schema.
+description: Architecture audit agent. Analyzes project structure, dependency layers, module boundaries, and architectural patterns. Produces a domain report.
 tools:
   - read
   - search
@@ -12,7 +10,7 @@ mcp-servers:
   inspectra:
     type: local
     command: node
-    args: ['../../mcp/dist/index.js']
+    args: ['./mcp/dist/index.js']
     tools: ['check-layering', 'analyze-dependencies']
 ---
 
