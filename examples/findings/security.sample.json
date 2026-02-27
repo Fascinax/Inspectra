@@ -1,0 +1,85 @@
+{
+  "domain": "security",
+  "score": 72,
+  "summary": "1 high, 2 medium, 1 low",
+  "findings": [
+    {
+      "id": "SEC-001",
+      "severity": "high",
+      "title": "Potential hardcoded API key in auth configuration",
+      "description": "A string matching an API key pattern was found in the authentication configuration file. This could expose the key if the repository is public.",
+      "domain": "security",
+      "rule": "no-hardcoded-secret",
+      "confidence": 0.91,
+      "evidence": [
+        {
+          "file": "src/config/auth.ts",
+          "line": 14,
+          "snippet": "const API_KEY = \"sk_live_48xq7Kn3r9mP2vB5sT8wYz\""
+        }
+      ],
+      "recommendation": "Move the API key to an environment variable or a secrets manager (e.g., GitHub Secrets, HashiCorp Vault).",
+      "effort": "small",
+      "tags": ["secret", "credentials", "api-key"]
+    },
+    {
+      "id": "SEC-002",
+      "severity": "medium",
+      "title": "Connection string with embedded credentials",
+      "description": "A database connection string containing username and password was found in a configuration file.",
+      "domain": "security",
+      "rule": "no-connection-string",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "file": "src/config/database.ts",
+          "line": 7,
+          "snippet": "jdbc:postgresql://admin:p4ssw0rd@localhost:5432/mydb"
+        }
+      ],
+      "recommendation": "Extract credentials from the connection string and use environment variables.",
+      "effort": "small",
+      "tags": ["secret", "credentials", "database"]
+    },
+    {
+      "id": "SEC-003",
+      "severity": "medium",
+      "title": "Vulnerable dependency: lodash@4.17.20",
+      "description": "lodash@4.17.20 has a known prototype pollution vulnerability (CVE-2021-23337).",
+      "domain": "security",
+      "rule": "no-vulnerable-dependency",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "file": "package-lock.json"
+        }
+      ],
+      "recommendation": "Upgrade lodash to 4.17.21 or later.",
+      "effort": "trivial",
+      "tags": ["dependency", "vulnerability", "cve"]
+    },
+    {
+      "id": "SEC-004",
+      "severity": "low",
+      "title": "Missing Content-Security-Policy header",
+      "description": "The application does not set a Content-Security-Policy header, which helps prevent XSS attacks.",
+      "domain": "security",
+      "rule": "missing-security-header",
+      "confidence": 0.75,
+      "evidence": [
+        {
+          "file": "src/app/app.module.ts"
+        }
+      ],
+      "recommendation": "Add a Content-Security-Policy header in the server configuration or via a middleware.",
+      "effort": "small",
+      "tags": ["headers", "xss"]
+    }
+  ],
+  "metadata": {
+    "agent": "audit-security",
+    "timestamp": "2026-02-27T10:30:00.000Z",
+    "duration_ms": 4520,
+    "tools_used": ["scan-secrets", "check-deps-vulns"]
+  }
+}

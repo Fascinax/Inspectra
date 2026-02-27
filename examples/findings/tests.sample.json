@@ -1,0 +1,62 @@
+{
+  "domain": "tests",
+  "score": 65,
+  "summary": "1 high, 2 medium",
+  "findings": [
+    {
+      "id": "TST-001",
+      "severity": "high",
+      "title": "Lines coverage below threshold: 58.3% < 80%",
+      "description": "The lines coverage is 58.3%, which is below the configured threshold of 80%.",
+      "domain": "tests",
+      "rule": "low-lines-coverage",
+      "confidence": 1.0,
+      "evidence": [
+        {
+          "file": "coverage/coverage-summary.json"
+        }
+      ],
+      "recommendation": "Add tests to increase lines coverage above 80%.",
+      "effort": "medium",
+      "tags": ["coverage"]
+    },
+    {
+      "id": "TST-002",
+      "severity": "medium",
+      "title": "No test file for src/services/payment.service.ts",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.7,
+      "evidence": [
+        {
+          "file": "src/services/payment.service.ts"
+        }
+      ],
+      "recommendation": "Create a corresponding payment.service.spec.ts file.",
+      "effort": "medium",
+      "tags": ["missing-test"]
+    },
+    {
+      "id": "TST-003",
+      "severity": "medium",
+      "title": "No test file for src/services/notification.service.ts",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.7,
+      "evidence": [
+        {
+          "file": "src/services/notification.service.ts"
+        }
+      ],
+      "recommendation": "Create a corresponding notification.service.spec.ts file.",
+      "effort": "medium",
+      "tags": ["missing-test"]
+    }
+  ],
+  "metadata": {
+    "agent": "audit-tests",
+    "timestamp": "2026-02-27T10:30:15.000Z",
+    "duration_ms": 3200,
+    "tools_used": ["parse-coverage", "detect-missing-tests"]
+  }
+}

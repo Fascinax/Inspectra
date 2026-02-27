@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://inspectra.dev/schemas/consolidated-report.schema.json",
+  "title": "Inspectra Consolidated Report",
+  "description": "Final merged report produced by the orchestrator after all domain agents complete.",
+  "type": "object",
+  "required": ["overall_score", "grade", "domain_reports", "top_findings", "summary", "metadata"],
+  "properties": {
+    "overall_score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Weighted average of all domain scores."
+    },
+    "grade": {
+      "type": "string",
+      "enum": ["A", "B", "C", "D", "F"],
+      "description": "Letter grade derived from overall_score."
+    },
+    "summary": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Executive summary for stakeholders."
+    },
+    "domain_reports": {
+      "type": "array",
+      "items": { "$ref": "domain-report.schema.json" },
+      "description": "Individual domain reports."
+    },
+    "top_findings": {
+      "type": "array",
+      "items": { "$ref": "finding.schema.json" },
+      "maxItems": 10,
+      "description": "Top 10 highest-priority findings across all domains."
+    },
+    "statistics": {
+      "type": "object",
+      "properties": {
+        "total_findings": { "type": "integer", "minimum": 0 },
+        "by_severity": {
+          "type": "object",
+          "properties": {
+            "critical": { "type": "integer", "minimum": 0 },
+            "high": { "type": "integer", "minimum": 0 },
+            "medium": { "type": "integer", "minimum": 0 },
+            "low": { "type": "integer", "minimum": 0 },
+            "info": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "by_domain": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["timestamp", "target", "profile"],
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp."
+        },
+        "target": {
+          "type": "string",
+          "description": "Repository or path that was audited."
+        },
+        "profile": {
+          "type": "string",
+          "description": "Policy profile used (e.g., java-angular-playwright)."
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total audit execution time."
+        },
+        "agents_invoked": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Names of all agents that contributed."
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

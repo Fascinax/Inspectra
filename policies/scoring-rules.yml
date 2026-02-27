@@ -1,0 +1,58 @@
+# Inspectra — Scoring Rules
+# Defines how domain scores and overall grades are computed.
+
+# Each finding's severity reduces the domain score.
+# penalty = weight × confidence
+severity_weights:
+  critical: 25
+  high: 15
+  medium: 8
+  low: 3
+  info: 0
+
+# Domain score = max(0, 100 - sum(penalties))
+# A domain with no findings scores 100.
+
+# Overall score = weighted average of domain scores
+domain_weights:
+  security: 0.30
+  tests: 0.25
+  architecture: 0.20
+  conventions: 0.15
+  performance: 0.05
+  documentation: 0.05
+
+# Grade mapping
+grades:
+  A:
+    min_score: 90
+    label: "Excellent"
+    description: "Production-ready codebase with minor or no issues."
+  B:
+    min_score: 75
+    label: "Good"
+    description: "Solid codebase with some areas to improve."
+  C:
+    min_score: 60
+    label: "Acceptable"
+    description: "Functional but has notable quality gaps."
+  D:
+    min_score: 40
+    label: "Poor"
+    description: "Significant issues across multiple domains."
+  F:
+    min_score: 0
+    label: "Critical"
+    description: "Major risks present. Requires immediate attention."
+
+# Deduplication rules
+deduplication:
+  strategy: "same-rule-same-location"
+  key_fields: ["rule", "evidence[0].file", "evidence[0].line"]
+  on_conflict: "keep highest confidence"
+
+# Confidence thresholds
+confidence:
+  minimum_for_report: 0.3
+  minimum_for_pr_comment: 0.7
+  auto_dismiss_below: 0.2

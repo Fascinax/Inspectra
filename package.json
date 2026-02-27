@@ -1,0 +1,29 @@
+{
+  "name": "inspectra",
+  "version": "0.1.0",
+  "description": "Multi-agent code audit system powered by GitHub Copilot Custom Agents and MCP",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "npm run build --workspace=mcp",
+    "dev": "npm run dev --workspace=mcp",
+    "lint": "eslint . --ext .ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "validate:schemas": "ajv validate -s schemas/finding.schema.json -d examples/findings/*.json",
+    "clean": "rimraf mcp/dist"
+  },
+  "workspaces": [
+    "mcp"
+  ],
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "rimraf": "^6.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "license": "MIT"
+}

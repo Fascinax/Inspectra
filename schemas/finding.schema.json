@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://inspectra.dev/schemas/finding.schema.json",
+  "title": "Inspectra Finding",
+  "description": "A single audit finding produced by any Inspectra agent or MCP tool.",
+  "type": "object",
+  "required": ["id", "severity", "title", "domain", "rule", "confidence"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Z]{2,5}-\\d{3,4}$",
+      "description": "Unique finding identifier. Format: DOMAIN_PREFIX-NUMBER (e.g., SEC-001, TST-012)."
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low", "info"],
+      "description": "Impact level of the finding."
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "Concise human-readable title."
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Detailed explanation of the issue."
+    },
+    "domain": {
+      "type": "string",
+      "enum": ["security", "tests", "architecture", "conventions", "performance", "documentation"],
+      "description": "Audit domain that produced this finding."
+    },
+    "rule": {
+      "type": "string",
+      "description": "Machine-readable rule identifier (e.g., no-hardcoded-secret, missing-unit-test)."
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Agent confidence in this finding (0 = guess, 1 = certain)."
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["file"],
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Relative path to the file."
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Line number where the issue occurs."
+          },
+          "snippet": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Code snippet showing the issue."
+          }
+        }
+      },
+      "description": "Source locations and code evidence."
+    },
+    "recommendation": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Actionable fix suggestion."
+    },
+    "effort": {
+      "type": "string",
+      "enum": ["trivial", "small", "medium", "large", "epic"],
+      "description": "Estimated remediation effort."
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Free-form labels for categorization and filtering."
+    }
+  },
+  "additionalProperties": false
+}

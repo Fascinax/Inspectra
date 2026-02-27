@@ -1,0 +1,88 @@
+# Inspectra — Profile: Java + Angular + Playwright
+# Stack-specific thresholds and conventions for full-stack projects.
+
+profile: java-angular-playwright
+description: "Full-stack profile for Java backend + Angular frontend + Playwright E2E"
+
+stack:
+  backend:
+    language: java
+    framework: quarkus
+    build_tool: maven
+  frontend:
+    language: typescript
+    framework: angular
+    build_tool: npm
+  e2e:
+    framework: playwright
+
+# Coverage thresholds
+coverage:
+  lines:
+    minimum: 80
+    target: 90
+  branches:
+    minimum: 70
+    target: 85
+  functions:
+    minimum: 75
+    target: 90
+
+# File length thresholds
+file_lengths:
+  warning: 300
+  error: 600
+
+# Naming conventions
+naming:
+  java:
+    classes: PascalCase
+    methods: camelCase
+    constants: SCREAMING_SNAKE_CASE
+    packages: lowercase
+    suffixes:
+      - pattern: "*Controller.java"
+        directory: controllers
+      - pattern: "*Service.java"
+        directory: services
+      - pattern: "*Repository.java"
+        directory: repositories
+      - pattern: "*Entity.java"
+        directory: entities
+      - pattern: "*Dto.java"
+        directory: dtos
+
+  angular:
+    components: kebab-case.component.ts
+    services: kebab-case.service.ts
+    modules: kebab-case.module.ts
+    pipes: kebab-case.pipe.ts
+    guards: kebab-case.guard.ts
+    interceptors: kebab-case.interceptor.ts
+
+  playwright:
+    page_objects: kebab-case.page.ts
+    test_files: kebab-case.spec.ts
+
+# Architecture rules
+architecture:
+  layers:
+    - presentation
+    - application
+    - domain
+    - infrastructure
+  allowed_dependencies:
+    presentation: [application]
+    application: [domain]
+    domain: []
+    infrastructure: [domain]
+
+# Security overrides
+security:
+  additional_patterns:
+    - rule: "no-angular-bypass-security"
+      pattern: "bypassSecurityTrust"
+      severity: high
+    - rule: "no-innerhtml-binding"
+      pattern: "\\[innerHTML\\]"
+      severity: medium

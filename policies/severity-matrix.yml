@@ -1,0 +1,60 @@
+# Inspectra — Severity Matrix
+# Maps rule categories to severity levels with contextual adjustments.
+
+severity_defaults:
+  critical:
+    description: "Immediate risk. Must fix before merge/deploy."
+    examples:
+      - "Exposed secrets in source code"
+      - "Remote code execution vectors"
+      - "Authentication bypass"
+      - "No tests at all in the project"
+    sla_days: 1
+
+  high:
+    description: "Significant risk. Should fix within current sprint."
+    examples:
+      - "Vulnerable dependencies with known exploits"
+      - "SQL injection vectors"
+      - "Coverage below 50%"
+      - "Failing tests in CI"
+      - "Layer violations (domain → infrastructure)"
+    sla_days: 7
+
+  medium:
+    description: "Moderate risk. Plan fix within next sprint."
+    examples:
+      - "Weak cryptographic algorithms"
+      - "Coverage below 80%"
+      - "Excessive dependencies"
+      - "Inconsistent naming patterns"
+      - "Files over 300 lines"
+    sla_days: 14
+
+  low:
+    description: "Minor issue. Track and fix opportunistically."
+    examples:
+      - "Missing security headers"
+      - "Skipped tests"
+      - "Minor structural inconsistencies"
+      - "TODO/FIXME comments"
+    sla_days: 30
+
+  info:
+    description: "Suggestion for improvement. No action required."
+    examples:
+      - "Style improvement opportunities"
+      - "Architecture pattern recommendations"
+      - "Test strategy suggestions"
+    sla_days: null
+
+# Context-based severity adjustments
+adjustments:
+  - condition: "finding in test fixtures or example files"
+    action: "downgrade severity by 1 level"
+  - condition: "finding in generated code"
+    action: "downgrade to info"
+  - condition: "finding in main branch production code"
+    action: "no adjustment"
+  - condition: "critical finding with confidence < 0.7"
+    action: "downgrade to high"

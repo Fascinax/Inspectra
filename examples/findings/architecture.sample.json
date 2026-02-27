@@ -1,0 +1,49 @@
+{
+  "domain": "architecture",
+  "score": 82,
+  "summary": "1 high, 1 low",
+  "findings": [
+    {
+      "id": "ARC-001",
+      "severity": "high",
+      "title": "Layer violation: domain → infrastructure",
+      "description": "File in 'domain' layer imports from 'infrastructure' layer. Dependencies should flow inward (presentation → application → domain ← infrastructure).",
+      "domain": "architecture",
+      "rule": "no-layer-violation",
+      "confidence": 0.8,
+      "evidence": [
+        {
+          "file": "src/domain/models/user.entity.ts",
+          "line": 3,
+          "snippet": "import { DatabaseClient } from '../../infrastructure/database/client'"
+        }
+      ],
+      "recommendation": "Invert the dependency using an interface in the domain layer. Create a UserRepository interface in domain and implement it in infrastructure.",
+      "effort": "large",
+      "tags": ["layering", "clean-architecture"]
+    },
+    {
+      "id": "ARC-002",
+      "severity": "low",
+      "title": "Multiple packages with prefix 'eslint'",
+      "description": "Found 4 packages starting with 'eslint': eslint, eslint-config-prettier, eslint-plugin-angular, eslint-plugin-unused-imports. Check for redundant dependencies.",
+      "domain": "architecture",
+      "rule": "potential-duplicate-deps",
+      "confidence": 0.5,
+      "evidence": [
+        {
+          "file": "package.json"
+        }
+      ],
+      "recommendation": "Verify whether all ESLint plugins are actively used in the configuration.",
+      "effort": "small",
+      "tags": ["dependencies"]
+    }
+  ],
+  "metadata": {
+    "agent": "audit-architecture",
+    "timestamp": "2026-02-27T10:30:20.000Z",
+    "duration_ms": 2800,
+    "tools_used": ["check-layering", "analyze-dependencies"]
+  }
+}
