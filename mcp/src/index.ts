@@ -8,7 +8,7 @@ import { checkLayering, analyzeModuleDependencies } from "./tools/architecture.j
 import { checkNamingConventions, checkFileLengths, checkTodoFixmes } from "./tools/code-quality.js";
 import { mergeReports } from "./merger/merge-findings.js";
 import { scoreDomain } from "./merger/score.js";
-import type { DomainReport } from "./types.js";
+import { DomainReportSchema, FindingSchema } from "./types.js";
 
 const server = new McpServer({
   name: "inspectra",
@@ -129,12 +129,13 @@ server.tool(
   "merge-domain-reports",
   "Merge multiple domain reports into a consolidated audit report with scoring and deduplication",
   {
-    domainReports: z.array(z.any()).describe("Array of domain report JSON objects"),
+    domainReportsJson: z.string().describe("JSON string — array of domain report objects"),
     target: z.string().describe("Repository or path being audited"),
     profile: z.string().describe("Policy profile used (e.g., java-angular-playwright)"),
   },
-  async ({ domainReports, target, profile }) => {
-    const consolidated = mergeReports(domainReports as DomainReport[], target, profile);
+  async ({ domainReportsJson, target, profile }) => {
+    const domainReports = z.array(DomainReportSchema).parse(JSON.parse(domainReportsJson));
+    const consolidated = mergeReports(domainReports, target, profile);
     return { content: [{ type: "text", text: JSON.stringify(consolidated, null, 2) }] };
   }
 );
@@ -142,8 +143,9 @@ server.tool(
 server.tool(
   "score-findings",
   "Compute a domain score from a list of findings",
-  { findings: z.array(z.any()).describe("Array of finding JSON objects") },
-  async ({ findings }) => {
+  { findingsJson: z.string().describe("JSON string — array of finding objects") },
+  async ({ findingsJson }) => {
+    const findings = z.array(FindingSchema).parse(JSON.parse(findingsJson));
     const score = scoreDomain(findings);
     return { content: [{ type: "text", text: JSON.stringify({ score }, null, 2) }] };
   }

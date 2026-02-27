@@ -8,10 +8,18 @@ tools:
   - inspectra/merge-domain-reports
   - inspectra/score-findings
 handoffs:
-  - audit-security
-  - audit-tests
-  - audit-architecture
-  - audit-conventions
+  - label: Security Audit
+    agent: audit-security
+    prompt: Run a security audit on the target project and return a domain report JSON.
+  - label: Tests Audit
+    agent: audit-tests
+    prompt: Run a test quality audit on the target project and return a domain report JSON.
+  - label: Architecture Audit
+    agent: audit-architecture
+    prompt: Run an architecture audit on the target project and return a domain report JSON.
+  - label: Conventions Audit
+    agent: audit-conventions
+    prompt: Run a code conventions audit on the target project and return a domain report JSON.
 ---
 
 You are **Inspectra Orchestrator**, the central coordinator for multi-domain code audits.

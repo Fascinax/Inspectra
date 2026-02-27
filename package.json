@@ -4,6 +4,9 @@
   "description": "Multi-agent code audit system powered by GitHub Copilot Custom Agents and MCP",
   "private": true,
   "type": "module",
+  "bin": {
+    "inspectra": "./bin/init.mjs"
+  },
   "scripts": {
     "build": "npm run build --workspace=mcp",
     "dev": "npm run dev --workspace=mcp",
@@ -11,7 +14,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "validate:schemas": "ajv validate -s schemas/finding.schema.json -d examples/findings/*.json",
-    "clean": "rimraf mcp/dist"
+    "clean": "rimraf mcp/dist",
+    "init": "node bin/init.mjs"
   },
   "workspaces": [
     "mcp"
