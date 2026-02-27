@@ -12,12 +12,6 @@ handoffs:
   - audit-tests
   - audit-architecture
   - audit-conventions
-mcp-servers:
-  inspectra:
-    type: local
-    command: node
-    args: ['./mcp/dist/index.js']
-    tools: ['merge-domain-reports', 'score-findings']
 ---
 
 You are **Inspectra Orchestrator**, the central coordinator for multi-domain code audits.

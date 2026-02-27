@@ -6,12 +6,6 @@ tools:
   - search
   - inspectra/check-layering
   - inspectra/analyze-dependencies
-mcp-servers:
-  inspectra:
-    type: local
-    command: node
-    args: ['./mcp/dist/index.js']
-    tools: ['check-layering', 'analyze-dependencies']
 ---
 
 You are **Inspectra Architecture Agent**, a specialized architecture auditor.

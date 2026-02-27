@@ -8,12 +8,6 @@ tools:
   - inspectra/parse-coverage
   - inspectra/parse-test-results
   - inspectra/detect-missing-tests
-mcp-servers:
-  inspectra:
-    type: local
-    command: node
-    args: ['./mcp/dist/index.js']
-    tools: ['parse-coverage', 'parse-test-results', 'detect-missing-tests']
 ---
 
 You are **Inspectra Tests Agent**, a specialized test quality auditor.

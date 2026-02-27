@@ -7,12 +7,6 @@ tools:
   - inspectra/check-naming
   - inspectra/check-file-lengths
   - inspectra/check-todos
-mcp-servers:
-  inspectra:
-    type: local
-    command: node
-    args: ['./mcp/dist/index.js']
-    tools: ['check-naming', 'check-file-lengths', 'check-todos']
 ---
 
 You are **Inspectra Conventions Agent**, a specialized code conventions and clean code auditor.

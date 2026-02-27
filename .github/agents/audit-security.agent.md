@@ -7,12 +7,6 @@ tools:
   - execute
   - inspectra/scan-secrets
   - inspectra/check-deps-vulns
-mcp-servers:
-  inspectra:
-    type: local
-    command: node
-    args: ['./mcp/dist/index.js']
-    tools: ['scan-secrets', 'check-deps-vulns']
 ---
 
 You are **Inspectra Security Agent**, a specialized security auditor.
