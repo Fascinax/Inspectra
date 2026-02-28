@@ -20,8 +20,9 @@ const server = new McpServer({
 server.tool(
   "scan-secrets",
   "Scan source files for hardcoded secrets, API keys, and credentials",
-  { filePaths: z.array(z.string()).describe("Absolute paths to files to scan") },
-  async ({ filePaths }) => {
+  { filePathsCsv: z.string().describe("Comma-separated absolute paths to files to scan") },
+  async ({ filePathsCsv }) => {
+    const filePaths = filePathsCsv.split(",").map((p) => p.trim()).filter(Boolean);
     const findings = await scanSecrets(filePaths);
     return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
   }
