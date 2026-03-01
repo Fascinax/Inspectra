@@ -38,9 +38,9 @@ smoke: build ## Smoke test the MCP server
 
 # ─── Audit ───────────────────────────────────────────────────────────────────
 
-# Usage: make audit-local TARGET=/path/to/project PROFILE=generic
-audit-local: build ## Run a local audit against a target project
-	bash scripts/run-local-audit.sh $(TARGET) $(PROFILE)
+# Usage: make audit-local TARGET=/path/to/project PROFILE=generic FORMAT=markdown OUTPUT=report.md
+audit-local: build ## Run a full local audit against a target project
+	bash scripts/run-local-audit.sh $(TARGET) $(PROFILE) $(FORMAT) $(OUTPUT)
 
 # ─── Setup ───────────────────────────────────────────────────────────────────
 

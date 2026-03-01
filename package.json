@@ -13,6 +13,7 @@
     "lint": "eslint . --ext .ts",
     "test": "vitest run",
     "test:watch": "vitest",
+    "audit-local": "node mcp/dist/cli/audit.js",
     "validate:schemas": "ajv validate -s schemas/finding.schema.json -d examples/findings/*.json",
     "clean": "rimraf mcp/dist",
     "init": "node bin/init.mjs"
