@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { renderMarkdown } from "../renderer/markdown.js";
 import { renderJson } from "../renderer/json.js";
+import { renderSarif } from "../renderer/sarif.js";
 import { makeFinding, makeDomainReport } from "./fixtures.js";
 import type { ConsolidatedReport } from "../types.js";
 
@@ -148,5 +149,88 @@ describe("renderJson", () => {
     expect(parsed.metadata.target).toBe("/projects/my-app");
     expect(parsed.domain_reports).toHaveLength(2);
     expect(parsed.statistics.total_findings).toBe(3);
+  });
+});
+
+describe("renderSarif", () => {
+  it("produces valid SARIF v2.1.0 structure", () => {
+    const report = makeConsolidatedReport();
+    const output = renderSarif(report);
+    const sarif = JSON.parse(output);
+
+    expect(sarif.version).toBe("2.1.0");
+    expect(sarif.$schema).toContain("sarif-schema-2.1.0");
+    expect(sarif.runs).toHaveLength(1);
+    expect(sarif.runs[0].tool.driver.name).toBe("Inspectra");
+  });
+
+  it("maps findings to SARIF results", () => {
+    const report = makeConsolidatedReport();
+    const sarif = JSON.parse(renderSarif(report));
+
+    const results = sarif.runs[0].results;
+    expect(results).toHaveLength(3);
+    expect(results[0].ruleId).toBe("SEC-001");
+    expect(results[1].ruleId).toBe("SEC-002");
+    expect(results[2].ruleId).toBe("TST-001");
+  });
+
+  it("maps severity to correct SARIF levels", () => {
+    const report = makeConsolidatedReport();
+    const sarif = JSON.parse(renderSarif(report));
+
+    const results = sarif.runs[0].results;
+    expect(results[0].level).toBe("error");
+    expect(results[1].level).toBe("warning");
+    expect(results[2].level).toBe("warning");
+  });
+
+  it("includes evidence as locations", () => {
+    const finding = makeFinding({
+      id: "SEC-099",
+      severity: "critical",
+      title: "Secret in code",
+      evidence: [{ file: "src/config.ts", line: 42, snippet: "apiKey = '...'" }],
+    });
+    const report = makeConsolidatedReport({
+      domain_reports: [
+        makeDomainReport({ domain: "security", score: 50, findings: [finding] }),
+      ],
+    });
+    const sarif = JSON.parse(renderSarif(report));
+
+    const loc = sarif.runs[0].results[0].locations[0];
+    expect(loc.physicalLocation.artifactLocation.uri).toBe("src/config.ts");
+    expect(loc.physicalLocation.region.startLine).toBe(42);
+  });
+
+  it("deduplicates rules in the driver", () => {
+    const report = makeConsolidatedReport();
+    const sarif = JSON.parse(renderSarif(report));
+
+    const ruleIds = sarif.runs[0].tool.driver.rules.map((r: { id: string }) => r.id);
+    expect(new Set(ruleIds).size).toBe(ruleIds.length);
+  });
+
+  it("includes domain and confidence in result properties", () => {
+    const report = makeConsolidatedReport();
+    const sarif = JSON.parse(renderSarif(report));
+
+    const props = sarif.runs[0].results[0].properties;
+    expect(props.domain).toBe("security");
+    expect(props.confidence).toBe(0.9);
+    expect(props.severity).toBe("high");
+  });
+
+  it("handles empty findings", () => {
+    const report = makeConsolidatedReport({
+      domain_reports: [
+        makeDomainReport({ domain: "security", score: 100, findings: [] }),
+      ],
+    });
+    const sarif = JSON.parse(renderSarif(report));
+
+    expect(sarif.runs[0].results).toHaveLength(0);
+    expect(sarif.runs[0].tool.driver.rules).toHaveLength(0);
   });
 });

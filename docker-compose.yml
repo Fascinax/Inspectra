@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  inspectra:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+      - /app/node_modules
+    working_dir: /app
+    command: node mcp/dist/index.js
+    stdin_open: true
+    environment:
+      - NODE_ENV=development
+
+  # Run a local audit against a mounted project
+  audit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ${TARGET_PROJECT:-.}:/target:ro
+    working_dir: /app
+    command: node mcp/dist/cli/audit.js /target --profile=${PROFILE:-generic} --format=${FORMAT:-markdown}
+    environment:
+      - NODE_ENV=production
+    profiles:
+      - audit

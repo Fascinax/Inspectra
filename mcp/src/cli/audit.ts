@@ -23,12 +23,13 @@ import { scoreDomain } from "../merger/score.js";
 import { mergeReports } from "../merger/merge-findings.js";
 import { renderMarkdown } from "../renderer/markdown.js";
 import { renderJson } from "../renderer/json.js";
+import { renderSarif } from "../renderer/sarif.js";
 import type { DomainReport, Finding } from "../types.js";
 
 interface CliOptions {
   target: string;
   profile: string;
-  format: "markdown" | "json";
+  format: "markdown" | "json" | "sarif";
   output: string | null;
 }
 
@@ -42,7 +43,7 @@ function parseArgs(argv: string[]): CliOptions {
 
   const target = resolve(args.find((a) => !a.startsWith("--")) ?? ".");
   const profile = extractFlag(args, "--profile") ?? "generic";
-  const format = (extractFlag(args, "--format") ?? "markdown") as "markdown" | "json";
+  const format = (extractFlag(args, "--format") ?? "markdown") as "markdown" | "json" | "sarif";
   const output = extractFlag(args, "--output") ?? null;
 
   return { target, profile, format, output };
@@ -62,7 +63,7 @@ Usage:
 
 Options:
   --profile=<name>    Policy profile (default: generic)
-  --format=<type>     Output format: markdown | json (default: markdown)
+  --format=<type>     Output format: markdown | json | sarif (default: markdown)
   --output=<path>     Write report to file (default: stdout)
   --help              Show this help
 
@@ -222,7 +223,9 @@ async function main(): Promise<void> {
 
   const rendered = opts.format === "json"
     ? renderJson(consolidated)
-    : renderMarkdown(consolidated);
+    : opts.format === "sarif"
+      ? renderSarif(consolidated)
+      : renderMarkdown(consolidated);
 
   if (opts.output) {
     await writeFile(opts.output, rendered, "utf-8");
