@@ -2,15 +2,30 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { parse as parseYaml } from "yaml";
 
+export interface GradeConfig {
+  min_score: number;
+  label: string;
+  description: string;
+}
+
 export interface ScoringConfig {
   severity_weights: Record<string, number>;
   domain_weights: Record<string, number>;
+  grades?: Record<string, GradeConfig>;
+}
+
+export interface ConfidenceAdjustment {
+  condition: string;
+  description: string;
+  delta: number;
 }
 
 export interface ConfidenceConfig {
   minimum_for_report: number;
   minimum_for_pr_comment: number;
   auto_dismiss_below: number;
+  adjustments?: ConfidenceAdjustment[];
+  tool_floors?: Record<string, number>;
 }
 
 export interface DeduplicationAlias {
@@ -22,6 +37,14 @@ export interface DeduplicationAlias {
 export interface DeduplicationConfig {
   strategy: string;
   cross_domain_aliases: DeduplicationAlias[];
+  on_conflict?: string;
+  key_fields?: string[];
+}
+
+export interface SecurityPatternOverride {
+  rule: string;
+  pattern: string;
+  severity: string;
 }
 
 export interface ProfileConfig {
@@ -39,6 +62,9 @@ export interface ProfileConfig {
   architecture?: {
     layers?: string[];
     allowed_dependencies?: Record<string, string[]>;
+  };
+  security?: {
+    additional_patterns?: SecurityPatternOverride[];
   };
 }
 
@@ -91,9 +117,24 @@ export async function loadScoringRules(policiesDir: string): Promise<ScoringConf
   const data = await loadYaml<Record<string, unknown>>(join(policiesDir, "scoring-rules.yml"));
   if (!data) return DEFAULT_SCORING;
 
+  const rawGrades = data.grades as Record<string, Record<string, unknown>> | undefined;
+  const grades = rawGrades
+    ? Object.fromEntries(
+        Object.entries(rawGrades).map(([letter, config]) => [
+          letter,
+          {
+            min_score: (config.min_score as number) ?? 0,
+            label: (config.label as string) ?? letter,
+            description: (config.description as string) ?? "",
+          },
+        ]),
+      )
+    : undefined;
+
   return {
     severity_weights: (data.severity_weights as Record<string, number>) ?? DEFAULT_SCORING.severity_weights,
     domain_weights: (data.domain_weights as Record<string, number>) ?? DEFAULT_SCORING.domain_weights,
+    grades,
   };
 }
 
@@ -101,10 +142,19 @@ export async function loadConfidenceRules(policiesDir: string): Promise<Confiden
   const data = await loadYaml<Record<string, unknown>>(join(policiesDir, "confidence-rules.yml"));
   if (!data) return DEFAULT_CONFIDENCE;
 
+  const rawAdjustments = data.adjustments as Array<Record<string, unknown>> | undefined;
+  const adjustments = rawAdjustments?.map((a) => ({
+    condition: (a.condition as string) ?? "",
+    description: (a.description as string) ?? "",
+    delta: (a.delta as number) ?? 0,
+  }));
+
   return {
     minimum_for_report: (data.minimum_for_report as number) ?? DEFAULT_CONFIDENCE.minimum_for_report,
     minimum_for_pr_comment: (data.minimum_for_pr_comment as number) ?? DEFAULT_CONFIDENCE.minimum_for_pr_comment,
     auto_dismiss_below: (data.auto_dismiss_below as number) ?? DEFAULT_CONFIDENCE.auto_dismiss_below,
+    adjustments,
+    tool_floors: (data.tool_floors as Record<string, number>) ?? undefined,
   };
 }
 
@@ -122,6 +172,8 @@ export async function loadDeduplicationRules(policiesDir: string): Promise<Dedup
   return {
     strategy: (data.strategy as string) ?? DEFAULT_DEDUPLICATION.strategy,
     cross_domain_aliases: aliases,
+    on_conflict: (data.on_conflict as string) ?? undefined,
+    key_fields: (data.key_fields as string[]) ?? undefined,
   };
 }
 
@@ -148,6 +200,7 @@ export async function loadProfile(policiesDir: string, profileName: string): Pro
       : DEFAULT_PROFILE.file_lengths,
     naming: data.naming as Record<string, Record<string, string>> | undefined,
     architecture: data.architecture as ProfileConfig["architecture"] | undefined,
+    security: data.security as ProfileConfig["security"] | undefined,
   };
 }
 

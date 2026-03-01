@@ -1,5 +1,5 @@
 import type { Finding, DomainReport, Grade } from "../types.js";
-import type { ScoringConfig } from "../policies/loader.js";
+import type { ScoringConfig, GradeConfig } from "../policies/loader.js";
 import { DEFAULT_SCORING } from "../policies/loader.js";
 
 export function scoreDomain(findings: Finding[], config?: ScoringConfig): number {
@@ -27,10 +27,23 @@ export function computeOverallScore(domainReports: DomainReport[], config?: Scor
   return totalWeight > 0 ? Math.round(weightedSum / totalWeight) : 0;
 }
 
-export function deriveGrade(score: number): Grade {
-  if (score >= 90) return "A";
-  if (score >= 75) return "B";
-  if (score >= 60) return "C";
-  if (score >= 40) return "D";
+const DEFAULT_GRADE_THRESHOLDS: Array<{ grade: Grade; min_score: number }> = [
+  { grade: "A", min_score: 90 },
+  { grade: "B", min_score: 75 },
+  { grade: "C", min_score: 60 },
+  { grade: "D", min_score: 40 },
+  { grade: "F", min_score: 0 },
+];
+
+export function deriveGrade(score: number, grades?: Record<string, GradeConfig>): Grade {
+  const thresholds = grades
+    ? Object.entries(grades)
+        .map(([grade, config]) => ({ grade: grade as Grade, min_score: config.min_score }))
+        .sort((a, b) => b.min_score - a.min_score)
+    : DEFAULT_GRADE_THRESHOLDS;
+
+  for (const { grade, min_score } of thresholds) {
+    if (score >= min_score) return grade;
+  }
   return "F";
 }

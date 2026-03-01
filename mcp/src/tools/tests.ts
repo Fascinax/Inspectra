@@ -92,22 +92,23 @@ export async function detectMissingTests(projectDir: string): Promise<Finding[]>
     SOURCE_EXTENSIONS.includes(extname(f)) && !TEST_PATTERNS.some((p) => p.test(f)),
   );
 
-  // Build test file set: strip test pattern to get the source equivalent
-  const testBaseNames = new Set<string>();
+  // Build test file set: extract filename stems (without test/spec suffix)
+  const testStems = new Set<string>();
   for (const f of allFiles) {
     if (TEST_PATTERNS.some((p) => p.test(f))) {
-      const baseName = f
+      const fileName = f.split(/[/\\]/).pop() ?? "";
+      const stem = fileName
         .replace(/\.(test|spec)\.(ts|js|java)$/, ".$2")
         .replace(/Test\.java$/, ".java");
-      testBaseNames.add(baseName);
+      testStems.add(stem);
     }
   }
 
   for (const src of sourceFiles) {
-    const baseName = src.split(/[\/\\]/).pop() ?? "";
+    const baseName = src.split(/[/\\]/).pop() ?? "";
     if (baseName === "index.ts" || baseName === "index.js" || baseName.startsWith("types")) continue;
 
-    if (!testBaseNames.has(src)) {
+    if (!testStems.has(baseName)) {
       findings.push({
         id: `TST-${String(counter++).padStart(3, "0")}`,
         severity: "medium",

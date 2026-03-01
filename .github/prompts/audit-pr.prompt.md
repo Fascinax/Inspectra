@@ -7,7 +7,7 @@ Run a focused audit on the files changed in this pull request only.
 
 ## Workflow
 
-1. Identify the changed files in the PR using `git diff` or the GitHub MCP tool
+1. Identify the changed files in the PR by reading the diff context provided in the conversation or using the `search` tool
 2. Determine which domains are relevant based on the diff:
    - Auth/config/API files changed → invoke `audit-security`
    - Source files with or without tests changed → invoke `audit-tests`

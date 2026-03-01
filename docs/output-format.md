@@ -36,13 +36,13 @@ The atomic unit of audit output. Every issue detected by any tool or agent is ex
 | `domain` | enum | `security`, `tests`, `architecture`, `conventions`, `performance`, `documentation` |
 | `rule` | string | Machine-readable rule identifier |
 | `confidence` | float | 0.0 (guess) to 1.0 (certain) |
+| `evidence` | array | At least one file path with optional line and snippet |
 
 ### Optional Fields
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `description` | string | Detailed explanation (max 2000 chars) |
-| `evidence` | array | File paths, line numbers, code snippets |
 | `recommendation` | string | Actionable fix suggestion |
 | `effort` | enum | `trivial`, `small`, `medium`, `large`, `epic` |
 | `tags` | array | Free-form labels for filtering |
@@ -110,7 +110,8 @@ The CLI and report engine can output the consolidated report in multiple formats
 
 The SARIF output conforms to [SARIF v2.1.0](https://sarifweb.azurewebsites.net/) and can be uploaded to GitHub Code Scanning or any SARIF-compatible tool. Each finding maps to:
 
-- `result.ruleId` → `finding.rule`
+- `result.ruleId` → `finding.id`
 - `result.level` → mapped from `finding.severity`
 - `result.message` → `finding.title` + `finding.description`
 - `result.locations` → `finding.evidence`
+- `result.properties.rule` → `finding.rule`

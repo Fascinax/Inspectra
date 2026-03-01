@@ -170,9 +170,9 @@ describe("renderSarif", () => {
 
     const results = sarif.runs[0].results;
     expect(results).toHaveLength(3);
-    expect(results[0].ruleId).toBe("SEC-001");
-    expect(results[1].ruleId).toBe("SEC-002");
-    expect(results[2].ruleId).toBe("TST-001");
+    expect(results[0].ruleId).toBe("no-hardcoded-secrets");
+    expect(results[1].ruleId).toBe("missing-csp");
+    expect(results[2].ruleId).toBe("low-branch-coverage");
   });
 
   it("maps severity to correct SARIF levels", () => {

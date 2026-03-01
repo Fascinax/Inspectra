@@ -1,5 +1,5 @@
 import type { DomainReport, Finding, ConsolidatedReport } from "../types.js";
-import type { MergeOptions } from "../policies/loader.js";
+import type { MergeOptions, GradeConfig, ConfidenceAdjustment } from "../policies/loader.js";
 import { deduplicateFindings } from "./deduplicate.js";
 import { computeOverallScore, deriveGrade } from "./score.js";
 
@@ -25,9 +25,11 @@ export function mergeReports(
     f.confidence >= autoDismiss && f.confidence >= minConfidence,
   );
 
+  const adjusted = applyConfidenceAdjustments(filtered, options?.confidence?.adjustments ?? []);
+
   const deduplicated = deduplicateFindings(
-    filtered,
-    options?.deduplication?.cross_domain_aliases,
+    adjusted,
+    options?.deduplication,
   );
 
   const ranked = [...deduplicated].sort((a, b) => {
@@ -47,11 +49,11 @@ export function mergeReports(
     byDomain[f.domain] = (byDomain[f.domain] ?? 0) + 1;
   }
 
-  const summary = buildSummary(overallScore, bySeverity, domainReports);
+  const summary = buildSummary(overallScore, bySeverity, domainReports, options?.scoring?.grades);
 
   return {
     overall_score: overallScore,
-    grade: deriveGrade(overallScore),
+    grade: deriveGrade(overallScore, options?.scoring?.grades),
     summary,
     domain_reports: domainReports,
     top_findings: topFindings,
@@ -72,9 +74,10 @@ export function mergeReports(
 function buildSummary(
   score: number,
   bySeverity: Record<string, number>,
-  domainReports: DomainReport[]
+  domainReports: DomainReport[],
+  grades?: Record<string, GradeConfig>,
 ): string {
-  const grade = deriveGrade(score);
+  const grade = deriveGrade(score, grades);
   const parts = Object.entries(bySeverity)
     .filter(([, count]) => count > 0)
     .map(([sev, count]) => `${count} ${sev}`);
@@ -89,4 +92,36 @@ function buildSummary(
   }
 
   return text;
+}
+
+function applyConfidenceAdjustments(
+  findings: Finding[],
+  adjustments: ConfidenceAdjustment[],
+): Finding[] {
+  if (adjustments.length === 0) return findings;
+  return findings.map((f) => {
+    let adjusted = f.confidence;
+    for (const adj of adjustments) {
+      if (matchesCondition(f, adj.condition)) {
+        adjusted += adj.delta;
+      }
+    }
+    adjusted = Math.max(0, Math.min(1, adjusted));
+    return adjusted !== f.confidence ? { ...f, confidence: adjusted } : f;
+  });
+}
+
+function matchesCondition(finding: Finding, condition: string): boolean {
+  switch (condition) {
+    case "evidence_has_snippet":
+      return finding.evidence?.some((e) => e.snippet !== undefined) ?? false;
+    case "multiple_evidence_locations":
+      return (finding.evidence?.length ?? 0) >= 2;
+    case "evidence_in_generated_code":
+      return finding.evidence?.some((e) => /generated|vendor|dist|node_modules/i.test(e.file)) ?? false;
+    case "evidence_in_test_fixtures":
+      return finding.evidence?.some((e) => /fixture|mock|stub|fake|__tests__|test-data/i.test(e.file)) ?? false;
+    default:
+      return false;
+  }
 }

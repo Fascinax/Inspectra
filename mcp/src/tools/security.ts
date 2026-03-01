@@ -13,7 +13,17 @@ const SECRET_PATTERNS = [
   { rule: "no-connection-string", pattern: /(jdbc|mongodb(\+srv)?|postgresql|mysql|redis):\/\/[^\s"']+/gi, severity: "high" as const },
 ];
 
-export async function scanSecrets(filePaths: string[]): Promise<Finding[]> {
+export async function scanSecrets(
+  filePaths: string[],
+  additionalPatterns?: Array<{ rule: string; pattern: string; severity: string }>,
+): Promise<Finding[]> {
+  const extraPatterns = (additionalPatterns ?? []).map((p) => ({
+    rule: p.rule,
+    pattern: new RegExp(p.pattern, "gi"),
+    severity: p.severity as Finding["severity"],
+  }));
+  const allPatterns = [...SECRET_PATTERNS, ...extraPatterns];
+
   const findings: Finding[] = [];
   let counter = 1;
 
@@ -22,7 +32,7 @@ export async function scanSecrets(filePaths: string[]): Promise<Finding[]> {
       const content = await readFile(filePath, "utf-8");
       const lines = content.split("\n");
 
-      for (const { rule, pattern, severity } of SECRET_PATTERNS) {
+      for (const { rule, pattern, severity } of allPatterns) {
         for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
           const line = lines[lineIndex];
           const regex = new RegExp(pattern.source, pattern.flags);
@@ -55,7 +65,16 @@ export async function checkDependencyVulnerabilities(projectDir: string): Promis
   const findings: Finding[] = [];
 
   try {
-    const { stdout } = await execFileAsync("npm", ["audit", "--json"], { cwd: projectDir, timeout: 30_000 });
+    let stdout: string;
+    try {
+      ({ stdout } = await execFileAsync("npm", ["audit", "--json"], { cwd: projectDir, timeout: 30_000, shell: true }));
+    } catch (err: unknown) {
+      // npm audit exits non-zero when vulnerabilities are found — stdout still contains JSON
+      const execError = err as { stdout?: string };
+      stdout = execError.stdout ?? "";
+      if (!stdout) return findings;
+    }
+
     const audit = JSON.parse(stdout);
 
     let counter = 1;

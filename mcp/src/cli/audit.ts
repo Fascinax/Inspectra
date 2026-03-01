@@ -91,10 +91,10 @@ function resolvePoliciesDir(): string {
   return join(dirname(currentFile), "..", "..", "..", "policies");
 }
 
-async function runSecurityAudit(projectDir: string, sourceFiles: string[], config?: ScoringConfig): Promise<DomainReport> {
+async function runSecurityAudit(projectDir: string, sourceFiles: string[], config?: ScoringConfig, profile?: ProfileConfig): Promise<DomainReport> {
   const start = Date.now();
   console.error("  [security] Scanning secrets...");
-  const secretFindings = await scanSecrets(sourceFiles);
+  const secretFindings = await scanSecrets(sourceFiles, profile?.security?.additional_patterns);
 
   console.error("  [security] Checking dependency vulnerabilities...");
   const vulnFindings = await checkDependencyVulnerabilities(projectDir);
@@ -124,10 +124,10 @@ async function runTestsAudit(projectDir: string, profile?: ProfileConfig, config
   ]);
 }
 
-async function runArchitectureAudit(projectDir: string, config?: ScoringConfig): Promise<DomainReport> {
+async function runArchitectureAudit(projectDir: string, config?: ScoringConfig, profile?: ProfileConfig): Promise<DomainReport> {
   const start = Date.now();
   console.error("  [architecture] Checking layer dependencies...");
-  const layerFindings = await checkLayering(projectDir);
+  const layerFindings = await checkLayering(projectDir, profile?.architecture?.allowed_dependencies);
 
   console.error("  [architecture] Analyzing module dependencies...");
   const depFindings = await analyzeModuleDependencies(projectDir);
@@ -220,9 +220,9 @@ async function main(): Promise<void> {
   console.error("Running audits...\n");
 
   const [securityReport, testsReport, archReport, convReport] = await Promise.all([
-    runSecurityAudit(opts.target, sourceFiles, policies.scoring),
+    runSecurityAudit(opts.target, sourceFiles, policies.scoring, policies.profile),
     runTestsAudit(opts.target, policies.profile, policies.scoring),
-    runArchitectureAudit(opts.target, policies.scoring),
+    runArchitectureAudit(opts.target, policies.scoring, policies.profile),
     runConventionsAudit(opts.target, policies.profile, policies.scoring),
   ]);
 

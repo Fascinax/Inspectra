@@ -82,11 +82,10 @@ function buildLocations(finding: Finding): SarifLocation[] {
 
 function buildRuleDescriptor(finding: Finding): SarifReportingDescriptor {
   return {
-    id: finding.id,
+    id: finding.rule,
     shortDescription: { text: finding.title },
     properties: {
       domain: finding.domain,
-      rule: finding.rule,
     },
   };
 }
@@ -97,7 +96,7 @@ function buildResult(finding: Finding): SarifResult {
     : finding.title;
 
   return {
-    ruleId: finding.id,
+    ruleId: finding.rule,
     level: mapSeverityToLevel(finding.severity),
     message: { text: description },
     locations: buildLocations(finding),
@@ -123,8 +122,8 @@ export function renderSarif(report: ConsolidatedReport): string {
   const results: SarifResult[] = [];
 
   for (const finding of allFindings) {
-    if (!seenRuleIds.has(finding.id)) {
-      seenRuleIds.add(finding.id);
+    if (!seenRuleIds.has(finding.rule)) {
+      seenRuleIds.add(finding.rule);
       rules.push(buildRuleDescriptor(finding));
     }
     results.push(buildResult(finding));

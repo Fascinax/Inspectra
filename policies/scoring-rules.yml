@@ -44,15 +44,3 @@ grades:
     min_score: 0
     label: "Critical"
     description: "Major risks present. Requires immediate attention."
-
-# Deduplication rules
-deduplication:
-  strategy: "same-rule-same-location"
-  key_fields: ["rule", "evidence[0].file", "evidence[0].line"]
-  on_conflict: "keep highest confidence"
-
-# Confidence thresholds
-confidence:
-  minimum_for_report: 0.3
-  minimum_for_pr_comment: 0.7
-  auto_dismiss_below: 0.2

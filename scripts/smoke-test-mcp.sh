@@ -36,12 +36,19 @@ echo ""
 echo "Step 4: Server startup smoke test"
 INIT_REQUEST='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"smoke-test","version":"1.0.0"}}}'
 
-RESPONSE=$(echo "$INIT_REQUEST" | timeout 10 node "$ROOT_DIR/mcp/dist/index.js" 2>/dev/null || true)
+RESPONSE=$(echo "$INIT_REQUEST" | timeout 10 node "$ROOT_DIR/mcp/dist/index.js" 2>/dev/null)
 
-if [[ -n "$RESPONSE" ]] && echo "$RESPONSE" | grep -q "inspectra"; then
+if [[ -z "$RESPONSE" ]]; then
+  echo "  FAIL: Server produced no response"
+  exit 1
+fi
+
+if echo "$RESPONSE" | grep -q "inspectra"; then
   echo "  Server responded with name 'inspectra' — OK"
 else
-  echo "  Server started (stdio mode, no persistent response expected) — OK"
+  echo "  FAIL: Response does not contain 'inspectra'"
+  echo "  Response: $RESPONSE"
+  exit 1
 fi
 
 echo ""

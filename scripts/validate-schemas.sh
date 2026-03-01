@@ -23,7 +23,7 @@ echo "--- Domain report samples ---"
 for f in "$ROOT_DIR"/examples/findings/*.json; do
   if [[ -f "$f" ]]; then
     echo -n "  Validating $(basename "$f") against domain-report.schema.json... "
-    if ajv validate -s "$ROOT_DIR/schemas/domain-report.schema.json" -d "$f" --spec=draft2020 -c ajv-formats 2>/dev/null; then
+    if ajv validate -s "$ROOT_DIR/schemas/domain-report.schema.json" -r "$ROOT_DIR/schemas/finding.schema.json" -d "$f" --spec=draft2020 -c ajv-formats 2>/dev/null; then
       echo "OK"
     else
       echo "FAIL"
@@ -38,7 +38,7 @@ echo "--- Consolidated report samples ---"
 for f in "$ROOT_DIR"/examples/reports/*.json; do
   if [[ -f "$f" ]]; then
     echo -n "  Validating $(basename "$f") against consolidated-report.schema.json... "
-    if ajv validate -s "$ROOT_DIR/schemas/consolidated-report.schema.json" -d "$f" --spec=draft2020 -c ajv-formats 2>/dev/null; then
+    if ajv validate -s "$ROOT_DIR/schemas/consolidated-report.schema.json" -r "$ROOT_DIR/schemas/finding.schema.json" -r "$ROOT_DIR/schemas/domain-report.schema.json" -d "$f" --spec=draft2020 -c ajv-formats 2>/dev/null; then
       echo "OK"
     else
       echo "FAIL"

@@ -11,7 +11,10 @@ const LAYER_PATTERNS: Record<string, RegExp> = {
   infrastructure: /\/(repositor(?:y|ies)|adapters?|gateways?|clients?|config|persistence)\//i,
 };
 
-export async function checkLayering(projectDir: string): Promise<Finding[]> {
+export async function checkLayering(
+  projectDir: string,
+  allowedDependencies?: Record<string, string[]>,
+): Promise<Finding[]> {
   const findings: Finding[] = [];
   let counter = 1;
 
@@ -29,7 +32,7 @@ export async function checkLayering(projectDir: string): Promise<Finding[]> {
         const targetLayer = detectLayer(imp);
         if (!targetLayer) continue;
 
-        if (isViolation(sourceLayer, targetLayer)) {
+        if (isViolation(sourceLayer, targetLayer, allowedDependencies)) {
           findings.push({
             id: `ARC-${String(counter++).padStart(3, "0")}`,
             severity: "high",
@@ -111,7 +114,15 @@ function detectLayer(filePath: string): string | undefined {
   return undefined;
 }
 
-function isViolation(source: string, target: string): boolean {
+function isViolation(source: string, target: string, allowedDeps?: Record<string, string[]>): boolean {
+  if (source === target) return false;
+
+  if (allowedDeps) {
+    const allowed = allowedDeps[source];
+    if (!allowed) return true;
+    return !allowed.includes(target);
+  }
+
   const sourceIndex = LAYER_ORDER.indexOf(source as (typeof LAYER_ORDER)[number]);
   const targetIndex = LAYER_ORDER.indexOf(target as (typeof LAYER_ORDER)[number]);
   if (sourceIndex < 0 || targetIndex < 0) return false;

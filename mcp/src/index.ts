@@ -10,7 +10,7 @@ import { checkLayering, analyzeModuleDependencies } from "./tools/architecture.j
 import { checkNamingConventions, checkFileLengths, checkTodoFixmes } from "./tools/code-quality.js";
 import { mergeReports } from "./merger/merge-findings.js";
 import { scoreDomain } from "./merger/score.js";
-import { loadAllPolicies } from "./policies/loader.js";
+import { loadAllPolicies, loadScoringRules } from "./policies/loader.js";
 import { DomainReportSchema, FindingSchema } from "./types.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -154,7 +154,8 @@ server.tool(
   { findingsJson: z.string().describe("JSON string — array of finding objects") },
   async ({ findingsJson }) => {
     const findings = z.array(FindingSchema).parse(JSON.parse(findingsJson));
-    const score = scoreDomain(findings);
+    const scoring = await loadScoringRules(POLICIES_DIR);
+    const score = scoreDomain(findings, scoring);
     return { content: [{ type: "text", text: JSON.stringify({ score }, null, 2) }] };
   }
 );

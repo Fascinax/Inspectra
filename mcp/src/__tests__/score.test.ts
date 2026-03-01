@@ -81,4 +81,25 @@ describe("deriveGrade", () => {
   ])("score %i → grade %s", (score, grade) => {
     expect(deriveGrade(score)).toBe(grade);
   });
+
+  it("uses custom grade thresholds from config", () => {
+    const grades = {
+      A: { min_score: 95, label: "Excellent", description: "" },
+      B: { min_score: 80, label: "Good", description: "" },
+      C: { min_score: 50, label: "OK", description: "" },
+      F: { min_score: 0, label: "Fail", description: "" },
+    };
+    expect(deriveGrade(96, grades)).toBe("A");
+    expect(deriveGrade(94, grades)).toBe("B");
+    expect(deriveGrade(79, grades)).toBe("C");
+    expect(deriveGrade(49, grades)).toBe("F");
+  });
+
+  it("returns F when score is below all custom thresholds", () => {
+    const grades = {
+      A: { min_score: 90, label: "A", description: "" },
+      B: { min_score: 80, label: "B", description: "" },
+    };
+    expect(deriveGrade(79, grades)).toBe("F");
+  });
 });

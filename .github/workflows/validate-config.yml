@@ -53,20 +53,20 @@ jobs:
         run: |
           for f in examples/findings/*.json; do
             echo "Validating $f against domain-report.schema.json"
-            ajv validate -s schemas/domain-report.schema.json -d "$f" --spec=draft2020 -c ajv-formats || exit 1
+            ajv validate -s schemas/domain-report.schema.json -r schemas/finding.schema.json -d "$f" --spec=draft2020 -c ajv-formats || exit 1
           done
 
       - name: Validate consolidated report samples
         run: |
           for f in examples/reports/*.json; do
             echo "Validating $f against consolidated-report.schema.json"
-            ajv validate -s schemas/consolidated-report.schema.json -d "$f" --spec=draft2020 -c ajv-formats || exit 1
+            ajv validate -s schemas/consolidated-report.schema.json -r schemas/finding.schema.json -r schemas/domain-report.schema.json -d "$f" --spec=draft2020 -c ajv-formats || exit 1
           done
 
       - name: Validate policies YAML syntax
         run: |
           npm install -g yaml-lint
-          yamllint policies/**/*.yml
+          yaml-lint policies/**/*.yml
 
   lint-agents:
     runs-on: ubuntu-latest
