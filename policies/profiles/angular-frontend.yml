@@ -1,0 +1,76 @@
+# Inspectra — Profile: Angular Frontend
+# Tailored for Angular SPA projects (Angular 14+, TypeScript, npm).
+
+profile: angular-frontend
+description: "Profile for Angular frontend applications with TypeScript."
+
+stack:
+  frontend:
+    language: typescript
+    framework: angular
+    build_tool: npm
+
+# Coverage thresholds
+coverage:
+  lines:
+    minimum: 70
+    target: 85
+  branches:
+    minimum: 60
+    target: 75
+  functions:
+    minimum: 70
+    target: 85
+
+# File length thresholds
+file_lengths:
+  warning: 300
+  error: 500
+
+# Naming conventions
+naming:
+  angular:
+    components: kebab-case.component.ts
+    services: kebab-case.service.ts
+    modules: kebab-case.module.ts
+    pipes: kebab-case.pipe.ts
+    guards: kebab-case.guard.ts
+    interceptors: kebab-case.interceptor.ts
+    directives: kebab-case.directive.ts
+    resolvers: kebab-case.resolver.ts
+
+  typescript:
+    classes: PascalCase
+    interfaces: PascalCase
+    enums: PascalCase
+    functions: camelCase
+    constants: SCREAMING_SNAKE_CASE
+
+# Architecture rules
+architecture:
+  layers:
+    - pages
+    - features
+    - shared
+    - core
+  allowed_dependencies:
+    pages: [features, shared, core]
+    features: [shared, core]
+    shared: [core]
+    core: []
+
+# Security overrides
+security:
+  additional_patterns:
+    - rule: "no-angular-bypass-security"
+      pattern: "bypassSecurityTrust"
+      severity: high
+    - rule: "no-innerhtml-binding"
+      pattern: "\\[innerHTML\\]"
+      severity: medium
+    - rule: "no-eval"
+      pattern: "\\beval\\s*\\("
+      severity: critical
+    - rule: "no-document-write"
+      pattern: "document\\.write"
+      severity: high

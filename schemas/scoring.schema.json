@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://inspectra.dev/schemas/scoring.schema.json",
+  "title": "Inspectra Scoring Configuration",
+  "description": "Defines severity weights, domain weights, grade thresholds, deduplication and confidence rules used by the scoring engine.",
+  "type": "object",
+  "required": ["severity_weights", "domain_weights", "grades"],
+  "properties": {
+    "severity_weights": {
+      "type": "object",
+      "description": "Penalty points per severity level. Applied as: penalty = weight × confidence.",
+      "required": ["critical", "high", "medium", "low", "info"],
+      "properties": {
+        "critical": { "type": "integer", "minimum": 0 },
+        "high": { "type": "integer", "minimum": 0 },
+        "medium": { "type": "integer", "minimum": 0 },
+        "low": { "type": "integer", "minimum": 0 },
+        "info": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "domain_weights": {
+      "type": "object",
+      "description": "Weight of each domain in the overall score calculation. Must sum to ~1.0.",
+      "propertyNames": {
+        "enum": ["security", "tests", "architecture", "conventions", "performance", "documentation"]
+      },
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      }
+    },
+    "grades": {
+      "type": "object",
+      "description": "Letter grade thresholds.",
+      "required": ["A", "B", "C", "D", "F"],
+      "properties": {
+        "A": { "$ref": "#/$defs/grade_threshold" },
+        "B": { "$ref": "#/$defs/grade_threshold" },
+        "C": { "$ref": "#/$defs/grade_threshold" },
+        "D": { "$ref": "#/$defs/grade_threshold" },
+        "F": { "$ref": "#/$defs/grade_threshold" }
+      },
+      "additionalProperties": false
+    },
+    "deduplication": {
+      "type": "object",
+      "description": "Rules for deduplicating findings across domain reports.",
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["same-rule-same-location", "same-rule-same-file", "same-rule-any-location"],
+          "description": "How to determine if two findings are duplicates."
+        },
+        "key_fields": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Fields used to compute the deduplication key."
+        },
+        "on_conflict": {
+          "type": "string",
+          "enum": ["keep highest confidence", "keep highest severity", "merge"],
+          "description": "Which finding to keep when duplicates are found."
+        }
+      },
+      "additionalProperties": false
+    },
+    "confidence": {
+      "type": "object",
+      "description": "Thresholds for filtering findings by confidence score.",
+      "properties": {
+        "minimum_for_report": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Include in full report only if confidence >= this value."
+        },
+        "minimum_for_pr_comment": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Include in PR comments only if confidence >= this value."
+        },
+        "auto_dismiss_below": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Auto-dismiss findings below this confidence."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "grade_threshold": {
+      "type": "object",
+      "required": ["min_score", "label"],
+      "properties": {
+        "min_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Minimum overall score to earn this grade."
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "Human-readable grade label."
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Grade meaning for stakeholders."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

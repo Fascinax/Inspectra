@@ -1,0 +1,41 @@
+# Inspectra — Deduplication Rules
+# Controls how duplicate findings are detected and resolved across domain reports.
+
+# Strategy determines how the dedup key is computed.
+#   same-rule-same-location : rule + file + line must all match
+#   same-rule-same-file     : rule + file match (ignores line)
+#   same-rule-any-location  : same rule anywhere counts as duplicate
+strategy: same-rule-same-location
+
+# Fields used to build the dedup key
+key_fields:
+  - rule
+  - evidence[0].file
+  - evidence[0].line
+
+# When two findings share the same key, which one survives
+on_conflict: keep highest confidence
+
+# Cross-domain deduplication
+# Some rules overlap across domains (e.g., architecture + conventions).
+# Map equivalent rules so findings are not reported twice.
+cross_domain_aliases:
+  - rules: [excessive-file-length, file-too-long]
+    canonical: excessive-file-length
+    keep_domain: conventions
+
+  - rules: [missing-unit-test, untested-source-file]
+    canonical: missing-unit-test
+    keep_domain: tests
+
+  - rules: [hardcoded-secret, no-hardcoded-secret]
+    canonical: no-hardcoded-secret
+    keep_domain: security
+
+# Similarity threshold for fuzzy dedup.
+# Findings with different rules but same file+line within this edit distance
+# are flagged as potential duplicates (manual review, not auto-merged).
+fuzzy:
+  enabled: false
+  title_similarity_threshold: 0.85
+  action: flag_for_review

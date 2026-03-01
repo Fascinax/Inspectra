@@ -1,0 +1,77 @@
+# Inspectra — Profile: Java Backend
+# Tailored for Java-only backend projects (Quarkus, Spring Boot, Maven/Gradle).
+
+profile: java-backend
+description: "Profile for Java backend services using Quarkus or Spring Boot."
+
+stack:
+  backend:
+    language: java
+    framework: quarkus
+    build_tool: maven
+
+# Coverage thresholds (stricter for backend services)
+coverage:
+  lines:
+    minimum: 75
+    target: 90
+  branches:
+    minimum: 65
+    target: 80
+  functions:
+    minimum: 70
+    target: 85
+
+# File length thresholds
+file_lengths:
+  warning: 300
+  error: 500
+
+# Naming conventions
+naming:
+  java:
+    classes: PascalCase
+    methods: camelCase
+    constants: SCREAMING_SNAKE_CASE
+    packages: lowercase
+    suffixes:
+      - pattern: "*Controller.java"
+        directory: controllers
+      - pattern: "*Resource.java"
+        directory: resources
+      - pattern: "*Service.java"
+        directory: services
+      - pattern: "*Repository.java"
+        directory: repositories
+      - pattern: "*Entity.java"
+        directory: entities
+      - pattern: "*Dto.java"
+        directory: dtos
+      - pattern: "*Mapper.java"
+        directory: mappers
+
+# Architecture rules (hexagonal)
+architecture:
+  layers:
+    - api
+    - application
+    - domain
+    - infrastructure
+  allowed_dependencies:
+    api: [application]
+    application: [domain]
+    domain: []
+    infrastructure: [domain, application]
+
+# Security overrides
+security:
+  additional_patterns:
+    - rule: "no-sql-concatenation"
+      pattern: "\".*SELECT.*\" \\+"
+      severity: high
+    - rule: "no-raw-jdbc"
+      pattern: "createNativeQuery|prepareStatement"
+      severity: medium
+    - rule: "no-permissive-cors"
+      pattern: "@CrossOrigin|allowedOrigins.*\\*"
+      severity: medium

@@ -1,0 +1,46 @@
+# Inspectra — Confidence Rules
+# Controls how agent confidence scores affect finding lifecycle.
+
+# Minimum confidence to include a finding in the full audit report.
+minimum_for_report: 0.3
+
+# Minimum confidence required to surface a finding in a PR comment.
+# PR comments are visible to the whole team, so we require higher certainty.
+minimum_for_pr_comment: 0.7
+
+# Findings below this threshold are automatically dismissed.
+auto_dismiss_below: 0.2
+
+# Confidence adjustments based on evidence quality
+adjustments:
+  # Boost confidence when evidence is strong
+  - condition: evidence_has_snippet
+    description: "Finding provides a code snippet as proof"
+    delta: +0.05
+
+  - condition: multiple_evidence_locations
+    description: "Finding cites 2+ distinct file locations"
+    delta: +0.10
+
+  # Reduce confidence for generated or test code
+  - condition: evidence_in_generated_code
+    description: "Finding is in generated/vendored code"
+    delta: -0.20
+
+  - condition: evidence_in_test_fixtures
+    description: "Finding is in test fixtures or sample data"
+    delta: -0.15
+
+# Tool-specific confidence floors
+# Some MCP tools produce inherently more reliable results.
+tool_floors:
+  scan-secrets: 0.80
+  check-deps-vulns: 0.90
+  parse-coverage: 0.95
+  parse-test-results: 0.95
+  detect-missing-tests: 0.70
+  check-layering: 0.75
+  analyze-dependencies: 0.85
+  check-naming: 0.65
+  check-file-lengths: 0.95
+  check-todos: 0.90

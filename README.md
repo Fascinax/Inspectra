@@ -17,14 +17,13 @@ Inspectra coordinates specialized audit agents — security, tests, architecture
 ### Setup
 
 ```bash
-# Install dependencies
+# Full setup (install + build + test)
+make bootstrap
+
+# Or step by step
 npm install
-
-# Build the MCP server
 npm run build
-
-# Verify it works
-node mcp/dist/index.js
+npm test
 ```
 
 ### Run an Audit
@@ -53,6 +52,10 @@ inspectra/
 │  ├─ prompts/          # Reusable prompt files
 │  │  ├─ audit-full.prompt.md
 │  │  └─ audit-pr.prompt.md
+│  ├─ workflows/        # GitHub Actions CI/CD
+│  │  ├─ validate-config.yml   # Build, test & validate on push/PR
+│  │  ├─ run-audit-on-pr.yml   # Audit scope comment on PRs
+│  │  └─ publish-report.yml    # Manual report generation
 │  └─ copilot-instructions.md
 │
 ├─ mcp/                 # MCP server (TypeScript)
@@ -72,21 +75,37 @@ inspectra/
 ├─ schemas/             # JSON Schema contracts
 │  ├─ finding.schema.json
 │  ├─ domain-report.schema.json
-│  └─ consolidated-report.schema.json
+│  ├─ consolidated-report.schema.json
+│  └─ scoring.schema.json
 │
 ├─ policies/            # Scoring rules & stack profiles
 │  ├─ severity-matrix.yml
 │  ├─ scoring-rules.yml
+│  ├─ deduplication-rules.yml
+│  ├─ confidence-rules.yml
 │  └─ profiles/
-│     └─ java-angular-playwright.yml
+│     ├─ generic.yml
+│     ├─ java-angular-playwright.yml
+│     ├─ java-backend.yml
+│     └─ angular-frontend.yml
+│
+├─ scripts/             # Dev & CI utility scripts
+│  ├─ bootstrap.sh
+│  ├─ run-local-audit.sh
+│  ├─ validate-schemas.sh
+│  ├─ lint-agents.sh
+│  └─ smoke-test-mcp.sh
 │
 ├─ examples/            # Sample outputs
 │  ├─ findings/
 │  └─ reports/
 │
-└─ docs/                # Documentation
-   ├─ architecture.md
-   └─ adding-a-tool.md
+├─ docs/                # Documentation
+│  ├─ architecture.md
+│  └─ adding-a-tool.md
+│
+├─ Makefile             # Unified command runner
+└─ bin/init.mjs         # Copy agents into a target project
 ```
 
 ---
@@ -110,11 +129,35 @@ inspectra/
 
 ---
 
+## Make Commands
+
+| Command | Description |
+|---------|-------------|
+| `make bootstrap` | Full setup: install, build, test |
+| `make build` | Build the MCP server |
+| `make test` | Run unit tests |
+| `make validate` | Validate schemas + lint agents |
+| `make smoke` | Smoke test the MCP server |
+| `make audit-local TARGET=/path PROFILE=generic` | Run local audit |
+| `make init TARGET=/path` | Copy agents into a project |
+| `make help` | List all commands |
+
+---
+
 ## Extending
 
 - **Add a tool**: See [docs/adding-a-tool.md](docs/adding-a-tool.md)
 - **Add a domain**: Create a new agent in `.github/agents/`, add tools in `mcp/src/tools/`, update scoring weights
 - **Add a profile**: Create a YAML file in `policies/profiles/`
+
+### Available Profiles
+
+| Profile | Stack |
+|---------|-------|
+| `generic` | Any project (conservative defaults) |
+| `java-angular-playwright` | Java + Angular + Playwright full-stack |
+| `java-backend` | Java backend (Quarkus / Spring Boot) |
+| `angular-frontend` | Angular SPA (TypeScript) |
 
 ---
 

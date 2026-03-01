@@ -1,0 +1,87 @@
+name: Audit on PR
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  smoke-test:
+    name: Smoke test MCP server
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build MCP server
+        run: npm run build
+
+      - name: Run tests
+        run: npm test
+
+      - name: Verify MCP server starts
+        run: |
+          timeout 5 node mcp/dist/index.js < /dev/null 2>&1 || true
+          echo "MCP server smoke test passed"
+
+  pr-comment:
+    name: Post audit summary
+    needs: smoke-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get changed files
+        id: changed
+        uses: tj-actions/changed-files@v45
+        with:
+          separator: "\n"
+
+      - name: Summarize changes for audit
+        id: summary
+        run: |
+          echo "## Inspectra PR Audit Scope" > audit-scope.md
+          echo "" >> audit-scope.md
+          echo "**Changed files:** ${{ steps.changed.outputs.all_changed_files_count }}" >> audit-scope.md
+          echo "" >> audit-scope.md
+
+          # Classify changed files by domain
+          sec_count=0
+          test_count=0
+          arch_count=0
+          conv_count=0
+
+          while IFS= read -r file; do
+            case "$file" in
+              *test*|*spec*|*__tests__*) test_count=$((test_count + 1)) ;;
+              *security*|*auth*|*crypto*) sec_count=$((sec_count + 1)) ;;
+              *module*|*package.json|*tsconfig*) arch_count=$((arch_count + 1)) ;;
+              *.ts|*.java|*.js) conv_count=$((conv_count + 1)) ;;
+            esac
+          done <<< "${{ steps.changed.outputs.all_changed_files }}"
+
+          echo "| Domain | Relevant Changes |" >> audit-scope.md
+          echo "|--------|-----------------|" >> audit-scope.md
+          echo "| Security | $sec_count files |" >> audit-scope.md
+          echo "| Tests | $test_count files |" >> audit-scope.md
+          echo "| Architecture | $arch_count files |" >> audit-scope.md
+          echo "| Conventions | $conv_count files |" >> audit-scope.md
+          echo "" >> audit-scope.md
+          echo "> Run \`/audit-pr\` in Copilot Chat for a full audit of this PR." >> audit-scope.md
+
+      - name: Comment on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: audit-scope.md

@@ -1,0 +1,55 @@
+# Inspectra — Profile: Generic
+# Default profile for any project. Conservative thresholds suitable for most stacks.
+
+profile: generic
+description: "Default profile with balanced thresholds for any technology stack."
+
+stack:
+  backend:
+    language: any
+    framework: any
+  frontend:
+    language: any
+    framework: any
+
+# Coverage thresholds
+coverage:
+  lines:
+    minimum: 60
+    target: 80
+  branches:
+    minimum: 50
+    target: 70
+  functions:
+    minimum: 60
+    target: 80
+
+# File length thresholds
+file_lengths:
+  warning: 400
+  error: 800
+
+# Naming conventions
+naming:
+  general:
+    classes: PascalCase
+    functions: camelCase
+    constants: SCREAMING_SNAKE_CASE
+    files: kebab-case
+
+# Architecture rules
+architecture:
+  layers:
+    - presentation
+    - application
+    - domain
+    - infrastructure
+  allowed_dependencies:
+    presentation: [application]
+    application: [domain]
+    domain: []
+    infrastructure: [domain]
+
+# Security — no stack-specific overrides
+security:
+  additional_patterns: []

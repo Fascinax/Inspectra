@@ -1,0 +1,85 @@
+name: Validate Config
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "schemas/**"
+      - "policies/**"
+      - "mcp/**"
+      - "package.json"
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build MCP server
+        run: npm run build
+
+      - name: Run tests
+        run: npm test
+
+  validate-schemas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install ajv-cli
+        run: npm install -g ajv-cli ajv-formats
+
+      - name: Validate finding samples
+        run: |
+          for f in examples/findings/*.json; do
+            echo "Validating $f against finding.schema.json"
+            ajv validate -s schemas/finding.schema.json -d "$f" --spec=draft2020 -c ajv-formats || exit 1
+          done
+
+      - name: Validate policies YAML syntax
+        run: |
+          npm install -g yaml-lint
+          yamllint policies/**/*.yml
+
+  lint-agents:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check agent files have YAML frontmatter
+        run: |
+          exit_code=0
+          for f in .github/agents/*.agent.md; do
+            if ! head -1 "$f" | grep -q "^---$"; then
+              echo "ERROR: $f is missing YAML frontmatter"
+              exit_code=1
+            fi
+          done
+          exit $exit_code
+
+      - name: Check prompt files exist
+        run: |
+          for f in .github/prompts/*.prompt.md; do
+            [ -f "$f" ] || { echo "No prompt files found"; exit 1; }
+            echo "OK: $f"
+          done
