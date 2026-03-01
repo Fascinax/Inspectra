@@ -4,7 +4,7 @@
   "title": "Inspectra Finding",
   "description": "A single audit finding produced by any Inspectra agent or MCP tool.",
   "type": "object",
-  "required": ["id", "severity", "title", "domain", "rule", "confidence"],
+  "required": ["id", "severity", "title", "domain", "rule", "confidence", "evidence"],
   "properties": {
     "id": {
       "type": "string",

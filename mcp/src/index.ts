@@ -1,6 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { scanSecrets, checkDependencyVulnerabilities } from "./tools/security.js";
 import { parseCoverage, parseTestResults, detectMissingTests } from "./tools/tests.js";
@@ -8,7 +10,11 @@ import { checkLayering, analyzeModuleDependencies } from "./tools/architecture.j
 import { checkNamingConventions, checkFileLengths, checkTodoFixmes } from "./tools/code-quality.js";
 import { mergeReports } from "./merger/merge-findings.js";
 import { scoreDomain } from "./merger/score.js";
+import { loadAllPolicies } from "./policies/loader.js";
 import { DomainReportSchema, FindingSchema } from "./types.js";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const POLICIES_DIR = resolve(__dirname, "..", "..", "policies");
 
 const server = new McpServer({
   name: "inspectra",
@@ -136,7 +142,8 @@ server.tool(
   },
   async ({ domainReportsJson, target, profile }) => {
     const domainReports = z.array(DomainReportSchema).parse(JSON.parse(domainReportsJson));
-    const consolidated = mergeReports(domainReports, target, profile);
+    const policies = await loadAllPolicies(POLICIES_DIR, profile);
+    const consolidated = mergeReports(domainReports, target, profile, policies);
     return { content: [{ type: "text", text: JSON.stringify(consolidated, null, 2) }] };
   }
 );

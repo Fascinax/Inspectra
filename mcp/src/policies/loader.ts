@@ -162,4 +162,4 @@ export async function loadAllPolicies(policiesDir: string, profileName: string):
   return { scoring, confidence, deduplication, profile };
 }
 
-export { DEFAULT_SCORING, DEFAULT_CONFIDENCE, DEFAULT_DEDUPLICATION, DEFAULT_PROFILE };
+export { DEFAULT_SCORING, DEFAULT_CONFIDENCE };

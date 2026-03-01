@@ -91,16 +91,8 @@ export async function detectMissingTests(projectDir: string): Promise<Finding[]>
   const sourceFiles = allFiles.filter((f) =>
     SOURCE_EXTENSIONS.includes(extname(f)) && !TEST_PATTERNS.some((p) => p.test(f)),
   );
-  const testFiles = new Set(
-    allFiles.filter((f) => TEST_PATTERNS.some((p) => p.test(f)))
-      .map((f) => f.replace(/\.(test|spec)\.(ts|js|java)$/, ".$1").replace(/Test\.java$/, ".java"))
-      .map((f) => {
-        // Normalize: remove test/spec suffix to get base name
-        return f.replace(/\.(test|spec)\.(ts|js|java)$/, ".$2");
-      }),
-  );
 
-  // Rebuild test file set properly: strip test pattern to get the source equivalent
+  // Build test file set: strip test pattern to get the source equivalent
   const testBaseNames = new Set<string>();
   for (const f of allFiles) {
     if (TEST_PATTERNS.some((p) => p.test(f))) {

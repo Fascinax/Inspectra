@@ -1,4 +1,4 @@
-import { readFile, readdir, access } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { join, relative, extname } from "node:path";
 import type { Finding } from "../types.js";
 import type { ProfileConfig } from "../policies/loader.js";
@@ -128,12 +128,12 @@ export async function checkTodoFixmes(projectDir: string): Promise<Finding[]> {
 }
 
 function isInConventionalDirectory(filePath: string): boolean {
-  const normalized = filePath.replace(/\\/g, "/");
+  const normalized = filePath.replaceAll("\\", "/");
   return /\/(controllers?|services?|repositories?|components?|pipes?|guards?|interceptors?|models?|entities?|dtos?)\//i.test(normalized);
 }
 
 function followsDirectoryConvention(filePath: string): boolean {
-  const normalized = filePath.replace(/\\/g, "/");
+  const normalized = filePath.replaceAll("\\", "/");
   const dirMatch = normalized.match(/\/(controller|service|repository|component|pipe|guard|interceptor|model|entity|dto)s?\//i);
   if (!dirMatch) return true;
   const dirType = dirMatch[1].toLowerCase();

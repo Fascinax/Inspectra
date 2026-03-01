@@ -26,7 +26,7 @@ export const FindingSchema = z.object({
   domain: z.enum(DOMAINS),
   rule: z.string(),
   confidence: z.number().min(0).max(1),
-  evidence: z.array(EvidenceSchema).optional(),
+  evidence: z.array(EvidenceSchema).min(1),
   recommendation: z.string().max(1000).optional(),
   effort: z.enum(EFFORT_LEVELS).optional(),
   tags: z.array(z.string()).optional(),
