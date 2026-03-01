@@ -1,4 +1,5 @@
 import type { DomainReport, Finding, ConsolidatedReport } from "../types.js";
+import type { MergeOptions } from "../policies/loader.js";
 import { deduplicateFindings } from "./deduplicate.js";
 import { computeOverallScore, deriveGrade } from "./score.js";
 
@@ -10,9 +11,24 @@ const SEVERITY_ORDER: Record<Finding["severity"], number> = {
   info: 4,
 };
 
-export function mergeReports(domainReports: DomainReport[], target: string, profile: string): ConsolidatedReport {
+export function mergeReports(
+  domainReports: DomainReport[],
+  target: string,
+  profile: string,
+  options?: MergeOptions,
+): ConsolidatedReport {
   const allFindings = domainReports.flatMap((r) => r.findings);
-  const deduplicated = deduplicateFindings(allFindings);
+
+  const minConfidence = options?.confidence?.minimum_for_report ?? 0;
+  const autoDismiss = options?.confidence?.auto_dismiss_below ?? 0;
+  const filtered = allFindings.filter((f) =>
+    f.confidence >= autoDismiss && f.confidence >= minConfidence,
+  );
+
+  const deduplicated = deduplicateFindings(
+    filtered,
+    options?.deduplication?.cross_domain_aliases,
+  );
 
   const ranked = [...deduplicated].sort((a, b) => {
     const sevDiff = SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity];
@@ -21,7 +37,7 @@ export function mergeReports(domainReports: DomainReport[], target: string, prof
   });
 
   const topFindings = ranked.slice(0, 10);
-  const overallScore = computeOverallScore(domainReports);
+  const overallScore = computeOverallScore(domainReports, options?.scoring);
 
   const bySeverity = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
   const byDomain: Record<string, number> = {};

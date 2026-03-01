@@ -110,6 +110,48 @@ inspectra/
 
 ---
 
+## CLI Usage
+
+Run audits locally without Copilot using the built-in CLI:
+
+```bash
+# Audit the current directory
+npx inspectra-audit . --profile=generic --format=markdown
+
+# Audit a specific project with JSON output
+npx inspectra-audit /path/to/project --profile=java-angular-playwright --format=json --output=report.json
+
+# Generate SARIF for CI integration
+npx inspectra-audit . --format=sarif --output=results.sarif
+```
+
+### Output Formats
+
+| Format | Flag | Use Case |
+|--------|------|----------|
+| Markdown | `--format=markdown` | Human-readable reports (default) |
+| JSON | `--format=json` | Machine-readable, CI pipelines |
+| SARIF | `--format=sarif` | GitHub Code Scanning, IDE integration |
+
+---
+
+## Docker
+
+### MCP Server
+
+```bash
+docker compose up inspectra
+```
+
+### Run an Audit
+
+```bash
+TARGET_PROJECT=/path/to/project PROFILE=generic FORMAT=markdown \
+  docker compose run audit
+```
+
+---
+
 ## Audit Domains
 
 | Domain | Agent | MCP Tools | Prefix |
@@ -147,6 +189,7 @@ inspectra/
 ## Extending
 
 - **Add a tool**: See [docs/adding-a-tool.md](docs/adding-a-tool.md)
+- **Architecture guide**: See [docs/architecture.md](docs/architecture.md)
 - **Add a domain**: Create a new agent in `.github/agents/`, add tools in `mcp/src/tools/`, update scoring weights
 - **Add a profile**: Create a YAML file in `policies/profiles/`
 

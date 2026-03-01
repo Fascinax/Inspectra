@@ -1,0 +1,79 @@
+{
+  "domain": "conventions",
+  "score": 81,
+  "summary": "0 high, 1 medium, 3 low",
+  "findings": [
+    {
+      "id": "CNV-050",
+      "severity": "medium",
+      "title": "File too long: src/services/payment.service.ts (512 lines)",
+      "description": "Files longer than 400 lines are harder to maintain. Consider splitting responsibilities.",
+      "domain": "conventions",
+      "rule": "file-too-long",
+      "confidence": 1.0,
+      "evidence": [
+        {
+          "file": "src/services/payment.service.ts"
+        }
+      ],
+      "recommendation": "Extract classes/functions into separate files following single responsibility principle.",
+      "effort": "medium",
+      "tags": ["complexity", "maintainability"]
+    },
+    {
+      "id": "CNV-001",
+      "severity": "low",
+      "title": "File may not follow naming conventions: helpers.ts",
+      "description": "File inside a conventional directory (services/) does not follow the expected naming pattern (e.g., *.service.ts).",
+      "domain": "conventions",
+      "rule": "file-naming-convention",
+      "confidence": 0.6,
+      "evidence": [
+        {
+          "file": "src/services/helpers.ts"
+        }
+      ],
+      "recommendation": "Rename the file to match the project's naming conventions (e.g., *.service.ts, *.controller.java).",
+      "effort": "trivial",
+      "tags": ["naming"]
+    },
+    {
+      "id": "CNV-100",
+      "severity": "low",
+      "title": "TODO comment: refactor this when payment v2 API is ready",
+      "description": "Unresolved TODO marker found in source file.",
+      "domain": "conventions",
+      "rule": "unresolved-todo",
+      "confidence": 1.0,
+      "evidence": [
+        {
+          "file": "src/services/payment.service.ts",
+          "line": 87,
+          "snippet": "// TODO: refactor this when payment v2 API is ready"
+        }
+      ],
+      "recommendation": "Resolve the TODO/FIXME or create a tracked issue.",
+      "effort": "small",
+      "tags": ["tech-debt", "todo"]
+    },
+    {
+      "id": "CNV-101",
+      "severity": "low",
+      "title": "FIXME comment: race condition on concurrent checkouts",
+      "description": "Unresolved FIXME marker found in source file.",
+      "domain": "conventions",
+      "rule": "unresolved-todo",
+      "confidence": 1.0,
+      "evidence": [
+        {
+          "file": "src/services/payment.service.ts",
+          "line": 203,
+          "snippet": "// FIXME: race condition on concurrent checkouts"
+        }
+      ],
+      "recommendation": "Resolve the TODO/FIXME or create a tracked issue.",
+      "effort": "small",
+      "tags": ["tech-debt", "fixme"]
+    }
+  ]
+}

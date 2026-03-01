@@ -10,9 +10,10 @@
  * computes scores, and generates a consolidated report.
  */
 
-import { resolve, join } from "node:path";
+import { resolve, join, dirname } from "node:path";
 import { existsSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 import { globby } from "globby";
 
 import { scanSecrets, checkDependencyVulnerabilities } from "../tools/security.js";
@@ -24,6 +25,8 @@ import { mergeReports } from "../merger/merge-findings.js";
 import { renderMarkdown } from "../renderer/markdown.js";
 import { renderJson } from "../renderer/json.js";
 import { renderSarif } from "../renderer/sarif.js";
+import { loadAllPolicies } from "../policies/loader.js";
+import type { MergeOptions, ProfileConfig, ScoringConfig } from "../policies/loader.js";
 import type { DomainReport, Finding } from "../types.js";
 
 interface CliOptions {
@@ -82,7 +85,13 @@ async function collectSourceFiles(projectDir: string): Promise<string[]> {
   });
 }
 
-async function runSecurityAudit(projectDir: string, sourceFiles: string[]): Promise<DomainReport> {
+function resolvePoliciesDir(): string {
+  const currentFile = fileURLToPath(import.meta.url);
+  // cli/audit.js → mcp/dist/cli/audit.js → ../../.. → project root
+  return join(dirname(currentFile), "..", "..", "..", "policies");
+}
+
+async function runSecurityAudit(projectDir: string, sourceFiles: string[], config?: ScoringConfig): Promise<DomainReport> {
   const start = Date.now();
   console.error("  [security] Scanning secrets...");
   const secretFindings = await scanSecrets(sourceFiles);
@@ -91,15 +100,15 @@ async function runSecurityAudit(projectDir: string, sourceFiles: string[]): Prom
   const vulnFindings = await checkDependencyVulnerabilities(projectDir);
 
   const findings = [...secretFindings, ...vulnFindings];
-  const score = scoreDomain(findings);
+  const score = scoreDomain(findings, config);
 
   return buildDomainReport("security", "audit-security", findings, score, start, ["scan-secrets", "check-deps-vulns"]);
 }
 
-async function runTestsAudit(projectDir: string): Promise<DomainReport> {
+async function runTestsAudit(projectDir: string, profile?: ProfileConfig, config?: ScoringConfig): Promise<DomainReport> {
   const start = Date.now();
   console.error("  [tests] Parsing coverage reports...");
-  const coverageFindings = await parseCoverage(projectDir);
+  const coverageFindings = await parseCoverage(projectDir, profile);
 
   console.error("  [tests] Parsing test results...");
   const testResultFindings = await parseTestResults(projectDir);
@@ -108,14 +117,14 @@ async function runTestsAudit(projectDir: string): Promise<DomainReport> {
   const missingTestFindings = await detectMissingTests(projectDir);
 
   const findings = [...coverageFindings, ...testResultFindings, ...missingTestFindings];
-  const score = scoreDomain(findings);
+  const score = scoreDomain(findings, config);
 
   return buildDomainReport("tests", "audit-tests", findings, score, start, [
     "parse-coverage", "parse-test-results", "detect-missing-tests",
   ]);
 }
 
-async function runArchitectureAudit(projectDir: string): Promise<DomainReport> {
+async function runArchitectureAudit(projectDir: string, config?: ScoringConfig): Promise<DomainReport> {
   const start = Date.now();
   console.error("  [architecture] Checking layer dependencies...");
   const layerFindings = await checkLayering(projectDir);
@@ -124,26 +133,26 @@ async function runArchitectureAudit(projectDir: string): Promise<DomainReport> {
   const depFindings = await analyzeModuleDependencies(projectDir);
 
   const findings = [...layerFindings, ...depFindings];
-  const score = scoreDomain(findings);
+  const score = scoreDomain(findings, config);
 
   return buildDomainReport("architecture", "audit-architecture", findings, score, start, [
     "check-layering", "analyze-dependencies",
   ]);
 }
 
-async function runConventionsAudit(projectDir: string): Promise<DomainReport> {
+async function runConventionsAudit(projectDir: string, profile?: ProfileConfig, config?: ScoringConfig): Promise<DomainReport> {
   const start = Date.now();
   console.error("  [conventions] Checking naming conventions...");
   const namingFindings = await checkNamingConventions(projectDir);
 
   console.error("  [conventions] Checking file lengths...");
-  const lengthFindings = await checkFileLengths(projectDir);
+  const lengthFindings = await checkFileLengths(projectDir, profile);
 
   console.error("  [conventions] Checking TODO/FIXME comments...");
   const todoFindings = await checkTodoFixmes(projectDir);
 
   const findings = [...namingFindings, ...lengthFindings, ...todoFindings];
-  const score = scoreDomain(findings);
+  const score = scoreDomain(findings, config);
 
   return buildDomainReport("conventions", "audit-conventions", findings, score, start, [
     "check-naming", "check-file-lengths", "check-todos",
@@ -203,13 +212,18 @@ async function main(): Promise<void> {
   const sourceFiles = await collectSourceFiles(opts.target);
   console.error(`  Found ${sourceFiles.length} source files.\n`);
 
+  console.error("Loading policies...");
+  const policiesDir = resolvePoliciesDir();
+  const policies = await loadAllPolicies(policiesDir, opts.profile);
+  console.error(`  Loaded profile: ${policies.profile?.profile ?? opts.profile}\n`);
+
   console.error("Running audits...\n");
 
   const [securityReport, testsReport, archReport, convReport] = await Promise.all([
-    runSecurityAudit(opts.target, sourceFiles),
-    runTestsAudit(opts.target),
-    runArchitectureAudit(opts.target),
-    runConventionsAudit(opts.target),
+    runSecurityAudit(opts.target, sourceFiles, policies.scoring),
+    runTestsAudit(opts.target, policies.profile, policies.scoring),
+    runArchitectureAudit(opts.target, policies.scoring),
+    runConventionsAudit(opts.target, policies.profile, policies.scoring),
   ]);
 
   console.error("\nMerging reports...");
@@ -217,6 +231,7 @@ async function main(): Promise<void> {
     [securityReport, testsReport, archReport, convReport],
     opts.target,
     opts.profile,
+    policies,
   );
 
   consolidated.metadata.duration_ms = Date.now() - totalStart;

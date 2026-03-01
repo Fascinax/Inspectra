@@ -1,6 +1,6 @@
 ---
 description: "Audit only the files changed in a pull request"
-agent: agent
+agent: audit-orchestrator
 ---
 
 Run a focused audit on the files changed in this pull request only.

@@ -1,12 +1,12 @@
-import { readFile, access } from "node:fs/promises";
-import { join, relative } from "node:path";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+import { readFile, readdir, access } from "node:fs/promises";
+import { join, relative, extname } from "node:path";
 import type { Finding } from "../types.js";
+import type { ProfileConfig } from "../policies/loader.js";
 
-const execFileAsync = promisify(execFile);
+const SOURCE_EXTENSIONS = [".ts", ".js", ".java"];
+const TEST_PATTERNS = [/\.(test|spec)\.(ts|js|java)$/, /Test\.java$/];
 
-export async function parseCoverage(projectDir: string): Promise<Finding[]> {
+export async function parseCoverage(projectDir: string, profile?: ProfileConfig): Promise<Finding[]> {
   const findings: Finding[] = [];
   let counter = 1;
 
@@ -23,7 +23,11 @@ export async function parseCoverage(projectDir: string): Promise<Finding[]> {
 
       if (data.total) {
         const { lines, branches, functions } = data.total;
-        const thresholds = { lines: 80, branches: 70, functions: 75 };
+        const thresholds = {
+          lines: profile?.coverage?.lines?.target ?? 80,
+          branches: profile?.coverage?.branches?.target ?? 70,
+          functions: profile?.coverage?.functions?.target ?? 75,
+        };
 
         if (lines?.pct !== undefined && lines.pct < thresholds.lines) {
           findings.push(buildCoverageFinding(counter++, "lines", lines.pct, thresholds.lines, coveragePath, projectDir));
@@ -54,7 +58,7 @@ export async function parseTestResults(projectDir: string): Promise<Finding[]> {
     await access(junitPath);
     const xml = await readFile(junitPath, "utf-8");
 
-    const failureMatches = xml.matchAll(/<testcase\s[^>]*name="([^"]*)"[^>]*>[\s\S]*?<failure[^>]*message="([^"]*)"[\s\S]*?<\/testcase>/g);
+    const failureMatches = xml.matchAll(/<testcase\s[^>]*?\bname="([^"]*)"[^>]*>[\s\S]*?<failure[^>]*message="([^"]*)"[\s\S]*?<\/testcase>/g);
     for (const match of failureMatches) {
       const testName = match[1];
       const message = match[2];
@@ -83,36 +87,69 @@ export async function detectMissingTests(projectDir: string): Promise<Finding[]>
   const findings: Finding[] = [];
   let counter = 100;
 
-  try {
-    const { stdout } = await execFileAsync("find", [projectDir, "-name", "*.ts", "-not", "-path", "*/node_modules/*", "-not", "-name", "*.test.ts", "-not", "-name", "*.spec.ts"], { timeout: 10_000 });
-    const sourceFiles = stdout.trim().split("\n").filter(Boolean);
+  const allFiles = await collectSourceFiles(projectDir);
+  const sourceFiles = allFiles.filter((f) =>
+    SOURCE_EXTENSIONS.includes(extname(f)) && !TEST_PATTERNS.some((p) => p.test(f)),
+  );
+  const testFiles = new Set(
+    allFiles.filter((f) => TEST_PATTERNS.some((p) => p.test(f)))
+      .map((f) => f.replace(/\.(test|spec)\.(ts|js|java)$/, ".$1").replace(/Test\.java$/, ".java"))
+      .map((f) => {
+        // Normalize: remove test/spec suffix to get base name
+        return f.replace(/\.(test|spec)\.(ts|js|java)$/, ".$2");
+      }),
+  );
 
-    const { stdout: testStdout } = await execFileAsync("find", [projectDir, "-name", "*.test.ts", "-o", "-name", "*.spec.ts"], { timeout: 10_000 });
-    const testFiles = new Set(testStdout.trim().split("\n").filter(Boolean).map(f => f.replace(/\.(test|spec)\.ts$/, ".ts")));
-
-    for (const src of sourceFiles) {
-      const baseName = src.replace(/\.ts$/, "");
-      const hasTest = testFiles.has(src) || testFiles.has(baseName + ".ts");
-      if (!hasTest && !src.includes("/types") && !src.includes("/index.ts")) {
-        findings.push({
-          id: `TST-${String(counter++).padStart(3, "0")}`,
-          severity: "medium",
-          title: `No test file for ${relative(projectDir, src)}`,
-          domain: "tests",
-          rule: "missing-test-file",
-          confidence: 0.7,
-          evidence: [{ file: relative(projectDir, src) }],
-          recommendation: "Create a corresponding .test.ts or .spec.ts file.",
-          effort: "medium",
-          tags: ["missing-test"],
-        });
-      }
+  // Rebuild test file set properly: strip test pattern to get the source equivalent
+  const testBaseNames = new Set<string>();
+  for (const f of allFiles) {
+    if (TEST_PATTERNS.some((p) => p.test(f))) {
+      const baseName = f
+        .replace(/\.(test|spec)\.(ts|js|java)$/, ".$2")
+        .replace(/Test\.java$/, ".java");
+      testBaseNames.add(baseName);
     }
-  } catch {
-    /* find not available on this OS */
+  }
+
+  for (const src of sourceFiles) {
+    const baseName = src.split(/[\/\\]/).pop() ?? "";
+    if (baseName === "index.ts" || baseName === "index.js" || baseName.startsWith("types")) continue;
+
+    if (!testBaseNames.has(src)) {
+      findings.push({
+        id: `TST-${String(counter++).padStart(3, "0")}`,
+        severity: "medium",
+        title: `No test file for ${relative(projectDir, src)}`,
+        domain: "tests",
+        rule: "missing-test-file",
+        confidence: 0.7,
+        evidence: [{ file: relative(projectDir, src) }],
+        recommendation: "Create a corresponding test file.",
+        effort: "medium",
+        tags: ["missing-test"],
+      });
+    }
   }
 
   return findings;
+}
+
+async function collectSourceFiles(dir: string, collected: string[] = []): Promise<string[]> {
+  try {
+    const entries = await readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = join(dir, entry.name);
+      if (entry.name === "node_modules" || entry.name === "dist" || entry.name.startsWith(".")) continue;
+      if (entry.isDirectory()) {
+        await collectSourceFiles(fullPath, collected);
+      } else if (SOURCE_EXTENSIONS.includes(extname(entry.name))) {
+        collected.push(fullPath);
+      }
+    }
+  } catch {
+    /* directory not readable */
+  }
+  return collected;
 }
 
 function buildCoverageFinding(counter: number, metric: string, actual: number, threshold: number, coveragePath: string, projectDir: string): Finding {

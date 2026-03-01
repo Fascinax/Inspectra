@@ -5,16 +5,17 @@
   "private": true,
   "type": "module",
   "bin": {
-    "inspectra": "./bin/init.mjs"
+    "inspectra": "./bin/init.mjs",
+    "inspectra-audit": "./mcp/dist/cli/audit.js"
   },
   "scripts": {
     "build": "npm run build --workspace=mcp",
     "dev": "npm run dev --workspace=mcp",
-    "lint": "eslint . --ext .ts",
+    "lint": "tsc --noEmit --project mcp/tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "audit-local": "node mcp/dist/cli/audit.js",
-    "validate:schemas": "ajv validate -s schemas/finding.schema.json -d examples/findings/*.json",
+    "validate:schemas": "bash scripts/validate-schemas.sh",
     "clean": "rimraf mcp/dist",
     "init": "node bin/init.mjs"
   },

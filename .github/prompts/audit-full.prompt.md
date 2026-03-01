@@ -1,6 +1,6 @@
 ---
 description: "Run a full multi-domain audit on the target project"
-agent: agent
+agent: audit-orchestrator
 ---
 
 Run a comprehensive code audit on the project in the current workspace, covering all domains: **security**, **tests**, **architecture**, and **conventions**.

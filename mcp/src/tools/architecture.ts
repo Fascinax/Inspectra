@@ -7,8 +7,8 @@ const LAYER_ORDER = ["presentation", "application", "domain", "infrastructure"] 
 const LAYER_PATTERNS: Record<string, RegExp> = {
   presentation: /\/(controller|resource|handler|view|component|page)s?\//i,
   application: /\/(service|usecase|facade|orchestrator)s?\//i,
-  domain: /\/(model|entity|domain|aggregate|value-?object)s?\//i,
-  infrastructure: /\/(repository|adapter|gateway|client|config|persistence)s?\//i,
+  domain: /\/(models?|entit(?:y|ies)|domain|aggregates?|value-?objects?)\//i,
+  infrastructure: /\/(repositor(?:y|ies)|adapters?|gateways?|clients?|config|persistence)\//i,
 };
 
 export async function checkLayering(projectDir: string): Promise<Finding[]> {
@@ -104,8 +104,9 @@ export async function analyzeModuleDependencies(projectDir: string): Promise<Fin
 }
 
 function detectLayer(filePath: string): string | undefined {
+  const normalized = filePath.replace(/\\/g, "/");
   for (const [layer, pattern] of Object.entries(LAYER_PATTERNS)) {
-    if (pattern.test(filePath)) return layer;
+    if (pattern.test(normalized)) return layer;
   }
   return undefined;
 }

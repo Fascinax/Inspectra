@@ -49,11 +49,18 @@ jobs:
       - name: Install ajv-cli
         run: npm install -g ajv-cli ajv-formats
 
-      - name: Validate finding samples
+      - name: Validate domain report samples
         run: |
           for f in examples/findings/*.json; do
-            echo "Validating $f against finding.schema.json"
-            ajv validate -s schemas/finding.schema.json -d "$f" --spec=draft2020 -c ajv-formats || exit 1
+            echo "Validating $f against domain-report.schema.json"
+            ajv validate -s schemas/domain-report.schema.json -d "$f" --spec=draft2020 -c ajv-formats || exit 1
+          done
+
+      - name: Validate consolidated report samples
+        run: |
+          for f in examples/reports/*.json; do
+            echo "Validating $f against consolidated-report.schema.json"
+            ajv validate -s schemas/consolidated-report.schema.json -d "$f" --spec=draft2020 -c ajv-formats || exit 1
           done
 
       - name: Validate policies YAML syntax

@@ -1,37 +1,25 @@
 import type { Finding, DomainReport, Grade } from "../types.js";
+import type { ScoringConfig } from "../policies/loader.js";
+import { DEFAULT_SCORING } from "../policies/loader.js";
 
-const SEVERITY_WEIGHTS: Record<Finding["severity"], number> = {
-  critical: 25,
-  high: 15,
-  medium: 8,
-  low: 3,
-  info: 0,
-};
-
-const DEFAULT_DOMAIN_WEIGHTS: Record<string, number> = {
-  security: 0.30,
-  tests: 0.25,
-  architecture: 0.20,
-  conventions: 0.15,
-  performance: 0.05,
-  documentation: 0.05,
-};
-
-export function scoreDomain(findings: Finding[]): number {
+export function scoreDomain(findings: Finding[], config?: ScoringConfig): number {
   if (findings.length === 0) return 100;
 
-  const penalty = findings.reduce((sum, f) => sum + SEVERITY_WEIGHTS[f.severity] * f.confidence, 0);
+  const weights = config?.severity_weights ?? DEFAULT_SCORING.severity_weights;
+  const penalty = findings.reduce((sum, f) => sum + (weights[f.severity] ?? 0) * f.confidence, 0);
   return Math.max(0, Math.round(100 - penalty));
 }
 
-export function computeOverallScore(domainReports: DomainReport[]): number {
+export function computeOverallScore(domainReports: DomainReport[], config?: ScoringConfig): number {
   if (domainReports.length === 0) return 0;
+
+  const domainWeights = config?.domain_weights ?? DEFAULT_SCORING.domain_weights;
 
   let weightedSum = 0;
   let totalWeight = 0;
 
   for (const report of domainReports) {
-    const weight = DEFAULT_DOMAIN_WEIGHTS[report.domain] ?? 0.1;
+    const weight = domainWeights[report.domain] ?? 0.1;
     weightedSum += report.score * weight;
     totalWeight += weight;
   }
