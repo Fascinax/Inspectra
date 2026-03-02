@@ -4,20 +4,29 @@ import type { ConsolidatedReport, Finding } from "../types.js";
 const { version: TOOL_VERSION } = createRequire(import.meta.url)("../../package.json") as { version: string };
 
 const SARIF_VERSION = "2.1.0";
-const SARIF_SCHEMA = "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json";
+const SARIF_SCHEMA =
+  "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json";
 const TOOL_NAME = "Inspectra";
 const TOOL_INFO_URI = "https://github.com/inspectra/inspectra";
 
-interface SarifMessage { text: string }
-interface SarifArtifactLocation { uri: string }
-interface SarifRegion { startLine?: number }
+interface SarifMessage {
+  text: string;
+}
+interface SarifArtifactLocation {
+  uri: string;
+}
+interface SarifRegion {
+  startLine?: number;
+}
 
 interface SarifPhysicalLocation {
   artifactLocation: SarifArtifactLocation;
   region?: SarifRegion;
 }
 
-interface SarifLocation { physicalLocation: SarifPhysicalLocation }
+interface SarifLocation {
+  physicalLocation: SarifPhysicalLocation;
+}
 
 type SarifLevel = "error" | "warning" | "note" | "none";
 
@@ -94,9 +103,7 @@ function buildRuleDescriptor(finding: Finding): SarifReportingDescriptor {
 }
 
 function buildResult(finding: Finding): SarifResult {
-  const description = finding.description
-    ? `${finding.title}\n\n${finding.description}`
-    : finding.title;
+  const description = finding.description ? `${finding.title}\n\n${finding.description}` : finding.title;
 
   return {
     ruleId: finding.rule,

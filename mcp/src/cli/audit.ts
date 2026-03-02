@@ -17,16 +17,27 @@ import { fileURLToPath } from "node:url";
 import { globby } from "globby";
 
 import { scanSecrets, checkDependencyVulnerabilities, runSemgrep, checkMavenDependencies } from "../tools/security.js";
-import { parseCoverage, parseTestResults, detectMissingTests, parsePlaywrightReport, detectFlakyTests } from "../tools/tests.js";
+import {
+  parseCoverage,
+  parseTestResults,
+  detectMissingTests,
+  parsePlaywrightReport,
+  detectFlakyTests,
+} from "../tools/tests.js";
 import { checkLayering, analyzeModuleDependencies, detectCircularDependencies } from "../tools/architecture.js";
-import { checkNamingConventions, checkFileLengths, checkTodoFixmes, parseLintOutput, detectDryViolations } from "../tools/conventions.js";
+import {
+  checkNamingConventions,
+  checkFileLengths,
+  checkTodoFixmes,
+  parseLintOutput,
+  detectDryViolations,
+} from "../tools/conventions.js";
 import { scoreDomain } from "../merger/score.js";
 import { mergeReports } from "../merger/merge-findings.js";
 import { renderMarkdown } from "../renderer/markdown.js";
 import { renderJson } from "../renderer/json.js";
 import { renderSarif } from "../renderer/sarif.js";
-import { loadAllPolicies } from "../policies/loader.js";
-import type { MergeOptions, ProfileConfig, ScoringConfig } from "../policies/loader.js";
+import { loadAllPolicies, type ProfileConfig, type ScoringConfig } from "../policies/loader.js";
 import type { DomainReport, Finding } from "../types.js";
 
 interface CliOptions {
@@ -91,7 +102,12 @@ function resolvePoliciesDir(): string {
   return join(dirname(currentFile), "..", "..", "..", "policies");
 }
 
-async function runSecurityAudit(projectDir: string, sourceFiles: string[], config?: ScoringConfig, profile?: ProfileConfig): Promise<DomainReport> {
+async function runSecurityAudit(
+  projectDir: string,
+  sourceFiles: string[],
+  config?: ScoringConfig,
+  profile?: ProfileConfig,
+): Promise<DomainReport> {
   const start = Date.now();
   console.error("  [security] Scanning secrets...");
   const secretFindings = await scanSecrets(sourceFiles, profile?.security?.additional_patterns);
@@ -108,10 +124,19 @@ async function runSecurityAudit(projectDir: string, sourceFiles: string[], confi
   const findings = [...secretFindings, ...vulnFindings, ...semgrepFindings, ...mavenFindings];
   const score = scoreDomain(findings, config);
 
-  return buildDomainReport("security", "audit-security", findings, score, start, ["scan-secrets", "check-deps-vulns", "run-semgrep", "check-maven-deps"]);
+  return buildDomainReport("security", "audit-security", findings, score, start, [
+    "scan-secrets",
+    "check-deps-vulns",
+    "run-semgrep",
+    "check-maven-deps",
+  ]);
 }
 
-async function runTestsAudit(projectDir: string, profile?: ProfileConfig, config?: ScoringConfig): Promise<DomainReport> {
+async function runTestsAudit(
+  projectDir: string,
+  profile?: ProfileConfig,
+  config?: ScoringConfig,
+): Promise<DomainReport> {
   const start = Date.now();
   console.error("  [tests] Parsing coverage reports...");
   const coverageFindings = await parseCoverage(projectDir, profile);
@@ -128,15 +153,29 @@ async function runTestsAudit(projectDir: string, profile?: ProfileConfig, config
   console.error("  [tests] Detecting flaky tests...");
   const flakyFindings = await detectFlakyTests(projectDir);
 
-  const findings = [...coverageFindings, ...testResultFindings, ...missingTestFindings, ...playwrightFindings, ...flakyFindings];
+  const findings = [
+    ...coverageFindings,
+    ...testResultFindings,
+    ...missingTestFindings,
+    ...playwrightFindings,
+    ...flakyFindings,
+  ];
   const score = scoreDomain(findings, config);
 
   return buildDomainReport("tests", "audit-tests", findings, score, start, [
-    "parse-coverage", "parse-test-results", "detect-missing-tests", "parse-playwright-report", "detect-flaky-tests",
+    "parse-coverage",
+    "parse-test-results",
+    "detect-missing-tests",
+    "parse-playwright-report",
+    "detect-flaky-tests",
   ]);
 }
 
-async function runArchitectureAudit(projectDir: string, config?: ScoringConfig, profile?: ProfileConfig): Promise<DomainReport> {
+async function runArchitectureAudit(
+  projectDir: string,
+  config?: ScoringConfig,
+  profile?: ProfileConfig,
+): Promise<DomainReport> {
   const start = Date.now();
   console.error("  [architecture] Checking layer dependencies...");
   const layerFindings = await checkLayering(projectDir, profile?.architecture?.allowed_dependencies);
@@ -151,11 +190,17 @@ async function runArchitectureAudit(projectDir: string, config?: ScoringConfig, 
   const score = scoreDomain(findings, config);
 
   return buildDomainReport("architecture", "audit-architecture", findings, score, start, [
-    "check-layering", "analyze-dependencies", "detect-circular-deps",
+    "check-layering",
+    "analyze-dependencies",
+    "detect-circular-deps",
   ]);
 }
 
-async function runConventionsAudit(projectDir: string, profile?: ProfileConfig, config?: ScoringConfig): Promise<DomainReport> {
+async function runConventionsAudit(
+  projectDir: string,
+  profile?: ProfileConfig,
+  config?: ScoringConfig,
+): Promise<DomainReport> {
   const start = Date.now();
   console.error("  [conventions] Checking naming conventions...");
   const namingFindings = await checkNamingConventions(projectDir);
@@ -176,7 +221,11 @@ async function runConventionsAudit(projectDir: string, profile?: ProfileConfig, 
   const score = scoreDomain(findings, config);
 
   return buildDomainReport("conventions", "audit-conventions", findings, score, start, [
-    "check-naming", "check-file-lengths", "check-todos", "parse-lint-output", "detect-dry-violations",
+    "check-naming",
+    "check-file-lengths",
+    "check-todos",
+    "parse-lint-output",
+    "detect-dry-violations",
   ]);
 }
 
@@ -189,7 +238,10 @@ export function buildDomainReport(
   tools: string[],
 ): DomainReport {
   const severityCounts = findings.reduce(
-    (acc, f) => { acc[f.severity] = (acc[f.severity] ?? 0) + 1; return acc; },
+    (acc, f) => {
+      acc[f.severity] = (acc[f.severity] ?? 0) + 1;
+      return acc;
+    },
     {} as Record<string, number>,
   );
 
@@ -257,11 +309,12 @@ async function main(): Promise<void> {
 
   consolidated.metadata.duration_ms = Date.now() - totalStart;
 
-  const rendered = opts.format === "json"
-    ? renderJson(consolidated)
-    : opts.format === "sarif"
-      ? renderSarif(consolidated)
-      : renderMarkdown(consolidated);
+  const rendered =
+    opts.format === "json"
+      ? renderJson(consolidated)
+      : opts.format === "sarif"
+        ? renderSarif(consolidated)
+        : renderMarkdown(consolidated);
 
   if (opts.output) {
     await writeFile(opts.output, rendered, "utf-8");

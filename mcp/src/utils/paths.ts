@@ -49,7 +49,10 @@ export async function validateProjectDir(rawPath: string): Promise<string> {
  * @throws `Error` if any path is unsafe or does not exist.
  */
 export async function validateFilePathsCsv(csv: string): Promise<string[]> {
-  const paths = csv.split(",").map((p) => p.trim()).filter(Boolean);
+  const paths = csv
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
 
   const validated: string[] = [];
   for (const rawPath of paths) {

@@ -12,7 +12,13 @@ function makeConsolidatedReport(overrides: Partial<ConsolidatedReport> = {}): Co
     summary: "1 high, 1 medium",
     findings: [
       makeFinding({ id: "SEC-001", severity: "high", title: "Hardcoded API key", confidence: 0.9 }),
-      makeFinding({ id: "SEC-002", severity: "medium", title: "Missing CSP header", rule: "missing-csp", confidence: 0.7 }),
+      makeFinding({
+        id: "SEC-002",
+        severity: "medium",
+        title: "Missing CSP header",
+        rule: "missing-csp",
+        confidence: 0.7,
+      }),
     ],
   });
 
@@ -21,7 +27,14 @@ function makeConsolidatedReport(overrides: Partial<ConsolidatedReport> = {}): Co
     score: 85,
     summary: "1 medium",
     findings: [
-      makeFinding({ id: "TST-001", severity: "medium", title: "Low branch coverage", domain: "tests", rule: "low-branch-coverage", confidence: 1.0 }),
+      makeFinding({
+        id: "TST-001",
+        severity: "medium",
+        title: "Low branch coverage",
+        domain: "tests",
+        rule: "low-branch-coverage",
+        confidence: 1.0,
+      }),
     ],
     metadata: { agent: "audit-tests", timestamp: "2026-02-27T10:00:00.000Z" },
   });
@@ -32,9 +45,30 @@ function makeConsolidatedReport(overrides: Partial<ConsolidatedReport> = {}): Co
     summary: "Overall score: 78/100 (Grade B). Findings: 1 high, 2 medium.",
     domain_reports: [securityReport, testsReport],
     top_findings: [
-      makeFinding({ id: "SEC-001", severity: "high", title: "Hardcoded API key", confidence: 0.9, recommendation: "Move secret to environment variable." }),
-      makeFinding({ id: "SEC-002", severity: "medium", title: "Missing CSP header", rule: "missing-csp", confidence: 0.7, recommendation: "Add Content-Security-Policy header." }),
-      makeFinding({ id: "TST-001", severity: "medium", title: "Low branch coverage", domain: "tests", rule: "low-branch-coverage", confidence: 1.0, recommendation: "Add tests for uncovered branches." }),
+      makeFinding({
+        id: "SEC-001",
+        severity: "high",
+        title: "Hardcoded API key",
+        confidence: 0.9,
+        recommendation: "Move secret to environment variable.",
+      }),
+      makeFinding({
+        id: "SEC-002",
+        severity: "medium",
+        title: "Missing CSP header",
+        rule: "missing-csp",
+        confidence: 0.7,
+        recommendation: "Add Content-Security-Policy header.",
+      }),
+      makeFinding({
+        id: "TST-001",
+        severity: "medium",
+        title: "Low branch coverage",
+        domain: "tests",
+        rule: "low-branch-coverage",
+        confidence: 1.0,
+        recommendation: "Add tests for uncovered branches.",
+      }),
     ],
     statistics: {
       total_findings: 3,
@@ -117,9 +151,7 @@ describe("renderMarkdown", () => {
       overall_score: 100,
       grade: "A",
       top_findings: [],
-      domain_reports: [
-        makeDomainReport({ domain: "security", score: 100, findings: [], summary: "No issues found" }),
-      ],
+      domain_reports: [makeDomainReport({ domain: "security", score: 100, findings: [], summary: "No issues found" })],
       statistics: { total_findings: 0, by_severity: { critical: 0, high: 0, medium: 0, low: 0, info: 0 } },
     });
 
@@ -193,9 +225,7 @@ describe("renderSarif", () => {
       evidence: [{ file: "src/config.ts", line: 42, snippet: "apiKey = '...'" }],
     });
     const report = makeConsolidatedReport({
-      domain_reports: [
-        makeDomainReport({ domain: "security", score: 50, findings: [finding] }),
-      ],
+      domain_reports: [makeDomainReport({ domain: "security", score: 50, findings: [finding] })],
     });
     const sarif = JSON.parse(renderSarif(report));
 
@@ -224,9 +254,7 @@ describe("renderSarif", () => {
 
   it("handles empty findings", () => {
     const report = makeConsolidatedReport({
-      domain_reports: [
-        makeDomainReport({ domain: "security", score: 100, findings: [] }),
-      ],
+      domain_reports: [makeDomainReport({ domain: "security", score: 100, findings: [] })],
     });
     const sarif = JSON.parse(renderSarif(report));
 

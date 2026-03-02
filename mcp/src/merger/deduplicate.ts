@@ -2,13 +2,14 @@ import type { Finding } from "../types.js";
 import type { DeduplicationConfig, DeduplicationAlias } from "../policies/loader.js";
 
 const SEVERITY_RANK: Record<string, number> = {
-  critical: 5, high: 4, medium: 3, low: 2, info: 1,
+  critical: 5,
+  high: 4,
+  medium: 3,
+  low: 2,
+  info: 1,
 };
 
-export function deduplicateFindings(
-  findings: Finding[],
-  config?: DeduplicationConfig,
-): Finding[] {
+export function deduplicateFindings(findings: Finding[], config?: DeduplicationConfig): Finding[] {
   const aliases = config?.cross_domain_aliases ?? [];
   const strategy = config?.strategy ?? "same-rule-same-location";
   const onConflict = config?.on_conflict ?? "keep highest confidence";

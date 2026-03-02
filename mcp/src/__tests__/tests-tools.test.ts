@@ -13,37 +13,49 @@ function makeTempDir(): string {
 describe("parseCoverage", () => {
   let tempDir: string;
 
-  beforeEach(() => { tempDir = makeTempDir(); });
-  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tempDir = makeTempDir();
+  });
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
 
   it("flags coverage below default thresholds", async () => {
     const coverageDir = join(tempDir, "coverage");
     mkdirSync(coverageDir, { recursive: true });
-    writeFileSync(join(coverageDir, "coverage-summary.json"), JSON.stringify({
-      total: {
-        lines: { pct: 50.0 },
-        branches: { pct: 40.0 },
-        functions: { pct: 60.0 },
-      },
-    }));
+    writeFileSync(
+      join(coverageDir, "coverage-summary.json"),
+      JSON.stringify({
+        total: {
+          lines: { pct: 50.0 },
+          branches: { pct: 40.0 },
+          functions: { pct: 60.0 },
+        },
+      }),
+    );
 
     const findings = await parseCoverage(tempDir);
     expect(findings.length).toBe(3);
     expect(findings.map((f) => f.rule)).toEqual([
-      "low-lines-coverage", "low-branches-coverage", "low-functions-coverage",
+      "low-lines-coverage",
+      "low-branches-coverage",
+      "low-functions-coverage",
     ]);
   });
 
   it("respects profile thresholds", async () => {
     const coverageDir = join(tempDir, "coverage");
     mkdirSync(coverageDir, { recursive: true });
-    writeFileSync(join(coverageDir, "coverage-summary.json"), JSON.stringify({
-      total: {
-        lines: { pct: 70.0 },
-        branches: { pct: 60.0 },
-        functions: { pct: 70.0 },
-      },
-    }));
+    writeFileSync(
+      join(coverageDir, "coverage-summary.json"),
+      JSON.stringify({
+        total: {
+          lines: { pct: 70.0 },
+          branches: { pct: 60.0 },
+          functions: { pct: 70.0 },
+        },
+      }),
+    );
 
     // Default thresholds: lines 80, branches 70, functions 75 → 3 findings
     const defaultFindings = await parseCoverage(tempDir);
@@ -70,9 +82,12 @@ describe("parseCoverage", () => {
   it("marks very low coverage as high severity", async () => {
     const coverageDir = join(tempDir, "coverage");
     mkdirSync(coverageDir, { recursive: true });
-    writeFileSync(join(coverageDir, "coverage-summary.json"), JSON.stringify({
-      total: { lines: { pct: 30.0 } },
-    }));
+    writeFileSync(
+      join(coverageDir, "coverage-summary.json"),
+      JSON.stringify({
+        total: { lines: { pct: 30.0 } },
+      }),
+    );
 
     const findings = await parseCoverage(tempDir);
     expect(findings[0].severity).toBe("high");
@@ -82,13 +97,19 @@ describe("parseCoverage", () => {
 describe("parseTestResults", () => {
   let tempDir: string;
 
-  beforeEach(() => { tempDir = makeTempDir(); });
-  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tempDir = makeTempDir();
+  });
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
 
   it("detects failing tests from JUnit XML", async () => {
     const resultsDir = join(tempDir, "test-results");
     mkdirSync(resultsDir, { recursive: true });
-    writeFileSync(join(resultsDir, "junit.xml"), `<?xml version="1.0"?>
+    writeFileSync(
+      join(resultsDir, "junit.xml"),
+      `<?xml version="1.0"?>
 <testsuites>
   <testsuite name="auth">
     <testcase name="should authenticate user" classname="auth.test">
@@ -96,7 +117,8 @@ describe("parseTestResults", () => {
     </testcase>
     <testcase name="should hash password" classname="auth.test" />
   </testsuite>
-</testsuites>`);
+</testsuites>`,
+    );
 
     const findings = await parseTestResults(tempDir);
     expect(findings.length).toBe(1);
@@ -112,12 +134,15 @@ describe("parseTestResults", () => {
   it("returns empty when all tests pass", async () => {
     const resultsDir = join(tempDir, "test-results");
     mkdirSync(resultsDir, { recursive: true });
-    writeFileSync(join(resultsDir, "junit.xml"), `<?xml version="1.0"?>
+    writeFileSync(
+      join(resultsDir, "junit.xml"),
+      `<?xml version="1.0"?>
 <testsuites>
   <testsuite name="math">
     <testcase name="adds numbers" classname="math.test" />
   </testsuite>
-</testsuites>`);
+</testsuites>`,
+    );
 
     const findings = await parseTestResults(tempDir);
     expect(findings.length).toBe(0);
@@ -127,8 +152,12 @@ describe("parseTestResults", () => {
 describe("detectMissingTests", () => {
   let tempDir: string;
 
-  beforeEach(() => { tempDir = makeTempDir(); });
-  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tempDir = makeTempDir();
+  });
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
 
   it("flags source files without corresponding test files", async () => {
     const srcDir = join(tempDir, "src");

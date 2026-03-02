@@ -33,9 +33,27 @@ describe("mergeReports", () => {
   });
 
   it("top_findings are sorted by severity then confidence", () => {
-    const critical = makeFinding({ id: "SEC-001", severity: "critical", confidence: 0.9, rule: "r1", evidence: [{ file: "a.ts" }] });
-    const high = makeFinding({ id: "SEC-002", severity: "high", confidence: 1.0, rule: "r2", evidence: [{ file: "b.ts" }] });
-    const medium = makeFinding({ id: "SEC-003", severity: "medium", confidence: 1.0, rule: "r3", evidence: [{ file: "c.ts" }] });
+    const critical = makeFinding({
+      id: "SEC-001",
+      severity: "critical",
+      confidence: 0.9,
+      rule: "r1",
+      evidence: [{ file: "a.ts" }],
+    });
+    const high = makeFinding({
+      id: "SEC-002",
+      severity: "high",
+      confidence: 1.0,
+      rule: "r2",
+      evidence: [{ file: "b.ts" }],
+    });
+    const medium = makeFinding({
+      id: "SEC-003",
+      severity: "medium",
+      confidence: 1.0,
+      rule: "r3",
+      evidence: [{ file: "c.ts" }],
+    });
     const reports = [makeDomainReport({ findings: [medium, high, critical] })];
 
     const result = mergeReports(reports, "proj", "default");
@@ -46,7 +64,7 @@ describe("mergeReports", () => {
 
   it("caps top_findings at 10", () => {
     const findings = Array.from({ length: 15 }, (_, i) =>
-      makeFinding({ id: `SEC-${String(i).padStart(3, "0")}`, rule: `rule-${i}`, evidence: [{ file: `f${i}.ts` }] })
+      makeFinding({ id: `SEC-${String(i).padStart(3, "0")}`, rule: `rule-${i}`, evidence: [{ file: `f${i}.ts` }] }),
     );
     const reports = [makeDomainReport({ findings })];
     const result = mergeReports(reports, "proj", "default");

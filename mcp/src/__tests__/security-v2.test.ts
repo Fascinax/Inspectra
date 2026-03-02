@@ -31,8 +31,12 @@ describe("runSemgrep", () => {
 describe("checkMavenDependencies", () => {
   let tempDir: string;
 
-  beforeEach(() => { tempDir = makeTempDir(); });
-  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tempDir = makeTempDir();
+  });
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
 
   it("returns empty array when pom.xml is absent", async () => {
     const findings = await checkMavenDependencies(tempDir);
@@ -40,8 +44,10 @@ describe("checkMavenDependencies", () => {
   }, 30000);
 
   it("flags projects with more than 50 dependencies", async () => {
-    const deps = Array.from({ length: 55 }, (_, i) =>
-      `<dependency>\n  <groupId>org.test</groupId>\n  <artifactId>lib-${i}</artifactId>\n  <version>1.0.0</version>\n</dependency>`,
+    const deps = Array.from(
+      { length: 55 },
+      (_, i) =>
+        `<dependency>\n  <groupId>org.test</groupId>\n  <artifactId>lib-${i}</artifactId>\n  <version>1.0.0</version>\n</dependency>`,
     ).join("\n");
     writeFileSync(join(tempDir, "pom.xml"), `<project>\n<dependencies>\n${deps}\n</dependencies>\n</project>`);
 
@@ -54,8 +60,10 @@ describe("checkMavenDependencies", () => {
 
   // increased timeout: checkMavenDependencies may run `mvn` which takes time to fail
   it("does not flag projects with 50 or fewer dependencies", async () => {
-    const deps = Array.from({ length: 30 }, (_, i) =>
-      `<dependency>\n  <groupId>org.test</groupId>\n  <artifactId>lib-${i}</artifactId>\n  <version>1.0.0</version>\n</dependency>`,
+    const deps = Array.from(
+      { length: 30 },
+      (_, i) =>
+        `<dependency>\n  <groupId>org.test</groupId>\n  <artifactId>lib-${i}</artifactId>\n  <version>1.0.0</version>\n</dependency>`,
     ).join("\n");
     writeFileSync(join(tempDir, "pom.xml"), `<project>\n<dependencies>\n${deps}\n</dependencies>\n</project>`);
 
@@ -64,7 +72,9 @@ describe("checkMavenDependencies", () => {
   }, 30000);
 
   it("flags SNAPSHOT dependency versions", async () => {
-    writeFileSync(join(tempDir, "pom.xml"), `
+    writeFileSync(
+      join(tempDir, "pom.xml"),
+      `
 <project>
   <dependencies>
     <dependency>
@@ -73,7 +83,8 @@ describe("checkMavenDependencies", () => {
       <version>1.2.3-SNAPSHOT</version>
     </dependency>
   </dependencies>
-</project>`);
+</project>`,
+    );
 
     const findings = await checkMavenDependencies(tempDir);
     const snapshotFinding = findings.find((f) => f.rule === "no-snapshot-dependency");
@@ -83,7 +94,9 @@ describe("checkMavenDependencies", () => {
   }, 30000);
 
   it("does not flag stable version dependencies", async () => {
-    writeFileSync(join(tempDir, "pom.xml"), `
+    writeFileSync(
+      join(tempDir, "pom.xml"),
+      `
 <project>
   <dependencies>
     <dependency>
@@ -92,15 +105,18 @@ describe("checkMavenDependencies", () => {
       <version>5.3.21</version>
     </dependency>
   </dependencies>
-</project>`);
+</project>`,
+    );
 
     const findings = await checkMavenDependencies(tempDir);
     expect(findings).toHaveLength(0);
   }, 30000);
 
   it("produces findings with valid domain and evidence", async () => {
-    const deps = Array.from({ length: 55 }, (_, i) =>
-      `<dependency><groupId>org.test</groupId><artifactId>lib-${i}</artifactId><version>1.0.0</version></dependency>`,
+    const deps = Array.from(
+      { length: 55 },
+      (_, i) =>
+        `<dependency><groupId>org.test</groupId><artifactId>lib-${i}</artifactId><version>1.0.0</version></dependency>`,
     ).join("\n");
     writeFileSync(join(tempDir, "pom.xml"), `<project><dependencies>${deps}</dependencies></project>`);
 

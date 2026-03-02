@@ -79,7 +79,9 @@ function renderTopFindings(findings: Finding[]): string {
 
     lines.push(`### ${icon} ${f.id} — ${f.title}`);
     lines.push("");
-    lines.push(`- **Severity:** ${f.severity} | **Confidence:** ${(f.confidence * 100).toFixed(0)}% | **Effort:** ${f.effort ?? "unknown"}`);
+    lines.push(
+      `- **Severity:** ${f.severity} | **Confidence:** ${(f.confidence * 100).toFixed(0)}% | **Effort:** ${f.effort ?? "unknown"}`,
+    );
     lines.push(`- **Location:** ${location}`);
     if (f.description) {
       lines.push(`- **Details:** ${f.description}`);
@@ -130,9 +132,7 @@ function renderDomainDetails(report: ConsolidatedReport): string {
 }
 
 function renderRecommendations(report: ConsolidatedReport): string {
-  const actionable = report.top_findings.filter(
-    (f) => f.recommendation && f.severity !== "info"
-  );
+  const actionable = report.top_findings.filter((f) => f.recommendation && f.severity !== "info");
 
   if (actionable.length === 0) return "";
 

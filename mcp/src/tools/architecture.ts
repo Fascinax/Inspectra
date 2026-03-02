@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { join, relative, extname, resolve, dirname } from "node:path";
 import type { Finding } from "../types.js";
 import { collectSourceFiles } from "../utils/files.js";
+import { createIdSequence } from "../utils/id.js";
 
 const LAYER_ORDER = ["presentation", "application", "domain", "infrastructure"] as const;
 
@@ -26,7 +27,7 @@ export async function checkLayering(
   allowedDependencies?: Record<string, string[]>,
 ): Promise<Finding[]> {
   const findings: Finding[] = [];
-  let counter = 1;
+  const nextId = createIdSequence("ARC");
 
   const files = await collectSourceFiles(projectDir);
 
@@ -44,7 +45,7 @@ export async function checkLayering(
 
         if (isViolation(sourceLayer, targetLayer, allowedDependencies)) {
           findings.push({
-            id: `ARC-${String(counter++).padStart(3, "0")}`,
+            id: nextId(),
             severity: "high",
             title: `Layer violation: ${sourceLayer} → ${targetLayer}`,
             description: `File in '${sourceLayer}' layer imports from '${targetLayer}' layer. Dependencies should flow inward (presentation → application → domain ← infrastructure).`,
@@ -75,7 +76,7 @@ export async function checkLayering(
  */
 export async function analyzeModuleDependencies(projectDir: string): Promise<Finding[]> {
   const findings: Finding[] = [];
-  let counter = 50;
+  const nextId = createIdSequence("ARC", 50);
 
   try {
     const packageJsonPath = join(projectDir, "package.json");
@@ -86,7 +87,7 @@ export async function analyzeModuleDependencies(projectDir: string): Promise<Fin
     const depCount = Object.keys(deps).length;
     if (depCount > 80) {
       findings.push({
-        id: `ARC-${String(counter++).padStart(3, "0")}`,
+        id: nextId(),
         severity: "medium",
         title: `High dependency count: ${depCount} packages`,
         description: `The project has ${depCount} direct dependencies. A high count increases supply chain risk and build times.`,
@@ -103,7 +104,7 @@ export async function analyzeModuleDependencies(projectDir: string): Promise<Fin
     const duplicatedPrefixes = findDuplicatedPrefixes(Object.keys(deps));
     for (const { prefix, packages } of duplicatedPrefixes) {
       findings.push({
-        id: `ARC-${String(counter++).padStart(3, "0")}`,
+        id: nextId(),
         severity: "low",
         title: `Multiple packages with prefix '${prefix}'`,
         description: `Found ${packages.length} packages starting with '${prefix}': ${packages.join(", ")}. Check for redundant dependencies.`,
@@ -132,7 +133,7 @@ export async function analyzeModuleDependencies(projectDir: string): Promise<Fin
  */
 export async function detectCircularDependencies(projectDir: string): Promise<Finding[]> {
   const findings: Finding[] = [];
-  let counter = 100;
+  const nextId = createIdSequence("ARC", 100);
 
   const files = await collectSourceFiles(projectDir);
   if (files.length === 0) return findings;
@@ -163,7 +164,9 @@ export async function detectCircularDependencies(projectDir: string): Promise<Fi
   }
 
   // DFS cycle detection
-  const WHITE = 0, GREY = 1, BLACK = 2;
+  const WHITE = 0,
+    GREY = 1,
+    BLACK = 2;
   const color = new Map<string, number>(files.map((f) => [f, WHITE]));
   const cycles = new Set<string>(); // deduplicate by cycle key
 
@@ -175,12 +178,15 @@ export async function detectCircularDependencies(projectDir: string): Promise<Fi
         const cycleStart = path.indexOf(dep);
         if (cycleStart !== -1) {
           const cycle = [...path.slice(cycleStart), node, dep];
-          const key = cycle.map((f) => relative(projectDir, f)).sort().join("|");
+          const key = cycle
+            .map((f) => relative(projectDir, f))
+            .sort()
+            .join("|");
           if (!cycles.has(key)) {
             cycles.add(key);
             const cycleFiles = cycle.slice(0, -1).map((f) => relative(projectDir, f));
             findings.push({
-              id: `ARC-${String(counter++).padStart(3, "0")}`,
+              id: nextId(),
               severity: "high",
               title: `Circular dependency detected: ${cycleFiles[0]} → … → ${cycleFiles[0]}`,
               description: `A circular import chain was detected: ${cycleFiles.join(" → ")} → ${cycleFiles[0]}`,
@@ -188,7 +194,8 @@ export async function detectCircularDependencies(projectDir: string): Promise<Fi
               rule: "no-circular-dependency",
               confidence: 0.95,
               evidence: cycleFiles.slice(0, 3).map((f) => ({ file: f })),
-              recommendation: "Break the cycle by extracting shared logic into a separate module or using dependency injection.",
+              recommendation:
+                "Break the cycle by extracting shared logic into a separate module or using dependency injection.",
               effort: "large",
               tags: ["circular-dependency", "coupling"],
             });
@@ -247,8 +254,6 @@ function extractImports(content: string): string[] {
   }
   return matches;
 }
-
-
 
 function findDuplicatedPrefixes(pkgs: string[]): Array<{ prefix: string; packages: string[] }> {
   const prefixMap = new Map<string, string[]>();

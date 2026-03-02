@@ -13,8 +13,12 @@ function makeTempDir(): string {
 describe("detectCircularDependencies", () => {
   let tempDir: string;
 
-  beforeEach(() => { tempDir = makeTempDir(); });
-  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tempDir = makeTempDir();
+  });
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
 
   it("returns empty array for a project with no source files", async () => {
     const findings = await detectCircularDependencies(tempDir);

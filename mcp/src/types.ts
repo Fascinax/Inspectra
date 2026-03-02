@@ -79,3 +79,42 @@ export type Evidence = z.infer<typeof EvidenceSchema>;
 export type Finding = z.infer<typeof FindingSchema>;
 export type DomainReport = z.infer<typeof DomainReportSchema>;
 export type ConsolidatedReport = z.infer<typeof ConsolidatedReportSchema>;
+
+export interface GradeConfig {
+  min_score: number;
+  label: string;
+  description: string;
+}
+
+export interface ScoringConfig {
+  severity_weights: Record<string, number>;
+  domain_weights: Record<string, number>;
+  grades?: Record<string, GradeConfig>;
+}
+
+export interface SecurityPatternOverride {
+  rule: string;
+  pattern: string;
+  severity: string;
+}
+
+export interface ProfileConfig {
+  profile: string;
+  coverage?: {
+    lines?: { minimum: number; target: number };
+    branches?: { minimum: number; target: number };
+    functions?: { minimum: number; target: number };
+  };
+  file_lengths?: {
+    warning: number;
+    error: number;
+  };
+  naming?: Record<string, Record<string, string>>;
+  architecture?: {
+    layers?: string[];
+    allowed_dependencies?: Record<string, string[]>;
+  };
+  security?: {
+    additional_patterns?: SecurityPatternOverride[];
+  };
+}

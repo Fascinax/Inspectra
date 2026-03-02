@@ -13,8 +13,12 @@ function makeTempDir(): string {
 describe("checkFileLengths", () => {
   let tempDir: string;
 
-  beforeEach(() => { tempDir = makeTempDir(); });
-  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tempDir = makeTempDir();
+  });
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
 
   it("flags files exceeding the default warning threshold (400 lines)", async () => {
     const content = Array(450).fill("const x = 1;").join("\n");
@@ -63,8 +67,12 @@ describe("checkFileLengths", () => {
 describe("checkTodoFixmes", () => {
   let tempDir: string;
 
-  beforeEach(() => { tempDir = makeTempDir(); });
-  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tempDir = makeTempDir();
+  });
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
 
   it("detects TODO comments", async () => {
     writeFileSync(join(tempDir, "app.ts"), "// TODO: implement auth\nconst x = 1;\n");
@@ -105,8 +113,12 @@ describe("checkTodoFixmes", () => {
 describe("checkNamingConventions", () => {
   let tempDir: string;
 
-  beforeEach(() => { tempDir = makeTempDir(); });
-  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tempDir = makeTempDir();
+  });
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
 
   it("returns empty for files outside conventional directories", async () => {
     writeFileSync(join(tempDir, "utils.ts"), "export const x = 1;\n");

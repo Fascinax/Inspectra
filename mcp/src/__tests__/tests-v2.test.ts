@@ -13,8 +13,12 @@ function makeTempDir(): string {
 describe("parsePlaywrightReport", () => {
   let tempDir: string;
 
-  beforeEach(() => { tempDir = makeTempDir(); });
-  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tempDir = makeTempDir();
+  });
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
 
   it("returns empty array when no report file exists", async () => {
     const findings = await parsePlaywrightReport(tempDir);
@@ -49,13 +53,17 @@ describe("parsePlaywrightReport", () => {
   it("detects timed-out tests", async () => {
     mkdirSync(join(tempDir, "playwright-report"), { recursive: true });
     const report = {
-      suites: [{
-        title: "e2e.spec.ts",
-        tests: [{
-          title: "checkout flow",
-          results: [{ status: "timedOut", duration: 30000 }],
-        }],
-      }],
+      suites: [
+        {
+          title: "e2e.spec.ts",
+          tests: [
+            {
+              title: "checkout flow",
+              results: [{ status: "timedOut", duration: 30000 }],
+            },
+          ],
+        },
+      ],
     };
     writeFileSync(join(tempDir, "playwright-report", "results.json"), JSON.stringify(report));
 
@@ -67,13 +75,15 @@ describe("parsePlaywrightReport", () => {
   it("ignores passing tests", async () => {
     mkdirSync(join(tempDir, "playwright-report"), { recursive: true });
     const report = {
-      suites: [{
-        title: "home.spec.ts",
-        tests: [
-          { title: "renders homepage", results: [{ status: "passed", duration: 300 }] },
-          { title: "shows footer", results: [{ status: "passed", duration: 120 }] },
-        ],
-      }],
+      suites: [
+        {
+          title: "home.spec.ts",
+          tests: [
+            { title: "renders homepage", results: [{ status: "passed", duration: 300 }] },
+            { title: "shows footer", results: [{ status: "passed", duration: 120 }] },
+          ],
+        },
+      ],
     };
     writeFileSync(join(tempDir, "playwright-report", "results.json"), JSON.stringify(report));
 
@@ -84,17 +94,23 @@ describe("parsePlaywrightReport", () => {
   it("handles nested suites", async () => {
     mkdirSync(join(tempDir, "playwright-report"), { recursive: true });
     const report = {
-      suites: [{
-        title: "outer.spec.ts",
-        suites: [{
-          title: "Inner Suite",
-          tests: [{
-            title: "nested test fails",
-            results: [{ status: "failed", duration: 500, error: { message: "boom" } }],
-          }],
-        }],
-        tests: [],
-      }],
+      suites: [
+        {
+          title: "outer.spec.ts",
+          suites: [
+            {
+              title: "Inner Suite",
+              tests: [
+                {
+                  title: "nested test fails",
+                  results: [{ status: "failed", duration: 500, error: { message: "boom" } }],
+                },
+              ],
+            },
+          ],
+          tests: [],
+        },
+      ],
     };
     writeFileSync(join(tempDir, "playwright-report", "results.json"), JSON.stringify(report));
 
@@ -105,13 +121,17 @@ describe("parsePlaywrightReport", () => {
 
   it("falls back to test-results.json if playwright-report/results.json does not exist", async () => {
     const report = {
-      suites: [{
-        title: "api.spec.ts",
-        tests: [{
-          title: "POST /users returns 201",
-          results: [{ status: "failed", duration: 800, error: { message: "assertion failed" } }],
-        }],
-      }],
+      suites: [
+        {
+          title: "api.spec.ts",
+          tests: [
+            {
+              title: "POST /users returns 201",
+              results: [{ status: "failed", duration: 800, error: { message: "assertion failed" } }],
+            },
+          ],
+        },
+      ],
     };
     writeFileSync(join(tempDir, "test-results.json"), JSON.stringify(report));
 
@@ -123,8 +143,12 @@ describe("parsePlaywrightReport", () => {
 describe("detectFlakyTests", () => {
   let tempDir: string;
 
-  beforeEach(() => { tempDir = makeTempDir(); });
-  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tempDir = makeTempDir();
+  });
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
 
   it("returns empty array when no test-results exist", async () => {
     const findings = await detectFlakyTests(tempDir);
@@ -154,17 +178,21 @@ describe("detectFlakyTests", () => {
   it("detects flaky Playwright tests (failed then passed on retry)", async () => {
     mkdirSync(join(tempDir, "playwright-report"), { recursive: true });
     const report = {
-      suites: [{
-        title: "payment.spec.ts",
-        tests: [{
-          title: "process payment",
-          retries: 1,
-          results: [
-            { status: "failed", duration: 1500, error: { message: "timeout" } },
-            { status: "passed", duration: 800 },
+      suites: [
+        {
+          title: "payment.spec.ts",
+          tests: [
+            {
+              title: "process payment",
+              retries: 1,
+              results: [
+                { status: "failed", duration: 1500, error: { message: "timeout" } },
+                { status: "passed", duration: 800 },
+              ],
+            },
           ],
-        }],
-      }],
+        },
+      ],
     };
     writeFileSync(join(tempDir, "playwright-report", "results.json"), JSON.stringify(report));
 
@@ -178,14 +206,18 @@ describe("detectFlakyTests", () => {
   it("does not flag tests that consistently pass", async () => {
     mkdirSync(join(tempDir, "playwright-report"), { recursive: true });
     const report = {
-      suites: [{
-        title: "stable.spec.ts",
-        tests: [{
-          title: "reliable test",
-          retries: 0,
-          results: [{ status: "passed", duration: 300 }],
-        }],
-      }],
+      suites: [
+        {
+          title: "stable.spec.ts",
+          tests: [
+            {
+              title: "reliable test",
+              retries: 0,
+              results: [{ status: "passed", duration: 300 }],
+            },
+          ],
+        },
+      ],
     };
     writeFileSync(join(tempDir, "playwright-report", "results.json"), JSON.stringify(report));
 

@@ -26,7 +26,10 @@ export function registerMergerTools(server: McpServer, policiesDir: string): voi
         domainReports = z.array(DomainReportSchema).parse(JSON.parse(domainReportsJson));
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        return { content: [{ type: "text", text: JSON.stringify({ error: `Invalid domainReportsJson: ${msg}` }) }], isError: true };
+        return {
+          content: [{ type: "text", text: JSON.stringify({ error: `Invalid domainReportsJson: ${msg}` }) }],
+          isError: true,
+        };
       }
       const policies = await loadAllPolicies(policiesDir, profile);
       const consolidated = mergeReports(domainReports, target, profile, policies);
@@ -44,7 +47,10 @@ export function registerMergerTools(server: McpServer, policiesDir: string): voi
         findings = z.array(FindingSchema).parse(JSON.parse(findingsJson));
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        return { content: [{ type: "text", text: JSON.stringify({ error: `Invalid findingsJson: ${msg}` }) }], isError: true };
+        return {
+          content: [{ type: "text", text: JSON.stringify({ error: `Invalid findingsJson: ${msg}` }) }],
+          isError: true,
+        };
       }
       const scoring = await loadScoringRules(policiesDir);
       const score = scoreDomain(findings, scoring);

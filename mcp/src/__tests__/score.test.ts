@@ -21,7 +21,7 @@ describe("scoreDomain", () => {
 
   it("accumulates penalties from multiple findings", () => {
     const findings = [
-      makeFinding({ id: "SEC-001", severity: "high", confidence: 1.0 }),   // -15
+      makeFinding({ id: "SEC-001", severity: "high", confidence: 1.0 }), // -15
       makeFinding({ id: "SEC-002", severity: "medium", confidence: 1.0 }), // -8
     ];
     // score = 100 - 23 = 77
@@ -35,7 +35,7 @@ describe("scoreDomain", () => {
 
   it("never returns below 0", () => {
     const findings = Array.from({ length: 10 }, (_, i) =>
-      makeFinding({ id: `SEC-00${i}`, severity: "critical", confidence: 1.0 })
+      makeFinding({ id: `SEC-00${i}`, severity: "critical", confidence: 1.0 }),
     );
     expect(scoreDomain(findings)).toBe(0);
   });

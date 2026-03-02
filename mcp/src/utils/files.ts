@@ -41,10 +41,7 @@ export async function collectSourceFiles(
  * @param collected - Internal accumulator — do not pass this externally.
  * @returns Absolute paths of all files found.
  */
-export async function collectAllFiles(
-  dir: string,
-  collected: string[] = [],
-): Promise<string[]> {
+export async function collectAllFiles(dir: string, collected: string[] = []): Promise<string[]> {
   try {
     const entries = await readdir(dir, { withFileTypes: true });
     for (const entry of entries) {

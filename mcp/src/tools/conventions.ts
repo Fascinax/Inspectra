@@ -5,12 +5,21 @@ import { promisify } from "node:util";
 import type { Finding } from "../types.js";
 import type { ProfileConfig } from "../policies/loader.js";
 import { collectAllFiles } from "../utils/files.js";
+import { createIdSequence } from "../utils/id.js";
 
 const execFileAsync = promisify(execFile);
 
 const NAMING_CONVENTIONS: Array<{ pattern: RegExp; expected: string; rule: string }> = [
-  { pattern: /\.(component|service|module|pipe|directive|guard|interceptor|resolver)\.ts$/, expected: "Angular naming", rule: "angular-naming-convention" },
-  { pattern: /\.(controller|resource|repository|entity|dto)\.java$/, expected: "Java layer naming", rule: "java-naming-convention" },
+  {
+    pattern: /\.(component|service|module|pipe|directive|guard|interceptor|resolver)\.ts$/,
+    expected: "Angular naming",
+    rule: "angular-naming-convention",
+  },
+  {
+    pattern: /\.(controller|resource|repository|entity|dto)\.java$/,
+    expected: "Java layer naming",
+    rule: "java-naming-convention",
+  },
   { pattern: /\.(test|spec)\.(ts|js|java)$/, expected: "Test file naming", rule: "test-naming-convention" },
 ];
 
@@ -27,7 +36,7 @@ const DEFAULT_FILE_LENGTH_ERROR = 800;
  */
 export async function checkNamingConventions(projectDir: string, _profile?: ProfileConfig): Promise<Finding[]> {
   const findings: Finding[] = [];
-  let counter = 1;
+  const nextId = createIdSequence("CNV");
 
   const files = await collectAllFiles(projectDir);
 
@@ -41,14 +50,15 @@ export async function checkNamingConventions(projectDir: string, _profile?: Prof
 
     if (isInConventionalDirectory(filePath) && !followsDirectoryConvention(filePath)) {
       findings.push({
-        id: `CNV-${String(counter++).padStart(3, "0")}`,
+        id: nextId(),
         severity: "low",
         title: `File may not follow naming conventions: ${fileName}`,
         domain: "conventions",
         rule: "file-naming-convention",
         confidence: 0.6,
         evidence: [{ file: relative(projectDir, filePath) }],
-        recommendation: "Rename the file to match the project's naming conventions (e.g., *.service.ts, *.controller.java).",
+        recommendation:
+          "Rename the file to match the project's naming conventions (e.g., *.service.ts, *.controller.java).",
         effort: "trivial",
         tags: ["naming"],
       });
@@ -68,7 +78,7 @@ export async function checkNamingConventions(projectDir: string, _profile?: Prof
  */
 export async function checkFileLengths(projectDir: string, profile?: ProfileConfig): Promise<Finding[]> {
   const findings: Finding[] = [];
-  let counter = 50;
+  const nextId = createIdSequence("CNV", 50);
 
   const warningThreshold = profile?.file_lengths?.warning ?? DEFAULT_FILE_LENGTH_WARNING;
   const errorThreshold = profile?.file_lengths?.error ?? DEFAULT_FILE_LENGTH_ERROR;
@@ -84,7 +94,7 @@ export async function checkFileLengths(projectDir: string, profile?: ProfileConf
 
       if (lineCount > warningThreshold) {
         findings.push({
-          id: `CNV-${String(counter++).padStart(3, "0")}`,
+          id: nextId(),
           severity: lineCount > errorThreshold ? "high" : "medium",
           title: `File too long: ${relative(projectDir, filePath)} (${lineCount} lines)`,
           description: `Files longer than ${warningThreshold} lines are harder to maintain. Consider splitting responsibilities.`,
@@ -113,7 +123,7 @@ export async function checkFileLengths(projectDir: string, profile?: ProfileConf
  */
 export async function checkTodoFixmes(projectDir: string): Promise<Finding[]> {
   const findings: Finding[] = [];
-  let counter = 100;
+  const nextId = createIdSequence("CNV", 100);
 
   const files = await collectAllFiles(projectDir);
 
@@ -133,7 +143,7 @@ export async function checkTodoFixmes(projectDir: string): Promise<Finding[]> {
           const isUrgent = tag === "FIXME" || tag === "HACK" || tag === "XXX";
 
           findings.push({
-            id: `CNV-${String(counter++).padStart(3, "0")}`,
+            id: nextId(),
             severity: isUrgent ? "medium" : "low",
             title: `${tag} comment: ${message.substring(0, 80)}`,
             domain: "conventions",
@@ -163,7 +173,7 @@ export async function checkTodoFixmes(projectDir: string): Promise<Finding[]> {
  */
 export async function parseLintOutput(projectDir: string): Promise<Finding[]> {
   const findings: Finding[] = [];
-  let counter = 150;
+  const nextId = createIdSequence("CNV", 150);
 
   // Strategy 1: look for pre-generated ESLint JSON report
   const reportCandidates = [
@@ -174,7 +184,12 @@ export async function parseLintOutput(projectDir: string): Promise<Finding[]> {
 
   let eslintJson: string | null = null;
   for (const p of reportCandidates) {
-    try { eslintJson = await readFile(p, "utf-8"); break; } catch { /* try next */ }
+    try {
+      eslintJson = await readFile(p, "utf-8");
+      break;
+    } catch {
+      /* try next */
+    }
   }
 
   // Strategy 2: run eslint if no pre-generated report
@@ -193,7 +208,7 @@ export async function parseLintOutput(projectDir: string): Promise<Finding[]> {
         eslintJson = e.stdout ?? null;
       }
     } catch {
-      /* eslint not available */
+      // The ESLint CLI is not available — skip lint findings
     }
   }
 
@@ -204,18 +219,20 @@ export async function parseLintOutput(projectDir: string): Promise<Finding[]> {
         for (const msg of fileResult.messages ?? []) {
           if (!msg.ruleId) continue;
           findings.push({
-            id: `CNV-${String(counter++).padStart(3, "0")}`,
+            id: nextId(),
             severity: msg.severity === 2 ? "medium" : "low",
             title: `ESLint [${msg.ruleId}]: ${msg.message.substring(0, 80)}`,
             description: `ESLint rule '${msg.ruleId}' triggered: ${msg.message}`,
             domain: "conventions",
             rule: `eslint/${msg.ruleId}`,
             confidence: 1.0,
-            evidence: [{
-              file: relative(projectDir, fileResult.filePath),
-              line: msg.line,
-              snippet: msg.source?.trim().substring(0, 120),
-            }],
+            evidence: [
+              {
+                file: relative(projectDir, fileResult.filePath),
+                line: msg.line,
+                snippet: msg.source?.trim().substring(0, 120),
+              },
+            ],
             recommendation: `Fix the ESLint violation for rule '${msg.ruleId}'.`,
             effort: "trivial",
             tags: ["eslint", "lint"],
@@ -247,7 +264,7 @@ export async function parseLintOutput(projectDir: string): Promise<Finding[]> {
         const [, line, severity, message, source] = m;
         const ruleName = source.split(".").pop() ?? source;
         findings.push({
-          id: `CNV-${String(counter++).padStart(3, "0")}`,
+          id: nextId(),
           severity: severity === "error" ? "medium" : "low",
           title: `Checkstyle [${ruleName}]: ${message.substring(0, 80)}`,
           description: message,
@@ -290,7 +307,7 @@ interface EslintFileResult {
  */
 export async function detectDryViolations(projectDir: string): Promise<Finding[]> {
   const findings: Finding[] = [];
-  let counter = 200;
+  const nextId = createIdSequence("CNV", 200);
 
   const files = await collectAllFiles(projectDir);
   const srcFiles = files.filter((f) => [".ts", ".js", ".java"].includes(extname(f)));
@@ -302,17 +319,20 @@ export async function detectDryViolations(projectDir: string): Promise<Finding[]
     try {
       const content = await readFile(filePath, "utf-8");
       const lines = content.split("\n");
-      const normalized = lines.map((l) => l.trim()).filter((l) =>
-        l.length > 2 &&
-        !l.startsWith("//") &&
-        !l.startsWith("*") &&
-        !l.startsWith("import ") &&
-        l !== "{" &&
-        l !== "}" &&
-        l !== "})" &&
-        l !== "});" &&
-        l !== "});",
-      );
+      const normalized = lines
+        .map((l) => l.trim())
+        .filter(
+          (l) =>
+            l.length > 2 &&
+            !l.startsWith("//") &&
+            !l.startsWith("*") &&
+            !l.startsWith("import ") &&
+            l !== "{" &&
+            l !== "}" &&
+            l !== "})" &&
+            l !== "});" &&
+            l !== "});",
+        );
 
       for (let i = 0; i <= normalized.length - BLOCK_SIZE; i++) {
         const block = normalized.slice(i, i + BLOCK_SIZE).join("\n");
@@ -338,7 +358,7 @@ export async function detectDryViolations(projectDir: string): Promise<Finding[]
     alreadyFlagged.add(key);
 
     findings.push({
-      id: `CNV-${String(counter++).padStart(3, "0")}`,
+      id: nextId(),
       severity: "low",
       title: `Duplicated code block across ${uniqueFiles.length} files`,
       description: `A block of ${BLOCK_SIZE}+ lines appears in multiple files: ${uniqueFiles.slice(0, 3).join(", ")}. This violates the DRY (Don't Repeat Yourself) principle.`,
@@ -357,16 +377,18 @@ export async function detectDryViolations(projectDir: string): Promise<Finding[]
 
 function isInConventionalDirectory(filePath: string): boolean {
   const normalized = filePath.replaceAll("\\", "/");
-  return /\/(controllers?|services?|repositories?|components?|pipes?|guards?|interceptors?|models?|entities?|dtos?)\//i.test(normalized);
+  return /\/(controllers?|services?|repositories?|components?|pipes?|guards?|interceptors?|models?|entities?|dtos?)\//i.test(
+    normalized,
+  );
 }
 
 function followsDirectoryConvention(filePath: string): boolean {
   const normalized = filePath.replaceAll("\\", "/");
-  const dirMatch = normalized.match(/\/(controller|service|repository|component|pipe|guard|interceptor|model|entity|dto)s?\//i);
+  const dirMatch = normalized.match(
+    /\/(controller|service|repository|component|pipe|guard|interceptor|model|entity|dto)s?\//i,
+  );
   if (!dirMatch) return true;
   const dirType = dirMatch[1].toLowerCase();
   const fileName = normalized.split("/").pop() ?? "";
   return fileName.includes(`.${dirType}.`) || fileName.includes(`.${dirType}s.`);
 }
-
-

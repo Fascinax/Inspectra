@@ -1,0 +1,10 @@
+mcp/dist/
+node_modules/
+mcp/node_modules/
+coverage/
+mcp/src/__tests__/fixtures/
+*.md
+*.json
+*.yml
+*.yaml
+*.sh

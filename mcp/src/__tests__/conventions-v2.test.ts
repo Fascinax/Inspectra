@@ -17,8 +17,12 @@ function makeTempDir(): string {
 describe("parseLintOutput", () => {
   let tempDir: string;
 
-  beforeEach(() => { tempDir = makeTempDir(); });
-  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tempDir = makeTempDir();
+  });
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
 
   it("returns empty array for an empty eslint-report.json", async () => {
     // Write an empty but valid ESLint report to bypass the slow npx fallback
@@ -32,8 +36,22 @@ describe("parseLintOutput", () => {
       {
         filePath: join(tempDir, "src", "app.ts"),
         messages: [
-          { ruleId: "no-console", severity: 1, message: "Unexpected console statement.", line: 5, column: 3, source: "console.log()" },
-          { ruleId: "no-unused-vars", severity: 2, message: "'x' is defined but never used.", line: 10, column: 1, source: "const x = 1;" },
+          {
+            ruleId: "no-console",
+            severity: 1,
+            message: "Unexpected console statement.",
+            line: 5,
+            column: 3,
+            source: "console.log()",
+          },
+          {
+            ruleId: "no-unused-vars",
+            severity: 2,
+            message: "'x' is defined but never used.",
+            line: 10,
+            column: 1,
+            source: "const x = 1;",
+          },
         ],
       },
     ];
@@ -57,9 +75,7 @@ describe("parseLintOutput", () => {
     const report = [
       {
         filePath: join(tempDir, "index.ts"),
-        messages: [
-          { ruleId: null, severity: 2, message: "Parsing error.", line: 1, column: 1 },
-        ],
+        messages: [{ ruleId: null, severity: 2, message: "Parsing error.", line: 1, column: 1 }],
       },
     ];
     writeFileSync(join(tempDir, "eslint-report.json"), JSON.stringify(report));
@@ -97,9 +113,7 @@ describe("parseLintOutput", () => {
     const report = [
       {
         filePath: join(tempDir, "a.ts"),
-        messages: [
-          { ruleId: "semi", severity: 1, message: "Missing semicolon.", line: 3, column: 5 },
-        ],
+        messages: [{ ruleId: "semi", severity: 1, message: "Missing semicolon.", line: 3, column: 5 }],
       },
     ];
     writeFileSync(join(tempDir, "eslint-report.json"), JSON.stringify(report));
@@ -125,8 +139,12 @@ describe("parseLintOutput", () => {
 describe("detectDryViolations", () => {
   let tempDir: string;
 
-  beforeEach(() => { tempDir = makeTempDir(); });
-  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tempDir = makeTempDir();
+  });
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
 
   it("returns empty array for an empty project", async () => {
     const findings = await detectDryViolations(tempDir);
@@ -218,7 +236,14 @@ describe("detectDryViolations", () => {
     writeFileSync(join(tempDir, "dup-b.ts"), contentB);
 
     const findings = await detectDryViolations(tempDir);
-    const pairs = new Set(findings.map((f) => f.evidence.map((e) => e.file).sort().join("|")));
+    const pairs = new Set(
+      findings.map((f) =>
+        f.evidence
+          .map((e) => e.file)
+          .sort()
+          .join("|"),
+      ),
+    );
     // The specific file pair should appear at most once
     expect(pairs.size).toBeLessThanOrEqual(findings.length);
     expect(findings.length).toBeGreaterThanOrEqual(1);

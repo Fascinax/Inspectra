@@ -1,6 +1,12 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { parseCoverage, parseTestResults, detectMissingTests, parsePlaywrightReport, detectFlakyTests } from "../tools/tests.js";
+import {
+  parseCoverage,
+  parseTestResults,
+  detectMissingTests,
+  parsePlaywrightReport,
+  detectFlakyTests,
+} from "../tools/tests.js";
 import { loadProfile } from "../policies/loader.js";
 import { validateProjectDir } from "../utils/paths.js";
 

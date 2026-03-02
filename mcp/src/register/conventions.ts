@@ -1,6 +1,12 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { checkNamingConventions, checkFileLengths, checkTodoFixmes, parseLintOutput, detectDryViolations } from "../tools/conventions.js";
+import {
+  checkNamingConventions,
+  checkFileLengths,
+  checkTodoFixmes,
+  parseLintOutput,
+  detectDryViolations,
+} from "../tools/conventions.js";
 import { loadProfile } from "../policies/loader.js";
 import { validateProjectDir } from "../utils/paths.js";
 

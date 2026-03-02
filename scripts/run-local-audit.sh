@@ -35,9 +35,9 @@ if [[ ! -f "$ROOT_DIR/mcp/dist/cli/audit.js" ]]; then
 fi
 
 # Build CLI args
-CLI_ARGS="$TARGET --profile=$PROFILE --format=$FORMAT"
+CLI_ARGS=("$TARGET" "--profile=$PROFILE" "--format=$FORMAT")
 if [[ -n "$OUTPUT" ]]; then
-  CLI_ARGS="$CLI_ARGS --output=$OUTPUT"
+  CLI_ARGS+=("--output=$OUTPUT")
 fi
 
-node "$ROOT_DIR/mcp/dist/cli/audit.js" $CLI_ARGS
+node "$ROOT_DIR/mcp/dist/cli/audit.js" "${CLI_ARGS[@]}"

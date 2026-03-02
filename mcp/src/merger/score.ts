@@ -1,6 +1,5 @@
 import type { Finding, DomainReport, Grade } from "../types.js";
-import type { ScoringConfig, GradeConfig } from "../policies/loader.js";
-import { DEFAULT_SCORING } from "../policies/loader.js";
+import { DEFAULT_SCORING, type ScoringConfig, type GradeConfig } from "../policies/loader.js";
 
 /**
  * Computes a 0–100 domain score based on findings and their severities.

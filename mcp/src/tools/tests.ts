@@ -3,6 +3,7 @@ import { join, relative, extname } from "node:path";
 import type { Finding } from "../types.js";
 import type { ProfileConfig } from "../policies/loader.js";
 import { collectSourceFiles } from "../utils/files.js";
+import { createIdSequence } from "../utils/id.js";
 
 const SOURCE_EXTENSIONS = [".ts", ".js", ".java"];
 const TEST_PATTERNS = [/\.(test|spec)\.(ts|js|java)$/, /Test\.java$/];
@@ -16,7 +17,7 @@ const TEST_PATTERNS = [/\.(test|spec)\.(ts|js|java)$/, /Test\.java$/];
  */
 export async function parseCoverage(projectDir: string, profile?: ProfileConfig): Promise<Finding[]> {
   const findings: Finding[] = [];
-  let counter = 1;
+  const nextId = createIdSequence("TST");
 
   const possiblePaths = [
     join(projectDir, "coverage", "coverage-summary.json"),
@@ -38,13 +39,17 @@ export async function parseCoverage(projectDir: string, profile?: ProfileConfig)
         };
 
         if (lines?.pct !== undefined && lines.pct < thresholds.lines) {
-          findings.push(buildCoverageFinding(counter++, "lines", lines.pct, thresholds.lines, coveragePath, projectDir));
+          findings.push(buildCoverageFinding(nextId(), "lines", lines.pct, thresholds.lines, coveragePath, projectDir));
         }
         if (branches?.pct !== undefined && branches.pct < thresholds.branches) {
-          findings.push(buildCoverageFinding(counter++, "branches", branches.pct, thresholds.branches, coveragePath, projectDir));
+          findings.push(
+            buildCoverageFinding(nextId(), "branches", branches.pct, thresholds.branches, coveragePath, projectDir),
+          );
         }
         if (functions?.pct !== undefined && functions.pct < thresholds.functions) {
-          findings.push(buildCoverageFinding(counter++, "functions", functions.pct, thresholds.functions, coveragePath, projectDir));
+          findings.push(
+            buildCoverageFinding(nextId(), "functions", functions.pct, thresholds.functions, coveragePath, projectDir),
+          );
         }
       }
 
@@ -65,19 +70,21 @@ export async function parseCoverage(projectDir: string, profile?: ProfileConfig)
  */
 export async function parseTestResults(projectDir: string): Promise<Finding[]> {
   const findings: Finding[] = [];
-  let counter = 50;
+  const nextId = createIdSequence("TST", 50);
 
   const junitPath = join(projectDir, "test-results", "junit.xml");
   try {
     await access(junitPath);
     const xml = await readFile(junitPath, "utf-8");
 
-    const failureMatches = xml.matchAll(/<testcase\s[^>]*?\bname="([^"]*)"[^>]*>[\s\S]*?<failure[^>]*message="([^"]*)"[\s\S]*?<\/testcase>/g);
+    const failureMatches = xml.matchAll(
+      /<testcase\s[^>]*?\bname="([^"]*)"[^>]*>[\s\S]*?<failure[^>]*message="([^"]*)"[\s\S]*?<\/testcase>/g,
+    );
     for (const match of failureMatches) {
       const testName = match[1];
       const message = match[2];
       findings.push({
-        id: `TST-${String(counter++).padStart(3, "0")}`,
+        id: nextId(),
         severity: "high",
         title: `Failing test: ${testName}`,
         description: message.substring(0, 500),
@@ -106,11 +113,11 @@ export async function parseTestResults(projectDir: string): Promise<Finding[]> {
  */
 export async function detectMissingTests(projectDir: string): Promise<Finding[]> {
   const findings: Finding[] = [];
-  let counter = 100;
+  const nextId = createIdSequence("TST", 100);
 
   const allFiles = await collectSourceFiles(projectDir);
-  const sourceFiles = allFiles.filter((f) =>
-    SOURCE_EXTENSIONS.includes(extname(f)) && !TEST_PATTERNS.some((p) => p.test(f)),
+  const sourceFiles = allFiles.filter(
+    (f) => SOURCE_EXTENSIONS.includes(extname(f)) && !TEST_PATTERNS.some((p) => p.test(f)),
   );
 
   // Build test file set: extract filename stems (without test/spec suffix)
@@ -118,9 +125,7 @@ export async function detectMissingTests(projectDir: string): Promise<Finding[]>
   for (const f of allFiles) {
     if (TEST_PATTERNS.some((p) => p.test(f))) {
       const fileName = f.split(/[/\\]/).pop() ?? "";
-      const stem = fileName
-        .replace(/\.(test|spec)\.(ts|js|java)$/, ".$2")
-        .replace(/Test\.java$/, ".java");
+      const stem = fileName.replace(/\.(test|spec)\.(ts|js|java)$/, ".$2").replace(/Test\.java$/, ".java");
       testStems.add(stem);
     }
   }
@@ -131,7 +136,7 @@ export async function detectMissingTests(projectDir: string): Promise<Finding[]>
 
     if (!testStems.has(baseName)) {
       findings.push({
-        id: `TST-${String(counter++).padStart(3, "0")}`,
+        id: nextId(),
         severity: "medium",
         title: `No test file for ${relative(projectDir, src)}`,
         domain: "tests",
@@ -156,7 +161,7 @@ export async function detectMissingTests(projectDir: string): Promise<Finding[]>
  */
 export async function parsePlaywrightReport(projectDir: string): Promise<Finding[]> {
   const findings: Finding[] = [];
-  let counter = 150;
+  const nextId = createIdSequence("TST", 150);
 
   const candidatePaths = [
     join(projectDir, "playwright-report", "results.json"),
@@ -192,7 +197,7 @@ export async function parsePlaywrightReport(projectDir: string): Promise<Finding
           if (!lastResult) continue;
           if (lastResult.status === "failed" || lastResult.status === "timedOut") {
             findings.push({
-              id: `TST-${String(counter++).padStart(3, "0")}`,
+              id: nextId(),
               severity: "high",
               title: `Playwright failure: ${test.title}`,
               description: lastResult.error?.message?.substring(0, 500) ?? `Test ${lastResult.status} in ${title}`,
@@ -246,7 +251,7 @@ interface PlaywrightTest {
  */
 export async function detectFlakyTests(projectDir: string): Promise<Finding[]> {
   const findings: Finding[] = [];
-  let counter = 200;
+  const nextId = createIdSequence("TST", 200);
 
   // Strategy 1: JUnit XML — detect <rerunFailure> or <flakyFailure> elements
   const junitPath = join(projectDir, "test-results", "junit.xml");
@@ -260,7 +265,7 @@ export async function detectFlakyTests(projectDir: string): Promise<Finding[]> {
     for (const match of reruns) {
       const testName = match[1];
       findings.push({
-        id: `TST-${String(counter++).padStart(3, "0")}`,
+        id: nextId(),
         severity: "medium",
         title: `Flaky test detected: ${testName}`,
         description: `The test '${testName}' passed on retry, indicating non-deterministic behavior (flakiness).`,
@@ -300,7 +305,7 @@ export async function detectFlakyTests(projectDir: string): Promise<Finding[]> {
             const hasFinalPass = results.length > 1 && results[results.length - 1].status === "passed";
             if (hasFailure && hasFinalPass) {
               findings.push({
-                id: `TST-${String(counter++).padStart(3, "0")}`,
+                id: nextId(),
                 severity: "medium",
                 title: `Flaky Playwright test: ${test.title}`,
                 description: `'${test.title}' failed on first attempt(s) but passed after retry (${results.length} attempts).`,
@@ -327,11 +332,16 @@ export async function detectFlakyTests(projectDir: string): Promise<Finding[]> {
   return findings;
 }
 
-
-
-function buildCoverageFinding(counter: number, metric: string, actual: number, threshold: number, coveragePath: string, projectDir: string): Finding {
+function buildCoverageFinding(
+  id: string,
+  metric: string,
+  actual: number,
+  threshold: number,
+  coveragePath: string,
+  projectDir: string,
+): Finding {
   return {
-    id: `TST-${String(counter).padStart(3, "0")}`,
+    id,
     severity: actual < threshold - 20 ? "high" : "medium",
     title: `${metric} coverage below threshold: ${actual.toFixed(1)}% < ${threshold}%`,
     description: `The ${metric} coverage is ${actual.toFixed(1)}%, which is below the configured threshold of ${threshold}%.`,

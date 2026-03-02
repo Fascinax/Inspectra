@@ -18,14 +18,28 @@ describe("deduplicateFindings", () => {
 
   it("deduplicates findings with the same rule and location", () => {
     const base = makeFinding({ rule: "no-hardcoded-secrets", evidence: [{ file: "a.ts", line: 5 }] });
-    const duplicate = makeFinding({ rule: "no-hardcoded-secrets", evidence: [{ file: "a.ts", line: 5 }], confidence: 0.5 });
+    const duplicate = makeFinding({
+      rule: "no-hardcoded-secrets",
+      evidence: [{ file: "a.ts", line: 5 }],
+      confidence: 0.5,
+    });
     const result = deduplicateFindings([base, duplicate]);
     expect(result).toHaveLength(1);
   });
 
   it("keeps the finding with higher confidence when deduplicating", () => {
-    const lowConf = makeFinding({ id: "SEC-001", rule: "rule-x", evidence: [{ file: "x.ts", line: 1 }], confidence: 0.4 });
-    const highConf = makeFinding({ id: "SEC-001", rule: "rule-x", evidence: [{ file: "x.ts", line: 1 }], confidence: 0.9 });
+    const lowConf = makeFinding({
+      id: "SEC-001",
+      rule: "rule-x",
+      evidence: [{ file: "x.ts", line: 1 }],
+      confidence: 0.4,
+    });
+    const highConf = makeFinding({
+      id: "SEC-001",
+      rule: "rule-x",
+      evidence: [{ file: "x.ts", line: 1 }],
+      confidence: 0.9,
+    });
     const result = deduplicateFindings([lowConf, highConf]);
     expect(result[0].confidence).toBe(0.9);
   });
@@ -99,8 +113,18 @@ describe("deduplicateFindings", () => {
         cross_domain_aliases: [],
         on_conflict: "keep highest severity",
       };
-      const highConfLow = makeFinding({ rule: "rule-x", severity: "low", confidence: 1.0, evidence: [{ file: "a.ts", line: 1 }] });
-      const lowConfCrit = makeFinding({ rule: "rule-x", severity: "critical", confidence: 0.5, evidence: [{ file: "a.ts", line: 1 }] });
+      const highConfLow = makeFinding({
+        rule: "rule-x",
+        severity: "low",
+        confidence: 1.0,
+        evidence: [{ file: "a.ts", line: 1 }],
+      });
+      const lowConfCrit = makeFinding({
+        rule: "rule-x",
+        severity: "critical",
+        confidence: 0.5,
+        evidence: [{ file: "a.ts", line: 1 }],
+      });
       const result = deduplicateFindings([highConfLow, lowConfCrit], config);
       expect(result).toHaveLength(1);
       expect(result[0].severity).toBe("critical");
@@ -112,8 +136,18 @@ describe("deduplicateFindings", () => {
         cross_domain_aliases: [],
         on_conflict: "keep highest severity",
       };
-      const low = makeFinding({ rule: "rule-x", severity: "high", confidence: 0.4, evidence: [{ file: "a.ts", line: 1 }] });
-      const high = makeFinding({ rule: "rule-x", severity: "high", confidence: 0.9, evidence: [{ file: "a.ts", line: 1 }] });
+      const low = makeFinding({
+        rule: "rule-x",
+        severity: "high",
+        confidence: 0.4,
+        evidence: [{ file: "a.ts", line: 1 }],
+      });
+      const high = makeFinding({
+        rule: "rule-x",
+        severity: "high",
+        confidence: 0.9,
+        evidence: [{ file: "a.ts", line: 1 }],
+      });
       const result = deduplicateFindings([low, high], config);
       expect(result[0].confidence).toBe(0.9);
     });

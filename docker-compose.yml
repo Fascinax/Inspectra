@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - .:/app
+      - .:/app:ro
       - /app/node_modules
     working_dir: /app
     command: node mcp/dist/index.js
@@ -20,7 +20,7 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - .:/app
+      - .:/app:ro
       - /app/node_modules
       - ${TARGET_PROJECT:-.}:/target:ro
     working_dir: /app

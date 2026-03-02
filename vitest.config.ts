@@ -3,6 +3,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     include: ["mcp/src/**/*.test.ts"],
+    exclude: ["mcp/src/__tests__/fixtures/**"],
     environment: "node",
     globals: true,
     coverage: {

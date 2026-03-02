@@ -13,8 +13,12 @@ function makeTempDir(): string {
 describe("checkLayering", () => {
   let tempDir: string;
 
-  beforeEach(() => { tempDir = makeTempDir(); });
-  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tempDir = makeTempDir();
+  });
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
 
   it("detects domain → infrastructure layer violation", async () => {
     const modelsDir = join(tempDir, "src", "domain", "models");
@@ -22,10 +26,11 @@ describe("checkLayering", () => {
     mkdirSync(modelsDir, { recursive: true });
     mkdirSync(repoDir, { recursive: true });
 
-    writeFileSync(join(modelsDir, "order.ts"),
-      `import { OrderRepo } from '../../infrastructure/repository/order-repo';\nexport class Order {}\n`);
-    writeFileSync(join(repoDir, "order-repo.ts"),
-      "export class OrderRepo {}\n");
+    writeFileSync(
+      join(modelsDir, "order.ts"),
+      `import { OrderRepo } from '../../infrastructure/repository/order-repo';\nexport class Order {}\n`,
+    );
+    writeFileSync(join(repoDir, "order-repo.ts"), "export class OrderRepo {}\n");
 
     const findings = await checkLayering(tempDir);
     expect(findings.length).toBeGreaterThanOrEqual(1);
@@ -40,10 +45,11 @@ describe("checkLayering", () => {
     mkdirSync(modelsDir, { recursive: true });
     mkdirSync(repoDir, { recursive: true });
 
-    writeFileSync(join(repoDir, "order-repo.ts"),
-      `import { Order } from '../../domain/models/order';\nexport class OrderRepo {}\n`);
-    writeFileSync(join(modelsDir, "order.ts"),
-      "export class Order {}\n");
+    writeFileSync(
+      join(repoDir, "order-repo.ts"),
+      `import { Order } from '../../domain/models/order';\nexport class OrderRepo {}\n`,
+    );
+    writeFileSync(join(modelsDir, "order.ts"), "export class Order {}\n");
 
     const findings = await checkLayering(tempDir);
     expect(findings.length).toBe(0);
@@ -62,8 +68,12 @@ describe("checkLayering", () => {
 describe("analyzeModuleDependencies", () => {
   let tempDir: string;
 
-  beforeEach(() => { tempDir = makeTempDir(); });
-  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tempDir = makeTempDir();
+  });
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
 
   it("flags excessive dependency count", async () => {
     const deps: Record<string, string> = {};
@@ -79,9 +89,12 @@ describe("analyzeModuleDependencies", () => {
   });
 
   it("returns empty for small dependency set", async () => {
-    writeFileSync(join(tempDir, "package.json"), JSON.stringify({
-      dependencies: { express: "^4.0.0", zod: "^3.0.0" },
-    }));
+    writeFileSync(
+      join(tempDir, "package.json"),
+      JSON.stringify({
+        dependencies: { express: "^4.0.0", zod: "^3.0.0" },
+      }),
+    );
 
     const findings = await analyzeModuleDependencies(tempDir);
     expect(findings.filter((f) => f.rule === "excessive-dependencies").length).toBe(0);

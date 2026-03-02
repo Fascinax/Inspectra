@@ -40,7 +40,7 @@ smoke: build ## Smoke test the MCP server
 
 # Usage: make audit-local TARGET=/path/to/project PROFILE=generic FORMAT=markdown OUTPUT=report.md
 audit-local: build ## Run a full local audit against a target project
-	bash scripts/run-local-audit.sh $(TARGET) $(PROFILE) $(FORMAT) $(OUTPUT)
+	bash scripts/run-local-audit.sh '$(TARGET)' '$(PROFILE)' '$(FORMAT)' '$(OUTPUT)'
 
 # ─── Setup ───────────────────────────────────────────────────────────────────
 
@@ -48,7 +48,7 @@ bootstrap: ## Full setup: install, build, test
 	bash scripts/bootstrap.sh
 
 init: ## Copy agents & config to a target project (TARGET=/path)
-	node bin/init.mjs $(TARGET)
+	node bin/init.mjs '$(TARGET)'
 
 # ─── Help ────────────────────────────────────────────────────────────────────
 

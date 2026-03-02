@@ -3,15 +3,32 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import type { Finding } from "../types.js";
+import { createIdSequence } from "../utils/id.js";
 
 const execFileAsync = promisify(execFile);
 
 const SECRET_PATTERNS = [
-  { rule: "no-hardcoded-secret", pattern: /(password|secret|api_?key|token|credentials)\s*[:=]\s*["'][^"']{8,}["']/gi, severity: "high" as const },
-  { rule: "no-private-key", pattern: /-----BEGIN\s+(RSA|EC|DSA|OPENSSH)\s+PRIVATE\s+KEY-----/g, severity: "critical" as const },
+  {
+    rule: "no-hardcoded-secret",
+    pattern: /(password|secret|api_?key|token|credentials)\s*[:=]\s*["'][^"']{8,}["']/gi,
+    severity: "high" as const,
+  },
+  {
+    rule: "no-private-key",
+    pattern: /-----BEGIN\s+(RSA|EC|DSA|OPENSSH)\s+PRIVATE\s+KEY-----/g,
+    severity: "critical" as const,
+  },
   { rule: "no-env-file-committed", pattern: /^\.env$/g, severity: "medium" as const },
-  { rule: "no-jwt-hardcoded", pattern: /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g, severity: "high" as const },
-  { rule: "no-connection-string", pattern: /(jdbc|mongodb(\+srv)?|postgresql|mysql|redis):\/\/[^\s"']+/gi, severity: "high" as const },
+  {
+    rule: "no-jwt-hardcoded",
+    pattern: /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g,
+    severity: "high" as const,
+  },
+  {
+    rule: "no-connection-string",
+    pattern: /(jdbc|mongodb(\+srv)?|postgresql|mysql|redis):\/\/[^\s"']+/gi,
+    severity: "high" as const,
+  },
 ];
 
 /**
@@ -34,7 +51,7 @@ export async function scanSecrets(
   const allPatterns = [...SECRET_PATTERNS, ...extraPatterns];
 
   const findings: Finding[] = [];
-  let counter = 1;
+  const nextId = createIdSequence("SEC");
 
   for (const filePath of filePaths) {
     try {
@@ -47,7 +64,7 @@ export async function scanSecrets(
           const regex = new RegExp(pattern.source, pattern.flags);
           if (regex.test(line)) {
             findings.push({
-              id: `SEC-${String(counter++).padStart(3, "0")}`,
+              id: nextId(),
               severity,
               title: `Potential secret detected: ${rule}`,
               description: `A pattern matching '${rule}' was found. This could expose sensitive credentials.`,
@@ -93,13 +110,13 @@ export async function checkDependencyVulnerabilities(projectDir: string): Promis
 
     const audit = JSON.parse(stdout);
 
-    let counter = 1;
+    const nextId = createIdSequence("SEC", 101);
     const vulnerabilities = audit.vulnerabilities ?? {};
 
     for (const [pkgName, vuln] of Object.entries<Record<string, unknown>>(vulnerabilities)) {
       const severity = mapNpmSeverity(vuln.severity as string);
       findings.push({
-        id: `SEC-${String(100 + counter++).padStart(3, "0")}`,
+        id: nextId(),
         severity,
         title: `Vulnerable dependency: ${pkgName}`,
         description: `${vuln.via ?? "Known vulnerability"} in ${pkgName}`,
@@ -130,11 +147,10 @@ export async function runSemgrep(projectDir: string): Promise<Finding[]> {
   let stdout: string;
   try {
     try {
-      ({ stdout } = await execFileAsync(
-        "semgrep",
-        ["--json", "--config", "auto", "--quiet", projectDir],
-        { timeout: 120_000, cwd: projectDir },
-      ));
+      ({ stdout } = await execFileAsync("semgrep", ["--json", "--config", "auto", "--quiet", projectDir], {
+        timeout: 120_000,
+        cwd: projectDir,
+      }));
     } catch (err: unknown) {
       const e = err as { stdout?: string };
       stdout = e.stdout ?? "";
@@ -143,10 +159,10 @@ export async function runSemgrep(projectDir: string): Promise<Finding[]> {
 
     const data = JSON.parse(stdout) as { results?: SemgrepResult[] };
     const results = data.results ?? [];
-    let counter = 200;
+    const nextId = createIdSequence("SEC", 200);
 
     return results.map((r) => ({
-      id: `SEC-${String(counter++).padStart(3, "0")}`,
+      id: nextId(),
       severity: mapSemgrepSeverity(r.extra.severity),
       title: `Semgrep: ${r.check_id.split(".").slice(-2).join(".")}`,
       description: r.extra.message.substring(0, 500),
@@ -184,7 +200,7 @@ interface SemgrepResult {
  */
 export async function checkMavenDependencies(projectDir: string): Promise<Finding[]> {
   const findings: Finding[] = [];
-  let counter = 300;
+  const nextId = createIdSequence("SEC", 300);
 
   const pomPath = join(projectDir, "pom.xml");
   let pomContent: string;
@@ -200,7 +216,7 @@ export async function checkMavenDependencies(projectDir: string): Promise<Findin
 
   if (depCount > 50) {
     findings.push({
-      id: `SEC-${String(counter++).padStart(3, "0")}`,
+      id: nextId(),
       severity: "medium",
       title: `High Maven dependency count: ${depCount} dependencies`,
       description: `The pom.xml declares ${depCount} dependencies. A high count increases supply chain risk and build complexity.`,
@@ -208,7 +224,8 @@ export async function checkMavenDependencies(projectDir: string): Promise<Findin
       rule: "excessive-maven-dependencies",
       confidence: 0.9,
       evidence: [{ file: "pom.xml" }],
-      recommendation: "Audit dependencies and remove unused ones. Run `mvn dependency:analyze` to find unused declarations.",
+      recommendation:
+        "Audit dependencies and remove unused ones. Run `mvn dependency:analyze` to find unused declarations.",
       effort: "medium",
       tags: ["dependencies", "maven"],
     });
@@ -220,7 +237,7 @@ export async function checkMavenDependencies(projectDir: string): Promise<Findin
   while ((snapshotMatch = snapshotPattern.exec(pomContent)) !== null) {
     const version = snapshotMatch[1];
     findings.push({
-      id: `SEC-${String(counter++).padStart(3, "0")}`,
+      id: nextId(),
       severity: "low",
       title: `SNAPSHOT dependency version in use: ${version}`,
       description: `SNAPSHOT versions are mutable and can change without notice, making builds non-reproducible.`,
@@ -236,11 +253,10 @@ export async function checkMavenDependencies(projectDir: string): Promise<Findin
 
   // Try running mvn dependency:tree to detect runtime issues (graceful fallback)
   try {
-    await execFileAsync(
-      "mvn",
-      ["dependency:tree", "-DoutputType=text", "--no-transfer-progress", "--batch-mode"],
-      { cwd: projectDir, timeout: 60_000 },
-    );
+    await execFileAsync("mvn", ["dependency:tree", "-DoutputType=text", "--no-transfer-progress", "--batch-mode"], {
+      cwd: projectDir,
+      timeout: 60_000,
+    });
   } catch {
     /* mvn not available or project not compilable — skip */
   }

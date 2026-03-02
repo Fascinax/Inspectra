@@ -22,11 +22,17 @@ function makeTempDir(): string {
 describe("loadScoringRules", () => {
   let tempDir: string;
 
-  beforeEach(() => { tempDir = makeTempDir(); });
-  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tempDir = makeTempDir();
+  });
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
 
   it("loads severity and domain weights from YAML", async () => {
-    writeFileSync(join(tempDir, "scoring-rules.yml"), `
+    writeFileSync(
+      join(tempDir, "scoring-rules.yml"),
+      `
 severity_weights:
   critical: 30
   high: 20
@@ -36,11 +42,12 @@ severity_weights:
 domain_weights:
   security: 0.50
   tests: 0.50
-`);
+`,
+    );
 
     const config = await loadScoringRules(tempDir);
     expect(config.severity_weights.critical).toBe(30);
-    expect(config.domain_weights.security).toBe(0.50);
+    expect(config.domain_weights.security).toBe(0.5);
   });
 
   it("returns defaults when file is missing", async () => {
@@ -52,15 +59,22 @@ domain_weights:
 describe("loadConfidenceRules", () => {
   let tempDir: string;
 
-  beforeEach(() => { tempDir = makeTempDir(); });
-  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tempDir = makeTempDir();
+  });
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
 
   it("loads thresholds from YAML", async () => {
-    writeFileSync(join(tempDir, "confidence-rules.yml"), `
+    writeFileSync(
+      join(tempDir, "confidence-rules.yml"),
+      `
 minimum_for_report: 0.4
 minimum_for_pr_comment: 0.8
 auto_dismiss_below: 0.1
-`);
+`,
+    );
 
     const config = await loadConfidenceRules(tempDir);
     expect(config.minimum_for_report).toBe(0.4);
@@ -76,17 +90,24 @@ auto_dismiss_below: 0.1
 describe("loadDeduplicationRules", () => {
   let tempDir: string;
 
-  beforeEach(() => { tempDir = makeTempDir(); });
-  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tempDir = makeTempDir();
+  });
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
 
   it("loads cross-domain aliases from YAML", async () => {
-    writeFileSync(join(tempDir, "deduplication-rules.yml"), `
+    writeFileSync(
+      join(tempDir, "deduplication-rules.yml"),
+      `
 strategy: same-rule-same-location
 cross_domain_aliases:
   - rules: [excessive-file-length, file-too-long]
     canonical: excessive-file-length
     keep_domain: conventions
-`);
+`,
+    );
 
     const config = await loadDeduplicationRules(tempDir);
     expect(config.cross_domain_aliases.length).toBe(1);
@@ -101,10 +122,14 @@ describe("loadProfile", () => {
     tempDir = makeTempDir();
     mkdirSync(join(tempDir, "profiles"), { recursive: true });
   });
-  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
 
   it("loads profile-specific thresholds", async () => {
-    writeFileSync(join(tempDir, "profiles", "strict.yml"), `
+    writeFileSync(
+      join(tempDir, "profiles", "strict.yml"),
+      `
 profile: strict
 coverage:
   lines:
@@ -119,7 +144,8 @@ coverage:
 file_lengths:
   warning: 200
   error: 400
-`);
+`,
+    );
 
     const profile = await loadProfile(tempDir, "strict");
     expect(profile.coverage?.lines?.target).toBe(95);
@@ -136,11 +162,17 @@ file_lengths:
 describe("loadSeverityMatrix", () => {
   let tempDir: string;
 
-  beforeEach(() => { tempDir = makeTempDir(); });
-  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tempDir = makeTempDir();
+  });
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
 
   it("loads sla_days per severity level", async () => {
-    writeFileSync(join(tempDir, "severity-matrix.yml"), `
+    writeFileSync(
+      join(tempDir, "severity-matrix.yml"),
+      `
 severity_defaults:
   critical:
     description: "Immediate risk"
@@ -151,7 +183,8 @@ severity_defaults:
   medium:
     description: "Moderate risk"
     sla_days: 14
-`);
+`,
+    );
     const matrix = await loadSeverityMatrix(tempDir);
     expect(matrix).not.toBeNull();
     expect(matrix!.severity_defaults.critical.sla_days).toBe(1);
@@ -170,7 +203,9 @@ describe("loadAllPolicies", () => {
     const tempDir = makeTempDir();
     mkdirSync(join(tempDir, "profiles"), { recursive: true });
 
-    writeFileSync(join(tempDir, "scoring-rules.yml"), `
+    writeFileSync(
+      join(tempDir, "scoring-rules.yml"),
+      `
 severity_weights:
   critical: 25
   high: 15
@@ -180,22 +215,32 @@ severity_weights:
 domain_weights:
   security: 0.30
   tests: 0.25
-`);
-    writeFileSync(join(tempDir, "confidence-rules.yml"), `
+`,
+    );
+    writeFileSync(
+      join(tempDir, "confidence-rules.yml"),
+      `
 minimum_for_report: 0.3
 minimum_for_pr_comment: 0.7
 auto_dismiss_below: 0.2
-`);
-    writeFileSync(join(tempDir, "deduplication-rules.yml"), `
+`,
+    );
+    writeFileSync(
+      join(tempDir, "deduplication-rules.yml"),
+      `
 strategy: same-rule-same-location
 cross_domain_aliases: []
-`);
-    writeFileSync(join(tempDir, "profiles", "generic.yml"), `
+`,
+    );
+    writeFileSync(
+      join(tempDir, "profiles", "generic.yml"),
+      `
 profile: generic
 file_lengths:
   warning: 400
   error: 800
-`);
+`,
+    );
 
     const policies = await loadAllPolicies(tempDir, "generic");
     expect(policies.scoring).toBeDefined();

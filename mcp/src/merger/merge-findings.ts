@@ -31,16 +31,11 @@ export function mergeReports(
 
   const minConfidence = options?.confidence?.minimum_for_report ?? 0;
   const autoDismiss = options?.confidence?.auto_dismiss_below ?? 0;
-  const filtered = allFindings.filter((f) =>
-    f.confidence >= autoDismiss && f.confidence >= minConfidence,
-  );
+  const filtered = allFindings.filter((f) => f.confidence >= autoDismiss && f.confidence >= minConfidence);
 
   const adjusted = applyConfidenceAdjustments(filtered, options?.confidence?.adjustments ?? []);
 
-  const deduplicated = deduplicateFindings(
-    adjusted,
-    options?.deduplication,
-  );
+  const deduplicated = deduplicateFindings(adjusted, options?.deduplication);
 
   const ranked = [...deduplicated].sort((a, b) => {
     const sevDiff = SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity];
@@ -59,7 +54,13 @@ export function mergeReports(
     byDomain[f.domain] = (byDomain[f.domain] ?? 0) + 1;
   }
 
-  const summary = buildSummary(overallScore, bySeverity, domainReports, options?.scoring?.grades, options?.severityMatrix);
+  const summary = buildSummary(
+    overallScore,
+    bySeverity,
+    domainReports,
+    options?.scoring?.grades,
+    options?.severityMatrix,
+  );
 
   return {
     overall_score: overallScore,
@@ -93,9 +94,8 @@ function buildSummary(
     .filter(([, count]) => count > 0)
     .map(([sev, count]) => `${count} ${sev}`);
 
-  const worstDomain = domainReports.length > 0
-    ? domainReports.reduce((worst, r) => (r.score < worst.score ? r : worst))
-    : null;
+  const worstDomain =
+    domainReports.length > 0 ? domainReports.reduce((worst, r) => (r.score < worst.score ? r : worst)) : null;
 
   let text = `Overall score: ${score}/100 (Grade ${grade}). Findings: ${parts.join(", ") || "none"}.`;
   if (worstDomain && worstDomain.score < 70) {
@@ -117,10 +117,7 @@ function buildSummary(
   return text;
 }
 
-function applyConfidenceAdjustments(
-  findings: Finding[],
-  adjustments: ConfidenceAdjustment[],
-): Finding[] {
+function applyConfidenceAdjustments(findings: Finding[], adjustments: ConfidenceAdjustment[]): Finding[] {
   if (adjustments.length === 0) return findings;
   return findings.map((f) => {
     let adjusted = f.confidence;
