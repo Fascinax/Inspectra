@@ -28,7 +28,7 @@
     },
     "domain": {
       "type": "string",
-      "enum": ["security", "tests", "architecture", "conventions", "performance", "documentation"],
+      "enum": ["security", "tests", "architecture", "conventions", "performance", "documentation", "tech-debt"],
       "description": "Audit domain that produced this finding."
     },
     "rule": {

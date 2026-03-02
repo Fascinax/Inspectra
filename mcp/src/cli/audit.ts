@@ -33,6 +33,9 @@ import {
   parseLintOutput,
   detectDryViolations,
 } from "../tools/conventions.js";
+import { analyzeBundleSize, checkBuildTimings, detectRuntimeMetrics } from "../tools/performance.js";
+import { checkReadmeCompleteness, checkAdrPresence, detectDocCodeDrift } from "../tools/documentation.js";
+import { analyzeComplexity, ageTodos, checkDependencyStaleness } from "../tools/tech-debt.js";
 import { scoreDomain } from "../merger/score.js";
 import { mergeReports } from "../merger/merge-findings.js";
 import { renderMarkdown } from "../renderer/markdown.js";
@@ -237,6 +240,78 @@ async function runConventionsAudit(
   });
 }
 
+async function runPerformanceAudit(projectDir: string, config?: ScoringConfig): Promise<DomainReport> {
+  const start = Date.now();
+  console.error("  [performance] Analyzing bundle sizes...");
+  const bundleFindings = await analyzeBundleSize(projectDir);
+
+  console.error("  [performance] Parsing build timings...");
+  const buildFindings = await checkBuildTimings(projectDir);
+
+  console.error("  [performance] Detecting runtime hotspots...");
+  const runtimeFindings = await detectRuntimeMetrics(projectDir);
+
+  const findings = [...bundleFindings, ...buildFindings, ...runtimeFindings];
+  const score = scoreDomain(findings, config);
+
+  return buildDomainReport({
+    domain: "performance",
+    agent: "audit-performance",
+    findings,
+    score,
+    startMs: start,
+    tools: ["analyze-bundle-size", "check-build-timings", "detect-runtime-metrics"],
+  });
+}
+
+async function runDocumentationAudit(projectDir: string, config?: ScoringConfig): Promise<DomainReport> {
+  const start = Date.now();
+  console.error("  [documentation] Checking README completeness...");
+  const readmeFindings = await checkReadmeCompleteness(projectDir);
+
+  console.error("  [documentation] Checking ADR presence...");
+  const adrFindings = await checkAdrPresence(projectDir);
+
+  console.error("  [documentation] Detecting doc-code drift...");
+  const driftFindings = await detectDocCodeDrift(projectDir);
+
+  const findings = [...readmeFindings, ...adrFindings, ...driftFindings];
+  const score = scoreDomain(findings, config);
+
+  return buildDomainReport({
+    domain: "documentation",
+    agent: "audit-documentation",
+    findings,
+    score,
+    startMs: start,
+    tools: ["check-readme-completeness", "check-adr-presence", "detect-doc-code-drift"],
+  });
+}
+
+async function runTechDebtAudit(projectDir: string, config?: ScoringConfig): Promise<DomainReport> {
+  const start = Date.now();
+  console.error("  [tech-debt] Analyzing complexity...");
+  const complexityFindings = await analyzeComplexity(projectDir);
+
+  console.error("  [tech-debt] Aging TODO/FIXME markers...");
+  const agedTodoFindings = await ageTodos(projectDir);
+
+  console.error("  [tech-debt] Checking dependency staleness...");
+  const stalenessFindings = await checkDependencyStaleness(projectDir);
+
+  const findings = [...complexityFindings, ...agedTodoFindings, ...stalenessFindings];
+  const score = scoreDomain(findings, config);
+
+  return buildDomainReport({
+    domain: "tech-debt",
+    agent: "audit-tech-debt",
+    findings,
+    score,
+    startMs: start,
+    tools: ["analyze-complexity", "age-todos", "check-dependency-staleness"],
+  });
+}
+
 type BuildDomainReportParams = {
   domain: DomainReport["domain"];
   agent: string;
@@ -303,16 +378,19 @@ async function main(): Promise<void> {
 
   console.error("Running audits...\n");
 
-  const [securityReport, testsReport, archReport, convReport] = await Promise.all([
+  const [securityReport, testsReport, archReport, convReport, perfReport, docsReport, debtReport] = await Promise.all([
     runSecurityAudit(opts.target, sourceFiles, policies.scoring, policies.profile),
     runTestsAudit(opts.target, policies.profile, policies.scoring),
     runArchitectureAudit(opts.target, policies.scoring, policies.profile),
     runConventionsAudit(opts.target, policies.profile, policies.scoring),
+    runPerformanceAudit(opts.target, policies.scoring),
+    runDocumentationAudit(opts.target, policies.scoring),
+    runTechDebtAudit(opts.target, policies.scoring),
   ]);
 
   console.error("\nMerging reports...");
   const consolidated = mergeReports(
-    [securityReport, testsReport, archReport, convReport],
+    [securityReport, testsReport, archReport, convReport, perfReport, docsReport, debtReport],
     opts.target,
     opts.profile,
     policies,

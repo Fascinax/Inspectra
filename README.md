@@ -176,17 +176,20 @@ TARGET_PROJECT=/path/to/project PROFILE=generic FORMAT=markdown \
 
 | Domain | Agent | MCP Tools | Prefix |
 |--------|-------|-----------|--------|
-| Security | `audit-security` | `scan-secrets`, `check-deps-vulns` | `SEC-` |
-| Tests | `audit-tests` | `parse-coverage`, `parse-test-results`, `detect-missing-tests` | `TST-` |
-| Architecture | `audit-architecture` | `check-layering`, `analyze-dependencies` | `ARC-` |
-| Conventions | `audit-conventions` | `check-naming`, `check-file-lengths`, `check-todos` | `CNV-` |
+| Security | `audit-security` | `scan-secrets`, `check-deps-vulns`, `run-semgrep`, `check-maven-deps` | `SEC-` |
+| Tests | `audit-tests` | `parse-coverage`, `parse-test-results`, `detect-missing-tests`, `parse-playwright-report`, `detect-flaky-tests` | `TST-` |
+| Architecture | `audit-architecture` | `check-layering`, `analyze-dependencies`, `detect-circular-deps` | `ARC-` |
+| Conventions | `audit-conventions` | `check-naming`, `check-file-lengths`, `check-todos`, `parse-lint-output`, `detect-dry-violations` | `CNV-` |
+| Performance | `audit-performance` | `analyze-bundle-size`, `check-build-timings`, `detect-runtime-metrics` | `PRF-` |
+| Documentation | `audit-documentation` | `check-readme-completeness`, `check-adr-presence`, `detect-doc-code-drift` | `DOC-` |
+| Tech debt | `audit-tech-debt` | `analyze-complexity`, `age-todos`, `check-dependency-staleness` | `DEBT-` |
 
 ---
 
 ## Scoring Model
 
 - **Domain scores**: 0–100 (100 = no issues)
-- **Overall score**: Weighted average (security 30%, tests 25%, architecture 20%, conventions 15%, other 10%)
+- **Overall score**: Weighted average across all 7 domains
 - **Grades**: A (90+), B (75+), C (60+), D (40+), F (<40)
 
 ---

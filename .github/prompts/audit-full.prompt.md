@@ -3,28 +3,56 @@ description: "Run a full multi-domain audit on the target project"
 agent: audit-orchestrator
 ---
 
-Run a comprehensive code audit on the project in the current workspace, covering all domains: **security**, **tests**, **architecture**, and **conventions**.
+Run a comprehensive code audit on the project in the current workspace, covering all 7 domains.
 
 ## Workflow
 
-1. Delegate to `audit-security` — scan secrets, vulnerable dependencies, security anti-patterns
-2. Delegate to `audit-tests` — analyze coverage, test failures, missing tests
-3. Delegate to `audit-architecture` — check layer violations and dependency health
-4. Delegate to `audit-conventions` — verify naming, file lengths, TODO/FIXME markers
-5. Call `inspectra/merge-domain-reports` with all domain reports
-6. Produce the final consolidated Markdown report
+1. Invoke **all** domain agents in parallel:
+   - `audit-security` — secrets, dependency vulnerabilities, auth issues
+   - `audit-tests` — coverage, test results, missing tests, flaky tests
+   - `audit-architecture` — layering violations, circular deps, dependency health
+   - `audit-conventions` — naming, file lengths, TODOs, lint, DRY
+   - `audit-performance` — bundle size, build timings, runtime metrics
+   - `audit-documentation` — README completeness, ADRs, doc-code drift
+   - `audit-tech-debt` — complexity, stale TODOs, dependency staleness
+2. Collect all domain reports (each conforming to `schemas/domain-report.schema.json`)
+3. Call `inspectra/merge-domain-reports` with the collected domain reports
+4. Produce a consolidated Markdown report
 
-## Policy Context
+## Scoring
 
-- Scoring rules: #file:../../policies/scoring-rules.yml
-- Severity matrix: #file:../../policies/severity-matrix.yml
-- Profile: `java-angular-playwright` (adapt to detected stack)
+- Domain scores: 0–100 (100 = no issues), penalties = severity_weight × confidence
+- Overall score: weighted average — security 30%, tests 25%, architecture 20%, conventions 15%, performance 5%, documentation 5%
+- Grades: A (90+), B (75+), C (60+), D (40+), F (<40)
 
 ## Output Format
 
-A Markdown report with:
-- Executive summary: overall score, grade, finding counts
-- Domain score table (security, tests, architecture, conventions)
-- Top 10 priority findings with file references and recommendations
-- Per-domain detailed findings grouped by severity
-- Prioritized action plan
+```markdown
+## Inspectra Full Audit
+
+**Score**: XX/100 | **Grade**: X | **Findings**: X critical, X high, X medium, X low
+
+### Domain Scores
+
+| Domain | Score | Grade | Findings |
+|--------|-------|-------|----------|
+| Security | XX/100 | X | X findings |
+| Tests | XX/100 | X | X findings |
+| Architecture | XX/100 | X | X findings |
+| Conventions | XX/100 | X | X findings |
+| Performance | XX/100 | X | X findings |
+| Documentation | XX/100 | X | X findings |
+| Tech Debt | XX/100 | X | X findings |
+
+### Top Findings
+
+| # | Severity | Domain | File | Title |
+|---|----------|--------|------|-------|
+| 1 | critical | security | src/config.ts | Hardcoded database password |
+
+### Details
+(for each finding: evidence with line, recommendation, effort)
+
+### Summary
+(2-3 sentences — overall health, top risks, recommended next steps)
+```

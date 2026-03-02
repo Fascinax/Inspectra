@@ -15,12 +15,13 @@ severity_weights:
 
 # Overall score = weighted average of domain scores
 domain_weights:
-  security: 0.30
-  tests: 0.25
-  architecture: 0.20
-  conventions: 0.15
-  performance: 0.05
-  documentation: 0.05
+  security: 0.24
+  tests: 0.20
+  architecture: 0.16
+  conventions: 0.12
+  performance: 0.10
+  documentation: 0.08
+  tech-debt: 0.10
 
 # Grade mapping
 grades:

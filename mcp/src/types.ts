@@ -12,7 +12,15 @@ export const SEVERITY_RANK: Record<Severity, number> = {
   info: 1,
 };
 
-export const DOMAINS = ["security", "tests", "architecture", "conventions", "performance", "documentation"] as const;
+export const DOMAINS = [
+  "security",
+  "tests",
+  "architecture",
+  "conventions",
+  "performance",
+  "documentation",
+  "tech-debt",
+] as const;
 export type Domain = (typeof DOMAINS)[number];
 
 export const EFFORT_LEVELS = ["trivial", "small", "medium", "large", "epic"] as const;

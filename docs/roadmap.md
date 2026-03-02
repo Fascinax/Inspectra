@@ -1,51 +1,49 @@
 # Roadmap
 
-## Current State (v0.2.0)
+## Current State (v0.3.0)
 
 Inspectra is a functional multi-agent code audit system with:
-- 5 Copilot Custom Agents (orchestrator + 4 domain agents)
-- 19 MCP tools across 4 domains (12 from v0.1.0 + 7 new in v0.2.0)
+- 8 Copilot Custom Agents (orchestrator + 7 domain agents)
+- 28 MCP tools across 7 domains
 - CLI orchestrator for local audits without Copilot
 - JSON Schema contracts for all outputs
 - Scoring engine with weighted domains and grade system
 - Markdown and JSON report renderers
 - SARIF output for CI integration
 - 4 stack-specific profiles
-- CI workflows for validation, PR audits, and report generation
-- 171 unit + integration tests
 
-## v0.2.0 — Tool Depth ✅ COMPLETE
+## v0.2.0 - Tool Depth COMPLETE
 
-**Goal:** Make existing tools smarter and more accurate.
+Goal: Make existing tools smarter and more accurate.
 
-- [x] **Security:** Integrate Semgrep for deeper static analysis (beyond regex)
-- [x] **Security:** Support Maven dependency analysis (`mvn dependency:tree`)
-- [x] **Tests:** Parse Playwright HTML reports
-- [x] **Tests:** Detect flaky tests (retry patterns, timeline analysis)
-- [x] **Architecture:** Detect circular dependencies between modules
-- [x] **Conventions:** Integrate ESLint/Checkstyle output parsing
-- [x] **Conventions:** Detect copy-paste / DRY violations
+- [x] Security: integrate Semgrep for deeper static analysis
+- [x] Security: support Maven dependency analysis (`mvn dependency:tree`)
+- [x] Tests: parse Playwright HTML reports
+- [x] Tests: detect flaky tests
+- [x] Architecture: detect circular dependencies between modules
+- [x] Conventions: integrate ESLint/Checkstyle output parsing
+- [x] Conventions: detect copy-paste / DRY violations
 
-## v0.3.0 — New Domains
+## v0.3.0 - New Domains COMPLETE
 
-**Goal:** Expand audit coverage to 6+ domains.
+Goal: Expand audit coverage to 6+ domains.
 
-- [ ] **Performance agent:** Bundle size analysis, build timing, runtime metrics
-- [ ] **Documentation agent:** README completeness, ADR presence, doc-code drift
-- [ ] **Tech debt agent:** Complexity metrics, age of TODOs, dependency staleness
+- [x] Performance agent: bundle size analysis, build timing, runtime metrics
+- [x] Documentation agent: README completeness, ADR presence, doc-code drift
+- [x] Tech debt agent: complexity metrics, age of TODOs, dependency staleness
 
-## v0.4.0 — PR Integration
+## v0.4.0 - PR Integration
 
-**Goal:** Full PR workflow with automated comments.
+Goal: Full PR workflow with automated comments.
 
 - [ ] GitHub Action that runs the CLI on PR diffs
 - [ ] PR comment with delta scoring (score change vs. main branch)
 - [ ] Inline review comments on specific findings
 - [ ] Status check: block merge if critical findings exist
 
-## v0.5.0 — Report Engine
+## v0.5.0 - Report Engine
 
-**Goal:** Rich, customizable report output.
+Goal: Rich, customizable report output.
 
 - [ ] Handlebars templates for report sections
 - [ ] Trend tracking (score over time)
@@ -53,9 +51,9 @@ Inspectra is a functional multi-agent code audit system with:
 - [ ] PDF export option
 - [ ] Comparison mode: audit A vs. audit B
 
-## v1.0.0 — Stable Release
+## v1.0.0 - Stable Release
 
-**Goal:** Production-ready for teams.
+Goal: Production-ready for teams.
 
 - [ ] Published npm package (`npx inspectra audit`)
 - [ ] VS Code extension for one-click audits
@@ -63,11 +61,3 @@ Inspectra is a functional multi-agent code audit system with:
 - [ ] Plugin system for custom tools
 - [ ] Multi-language support (Python, Go, Rust)
 - [ ] Documentation site
-
-## Future Ideas
-
-- SonarQube adapter (import/export findings)
-- Jira/GitHub Issues integration (auto-create issues from findings)
-- Slack/Teams notifications on score drops
-- AI-powered fix suggestions beyond recommendations
-- Cross-repository benchmarking

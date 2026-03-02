@@ -9,10 +9,13 @@ Run a focused audit on the files changed in this pull request only.
 
 1. Identify the changed files in the PR by reading the diff context provided in the conversation or using the `search` tool
 2. Determine which domains are relevant based on the diff:
-   - Auth/config/API files changed → invoke `audit-security`
+   - Auth, config, API, or secrets files changed → invoke `audit-security`
    - Source files with or without tests changed → invoke `audit-tests`
    - Module structure or import paths changed → invoke `audit-architecture`
    - Any source file changed → invoke `audit-conventions`
+   - Build, bundle, or runtime config files changed → invoke `audit-performance`
+   - Docs or README files changed → invoke `audit-documentation`
+   - Legacy hotspots or TODO-heavy files changed → invoke `audit-tech-debt`
 3. Pass only the changed file paths to each relevant agent
 4. Call `inspectra/merge-domain-reports` with the collected domain reports
 5. Produce a concise PR review report

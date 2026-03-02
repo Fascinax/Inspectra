@@ -23,7 +23,7 @@
       "type": "object",
       "description": "Weight of each domain in the overall score calculation. Must sum to ~1.0.",
       "propertyNames": {
-        "enum": ["security", "tests", "architecture", "conventions", "performance", "documentation"]
+        "enum": ["security", "tests", "architecture", "conventions", "performance", "documentation", "tech-debt"]
       },
       "additionalProperties": {
         "type": "number",

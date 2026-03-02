@@ -2,13 +2,13 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://inspectra.dev/schemas/domain-report.schema.json",
   "title": "Inspectra Domain Report",
-  "description": "Report produced by a single domain agent (security, tests, architecture, conventions).",
+  "description": "Report produced by a single domain agent.",
   "type": "object",
   "required": ["domain", "score", "summary", "findings", "metadata"],
   "properties": {
     "domain": {
       "type": "string",
-      "enum": ["security", "tests", "architecture", "conventions", "performance", "documentation"],
+      "enum": ["security", "tests", "architecture", "conventions", "performance", "documentation", "tech-debt"],
       "description": "Audit domain."
     },
     "score": {
