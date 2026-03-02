@@ -5,6 +5,9 @@ import type { ProfileConfig } from "../policies/loader.js";
 import { collectSourceFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
 
+const MAX_SNIPPET_LENGTH = 120;
+const MAX_DESCRIPTION_LENGTH = 500;
+
 const SOURCE_EXTENSIONS = [".ts", ".js", ".java"];
 const TEST_PATTERNS = [/\.(test|spec)\.(ts|js|java)$/, /Test\.java$/];
 
@@ -87,7 +90,7 @@ export async function parseTestResults(projectDir: string): Promise<Finding[]> {
         id: nextId(),
         severity: "high",
         title: `Failing test: ${testName}`,
-        description: message.substring(0, 500),
+        description: message.substring(0, MAX_DESCRIPTION_LENGTH),
         domain: "tests",
         rule: "no-failing-test",
         confidence: 1.0,
@@ -200,7 +203,7 @@ export async function parsePlaywrightReport(projectDir: string): Promise<Finding
               id: nextId(),
               severity: "high",
               title: `Playwright failure: ${test.title}`,
-              description: lastResult.error?.message?.substring(0, 500) ?? `Test ${lastResult.status} in ${title}`,
+              description: lastResult.error?.message?.substring(0, MAX_DESCRIPTION_LENGTH) ?? `Test ${lastResult.status} in ${title}`,
               domain: "tests",
               rule: "playwright-test-failure",
               confidence: 1.0,

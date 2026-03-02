@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { jsonResponse } from "./response.js";
 import { scanSecrets, checkDependencyVulnerabilities, runSemgrep, checkMavenDependencies } from "../tools/security.js";
 import { loadProfile } from "../policies/loader.js";
 import { validateProjectDir, validateFilePathsCsv } from "../utils/paths.js";
@@ -22,7 +23,7 @@ export function registerSecurityTools(server: McpServer, policiesDir: string): v
       const filePaths = await validateFilePathsCsv(filePathsCsv);
       const profileConfig = profile ? await loadProfile(policiesDir, profile) : undefined;
       const findings = await scanSecrets(filePaths, profileConfig?.security?.additional_patterns);
-      return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
+      return jsonResponse(findings);
     },
   );
 
@@ -33,7 +34,7 @@ export function registerSecurityTools(server: McpServer, policiesDir: string): v
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkDependencyVulnerabilities(safeDir);
-      return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
+      return jsonResponse(findings);
     },
   );
 
@@ -44,7 +45,7 @@ export function registerSecurityTools(server: McpServer, policiesDir: string): v
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await runSemgrep(safeDir);
-      return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
+      return jsonResponse(findings);
     },
   );
 
@@ -55,7 +56,7 @@ export function registerSecurityTools(server: McpServer, policiesDir: string): v
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkMavenDependencies(safeDir);
-      return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
+      return jsonResponse(findings);
     },
   );
 }

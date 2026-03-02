@@ -10,7 +10,7 @@ import { DEFAULT_SCORING, type ScoringConfig, type GradeConfig } from "../polici
  * @param config - Optional scoring weights and penalty rules.
  * @returns Integer score in range [0, 100].
  */
-export function scoreDomain(findings: Finding[], config?: ScoringConfig): number {
+export function scoreDomain(findings: ReadonlyArray<Finding>, config?: ScoringConfig): number {
   if (findings.length === 0) return 100;
 
   const weights = config?.severity_weights ?? DEFAULT_SCORING.severity_weights;
@@ -26,7 +26,7 @@ export function scoreDomain(findings: Finding[], config?: ScoringConfig): number
  * @param config - Optional scoring config with domain weights.
  * @returns Weighted average score in range [0, 100], rounded to one decimal place.
  */
-export function computeOverallScore(domainReports: DomainReport[], config?: ScoringConfig): number {
+export function computeOverallScore(domainReports: ReadonlyArray<DomainReport>, config?: ScoringConfig): number {
   if (domainReports.length === 0) return 0;
 
   const domainWeights = config?.domain_weights ?? DEFAULT_SCORING.domain_weights;

@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { jsonResponse } from "./response.js";
 import {
   checkNamingConventions,
   checkFileLengths,
@@ -20,15 +21,11 @@ export function registerConventionsTools(server: McpServer, policiesDir: string)
   server.tool(
     "check-naming",
     "Verify file and class naming conventions",
-    {
-      projectDir: z.string().describe("Absolute path to the project root"),
-      profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
-    },
-    async ({ projectDir, profile }) => {
+    { projectDir: z.string().describe("Absolute path to the project root") },
+    async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
-      const profileConfig = profile ? await loadProfile(policiesDir, profile) : undefined;
-      const findings = await checkNamingConventions(safeDir, profileConfig);
-      return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
+      const findings = await checkNamingConventions(safeDir);
+      return jsonResponse(findings);
     },
   );
 
@@ -43,7 +40,7 @@ export function registerConventionsTools(server: McpServer, policiesDir: string)
       const safeDir = await validateProjectDir(projectDir);
       const profileConfig = profile ? await loadProfile(policiesDir, profile) : undefined;
       const findings = await checkFileLengths(safeDir, profileConfig);
-      return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
+      return jsonResponse(findings);
     },
   );
 
@@ -57,7 +54,7 @@ export function registerConventionsTools(server: McpServer, policiesDir: string)
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkTodoFixmes(safeDir);
-      return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
+      return jsonResponse(findings);
     },
   );
 
@@ -68,7 +65,7 @@ export function registerConventionsTools(server: McpServer, policiesDir: string)
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await parseLintOutput(safeDir);
-      return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
+      return jsonResponse(findings);
     },
   );
 
@@ -79,7 +76,7 @@ export function registerConventionsTools(server: McpServer, policiesDir: string)
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectDryViolations(safeDir);
-      return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
+      return jsonResponse(findings);
     },
   );
 }

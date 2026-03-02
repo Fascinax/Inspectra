@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { jsonResponse } from "./response.js";
 import { checkLayering, analyzeModuleDependencies, detectCircularDependencies } from "../tools/architecture.js";
 import { loadProfile } from "../policies/loader.js";
 import { validateProjectDir } from "../utils/paths.js";
@@ -22,7 +23,7 @@ export function registerArchitectureTools(server: McpServer, policiesDir: string
       const safeDir = await validateProjectDir(projectDir);
       const profileConfig = profile ? await loadProfile(policiesDir, profile) : undefined;
       const findings = await checkLayering(safeDir, profileConfig?.architecture?.allowed_dependencies);
-      return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
+      return jsonResponse(findings);
     },
   );
 
@@ -33,7 +34,7 @@ export function registerArchitectureTools(server: McpServer, policiesDir: string
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await analyzeModuleDependencies(safeDir);
-      return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
+      return jsonResponse(findings);
     },
   );
 
@@ -44,7 +45,7 @@ export function registerArchitectureTools(server: McpServer, policiesDir: string
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectCircularDependencies(safeDir);
-      return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
+      return jsonResponse(findings);
     },
   );
 }

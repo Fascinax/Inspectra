@@ -1,15 +1,8 @@
 import type { DomainReport, Finding, ConsolidatedReport } from "../types.js";
+import { SEVERITY_RANK } from "../types.js";
 import type { MergeOptions, GradeConfig, ConfidenceAdjustment, SeverityMatrixConfig } from "../policies/loader.js";
 import { deduplicateFindings } from "./deduplicate.js";
 import { computeOverallScore, deriveGrade } from "./score.js";
-
-const SEVERITY_ORDER: Record<Finding["severity"], number> = {
-  critical: 0,
-  high: 1,
-  medium: 2,
-  low: 3,
-  info: 4,
-};
 
 /**
  * Merges domain reports into a single consolidated audit report.
@@ -38,7 +31,7 @@ export function mergeReports(
   const deduplicated = deduplicateFindings(adjusted, options?.deduplication);
 
   const ranked = [...deduplicated].sort((a, b) => {
-    const sevDiff = SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity];
+    const sevDiff = SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity];
     if (sevDiff !== 0) return sevDiff;
     return b.confidence - a.confidence;
   });

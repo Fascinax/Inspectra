@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { jsonResponse } from "./response.js";
 import {
   parseCoverage,
   parseTestResults,
@@ -28,7 +29,7 @@ export function registerTestsTools(server: McpServer, policiesDir: string): void
       const safeDir = await validateProjectDir(projectDir);
       const profileConfig = profile ? await loadProfile(policiesDir, profile) : undefined;
       const findings = await parseCoverage(safeDir, profileConfig);
-      return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
+      return jsonResponse(findings);
     },
   );
 
@@ -39,7 +40,7 @@ export function registerTestsTools(server: McpServer, policiesDir: string): void
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await parseTestResults(safeDir);
-      return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
+      return jsonResponse(findings);
     },
   );
 
@@ -50,7 +51,7 @@ export function registerTestsTools(server: McpServer, policiesDir: string): void
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectMissingTests(safeDir);
-      return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
+      return jsonResponse(findings);
     },
   );
 
@@ -61,7 +62,7 @@ export function registerTestsTools(server: McpServer, policiesDir: string): void
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await parsePlaywrightReport(safeDir);
-      return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
+      return jsonResponse(findings);
     },
   );
 
@@ -72,7 +73,7 @@ export function registerTestsTools(server: McpServer, policiesDir: string): void
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectFlakyTests(safeDir);
-      return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
+      return jsonResponse(findings);
     },
   );
 }

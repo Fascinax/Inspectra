@@ -7,6 +7,10 @@ import { createIdSequence } from "../utils/id.js";
 
 const execFileAsync = promisify(execFile);
 
+const MAX_SNIPPET_LENGTH = 120;
+const MAX_DESCRIPTION_LENGTH = 500;
+const PROCESS_TIMEOUT_MS = 30_000;
+
 const SECRET_PATTERNS = [
   {
     rule: "no-hardcoded-secret",
@@ -40,7 +44,7 @@ const SECRET_PATTERNS = [
  * @returns Array of `Finding` objects, one per detected secret.
  */
 export async function scanSecrets(
-  filePaths: string[],
+  filePaths: ReadonlyArray<string>,
   additionalPatterns?: Array<{ rule: string; pattern: string; severity: string }>,
 ): Promise<Finding[]> {
   const extraPatterns = (additionalPatterns ?? []).map((p) => ({
@@ -71,7 +75,7 @@ export async function scanSecrets(
               domain: "security",
               rule,
               confidence: 0.85,
-              evidence: [{ file: filePath, line: lineIndex + 1, snippet: line.trim().substring(0, 120) }],
+              evidence: [{ file: filePath, line: lineIndex + 1, snippet: line.trim().substring(0, MAX_SNIPPET_LENGTH) }],
               recommendation: "Move this value to an environment variable or a secrets manager.",
               effort: "small",
               tags: ["secret", "credentials"],
@@ -100,7 +104,7 @@ export async function checkDependencyVulnerabilities(projectDir: string): Promis
   try {
     let stdout: string;
     try {
-      ({ stdout } = await execFileAsync("npm", ["audit", "--json"], { cwd: projectDir, timeout: 30_000 }));
+      ({ stdout } = await execFileAsync("npm", ["audit", "--json"], { cwd: projectDir, timeout: PROCESS_TIMEOUT_MS }));
     } catch (err: unknown) {
       // npm audit exits non-zero when vulnerabilities are found — stdout still contains JSON
       const execError = err as { stdout?: string };
@@ -165,11 +169,11 @@ export async function runSemgrep(projectDir: string): Promise<Finding[]> {
       id: nextId(),
       severity: mapSemgrepSeverity(r.extra.severity),
       title: `Semgrep: ${r.check_id.split(".").slice(-2).join(".")}`,
-      description: r.extra.message.substring(0, 500),
+      description: r.extra.message.substring(0, MAX_DESCRIPTION_LENGTH),
       domain: "security" as const,
       rule: `semgrep/${r.check_id}`,
       confidence: 0.9,
-      evidence: [{ file: r.path, line: r.start.line, snippet: r.extra.lines?.trim().substring(0, 120) }],
+      evidence: [{ file: r.path, line: r.start.line, snippet: r.extra.lines?.trim().substring(0, MAX_SNIPPET_LENGTH) }],
       recommendation: r.extra.fix ?? "Review and address the flagged pattern.",
       effort: "small" as const,
       tags: ["semgrep", r.check_id.split(".")[0]],

@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { jsonResponse } from "./response.js";
 import { mergeReports } from "../merger/merge-findings.js";
 import { scoreDomain } from "../merger/score.js";
 import { loadAllPolicies, loadScoringRules } from "../policies/loader.js";
@@ -33,7 +34,7 @@ export function registerMergerTools(server: McpServer, policiesDir: string): voi
       }
       const policies = await loadAllPolicies(policiesDir, profile);
       const consolidated = mergeReports(domainReports, target, profile, policies);
-      return { content: [{ type: "text", text: JSON.stringify(consolidated, null, 2) }] };
+      return jsonResponse(consolidated);
     },
   );
 
@@ -54,7 +55,7 @@ export function registerMergerTools(server: McpServer, policiesDir: string): voi
       }
       const scoring = await loadScoringRules(policiesDir);
       const score = scoreDomain(findings, scoring);
-      return { content: [{ type: "text", text: JSON.stringify({ score }, null, 2) }] };
+      return jsonResponse({ score });
     },
   );
 }

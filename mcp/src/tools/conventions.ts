@@ -9,6 +9,11 @@ import { createIdSequence } from "../utils/id.js";
 
 const execFileAsync = promisify(execFile);
 
+const MAX_SNIPPET_LENGTH = 120;
+const MAX_TITLE_EXCERPT_LENGTH = 80;
+const MAX_DESCRIPTION_LENGTH = 500;
+const ESLINT_TIMEOUT_MS = 30_000;
+
 const NAMING_CONVENTIONS: Array<{ pattern: RegExp; expected: string; rule: string }> = [
   {
     pattern: /\.(component|service|module|pipe|directive|guard|interceptor|resolver)\.ts$/,
@@ -34,7 +39,7 @@ const DEFAULT_FILE_LENGTH_ERROR = 800;
  * @param _profile - Optional policy profile (reserved for future profile-based rules).
  * @returns Array of `Finding` objects for each naming violation.
  */
-export async function checkNamingConventions(projectDir: string, _profile?: ProfileConfig): Promise<Finding[]> {
+export async function checkNamingConventions(projectDir: string): Promise<Finding[]> {
   const findings: Finding[] = [];
   const nextId = createIdSequence("CNV");
 
@@ -145,11 +150,11 @@ export async function checkTodoFixmes(projectDir: string): Promise<Finding[]> {
           findings.push({
             id: nextId(),
             severity: isUrgent ? "medium" : "low",
-            title: `${tag} comment: ${message.substring(0, 80)}`,
+            title: `${tag} comment: ${message.substring(0, MAX_TITLE_EXCERPT_LENGTH)}`,
             domain: "conventions",
             rule: "unresolved-todo",
             confidence: 1.0,
-            evidence: [{ file: relative(projectDir, filePath), line: i + 1, snippet: line.trim().substring(0, 120) }],
+            evidence: [{ file: relative(projectDir, filePath), line: i + 1, snippet: line.trim().substring(0, MAX_SNIPPET_LENGTH) }],
             recommendation: "Resolve the TODO/FIXME or create a tracked issue.",
             effort: "small",
             tags: ["tech-debt", tag.toLowerCase()],
@@ -200,7 +205,7 @@ export async function parseLintOutput(projectDir: string): Promise<Finding[]> {
         ({ stdout } = await execFileAsync(
           "npx",
           ["--no-install", "eslint", "--format", "json", "--no-eslintrc", "--rule", "{}", projectDir],
-          { cwd: projectDir, timeout: 30_000 },
+          { cwd: projectDir, timeout: ESLINT_TIMEOUT_MS },
         ));
         eslintJson = stdout;
       } catch (err: unknown) {
@@ -221,7 +226,7 @@ export async function parseLintOutput(projectDir: string): Promise<Finding[]> {
           findings.push({
             id: nextId(),
             severity: msg.severity === 2 ? "medium" : "low",
-            title: `ESLint [${msg.ruleId}]: ${msg.message.substring(0, 80)}`,
+            title: `ESLint [${msg.ruleId}]: ${msg.message.substring(0, MAX_TITLE_EXCERPT_LENGTH)}`,
             description: `ESLint rule '${msg.ruleId}' triggered: ${msg.message}`,
             domain: "conventions",
             rule: `eslint/${msg.ruleId}`,
@@ -230,7 +235,7 @@ export async function parseLintOutput(projectDir: string): Promise<Finding[]> {
               {
                 file: relative(projectDir, fileResult.filePath),
                 line: msg.line,
-                snippet: msg.source?.trim().substring(0, 120),
+                snippet: msg.source?.trim().substring(0, MAX_SNIPPET_LENGTH),
               },
             ],
             recommendation: `Fix the ESLint violation for rule '${msg.ruleId}'.`,
@@ -266,7 +271,7 @@ export async function parseLintOutput(projectDir: string): Promise<Finding[]> {
         findings.push({
           id: nextId(),
           severity: severity === "error" ? "medium" : "low",
-          title: `Checkstyle [${ruleName}]: ${message.substring(0, 80)}`,
+          title: `Checkstyle [${ruleName}]: ${message.substring(0, MAX_TITLE_EXCERPT_LENGTH)}`,
           description: message,
           domain: "conventions",
           rule: `checkstyle/${ruleName}`,

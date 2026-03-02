@@ -3,6 +3,15 @@ import { z } from "zod";
 export const SEVERITY_LEVELS = ["critical", "high", "medium", "low", "info"] as const;
 export type Severity = (typeof SEVERITY_LEVELS)[number];
 
+/** Numeric severity rank — higher value means more severe. Use for comparisons and sorting. */
+export const SEVERITY_RANK: Record<Severity, number> = {
+  critical: 5,
+  high: 4,
+  medium: 3,
+  low: 2,
+  info: 1,
+};
+
 export const DOMAINS = ["security", "tests", "architecture", "conventions", "performance", "documentation"] as const;
 export type Domain = (typeof DOMAINS)[number];
 
