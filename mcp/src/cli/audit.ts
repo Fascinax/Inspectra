@@ -40,12 +40,12 @@ import { renderSarif } from "../renderer/sarif.js";
 import { loadAllPolicies, type ProfileConfig, type ScoringConfig } from "../policies/loader.js";
 import type { DomainReport, Finding } from "../types.js";
 
-interface CliOptions {
+type CliOptions = {
   target: string;
   profile: string;
   format: "markdown" | "json" | "sarif";
   output: string | null;
-}
+};
 
 function parseArgs(argv: string[]): CliOptions {
   const args = argv.slice(2);
@@ -65,7 +65,7 @@ function parseArgs(argv: string[]): CliOptions {
 
 export function extractFlag(args: string[], flag: string): string | undefined {
   const arg = args.find((a) => a.startsWith(`${flag}=`));
-  return arg?.split("=")[1];
+  return arg === undefined ? undefined : arg.slice(arg.indexOf("=") + 1);
 }
 
 function printUsage(): void {
@@ -88,7 +88,7 @@ Examples:
 `);
 }
 
-async function collectSourceFiles(projectDir: string): Promise<string[]> {
+async function globSourceFiles(projectDir: string): Promise<string[]> {
   return globby(["**/*.ts", "**/*.js", "**/*.java"], {
     cwd: projectDir,
     absolute: true,
@@ -124,12 +124,14 @@ async function runSecurityAudit(
   const findings = [...secretFindings, ...vulnFindings, ...semgrepFindings, ...mavenFindings];
   const score = scoreDomain(findings, config);
 
-  return buildDomainReport("security", "audit-security", findings, score, start, [
-    "scan-secrets",
-    "check-deps-vulns",
-    "run-semgrep",
-    "check-maven-deps",
-  ]);
+  return buildDomainReport({
+    domain: "security",
+    agent: "audit-security",
+    findings,
+    score,
+    startMs: start,
+    tools: ["scan-secrets", "check-deps-vulns", "run-semgrep", "check-maven-deps"],
+  });
 }
 
 async function runTestsAudit(
@@ -162,13 +164,14 @@ async function runTestsAudit(
   ];
   const score = scoreDomain(findings, config);
 
-  return buildDomainReport("tests", "audit-tests", findings, score, start, [
-    "parse-coverage",
-    "parse-test-results",
-    "detect-missing-tests",
-    "parse-playwright-report",
-    "detect-flaky-tests",
-  ]);
+  return buildDomainReport({
+    domain: "tests",
+    agent: "audit-tests",
+    findings,
+    score,
+    startMs: start,
+    tools: ["parse-coverage", "parse-test-results", "detect-missing-tests", "parse-playwright-report", "detect-flaky-tests"],
+  });
 }
 
 async function runArchitectureAudit(
@@ -189,11 +192,14 @@ async function runArchitectureAudit(
   const findings = [...layerFindings, ...depFindings, ...circularFindings];
   const score = scoreDomain(findings, config);
 
-  return buildDomainReport("architecture", "audit-architecture", findings, score, start, [
-    "check-layering",
-    "analyze-dependencies",
-    "detect-circular-deps",
-  ]);
+  return buildDomainReport({
+    domain: "architecture",
+    agent: "audit-architecture",
+    findings,
+    score,
+    startMs: start,
+    tools: ["check-layering", "analyze-dependencies", "detect-circular-deps"],
+  });
 }
 
 async function runConventionsAudit(
@@ -220,23 +226,27 @@ async function runConventionsAudit(
   const findings = [...namingFindings, ...lengthFindings, ...todoFindings, ...lintFindings, ...dryFindings];
   const score = scoreDomain(findings, config);
 
-  return buildDomainReport("conventions", "audit-conventions", findings, score, start, [
-    "check-naming",
-    "check-file-lengths",
-    "check-todos",
-    "parse-lint-output",
-    "detect-dry-violations",
-  ]);
+  return buildDomainReport({
+    domain: "conventions",
+    agent: "audit-conventions",
+    findings,
+    score,
+    startMs: start,
+    tools: ["check-naming", "check-file-lengths", "check-todos", "parse-lint-output", "detect-dry-violations"],
+  });
 }
 
-export function buildDomainReport(
-  domain: DomainReport["domain"],
-  agent: string,
-  findings: Finding[],
-  score: number,
-  startMs: number,
-  tools: string[],
-): DomainReport {
+type BuildDomainReportParams = {
+  domain: DomainReport["domain"];
+  agent: string;
+  findings: Finding[];
+  score: number;
+  startMs: number;
+  tools: string[];
+};
+
+export function buildDomainReport(params: BuildDomainReportParams): DomainReport {
+  const { domain, agent, findings, score, startMs, tools } = params;
   const severityCounts = findings.reduce(
     (acc, f) => {
       acc[f.severity] = (acc[f.severity] ?? 0) + 1;
@@ -282,7 +292,7 @@ async function main(): Promise<void> {
   console.error(``);
 
   console.error("Collecting source files...");
-  const sourceFiles = await collectSourceFiles(opts.target);
+  const sourceFiles = await globSourceFiles(opts.target);
   console.error(`  Found ${sourceFiles.length} source files.\n`);
 
   console.error("Loading policies...");

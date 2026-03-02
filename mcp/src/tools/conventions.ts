@@ -169,93 +169,96 @@ export async function checkTodoFixmes(projectDir: string): Promise<Finding[]> {
   return findings;
 }
 
-/**
- * Parses an ESLint JSON report (if present) or runs ESLint with no-op rules
- * to collect linting findings. Also parses Checkstyle XML reports for Java projects.
- *
- * @param projectDir - Absolute path to the project root.
- * @returns Array of `Finding` objects from ESLint / Checkstyle output.
- */
-export async function parseLintOutput(projectDir: string): Promise<Finding[]> {
-  const findings: Finding[] = [];
-  const nextId = createIdSequence("CNV", 150);
+type EslintFileResult = {
+  filePath: string;
+  messages: Array<{
+    ruleId: string | null;
+    severity: number;
+    message: string;
+    line: number;
+    column?: number;
+    source?: string;
+  }>;
+};
 
-  // Strategy 1: look for pre-generated ESLint JSON report
+async function findEslintReport(projectDir: string): Promise<string | null> {
   const reportCandidates = [
     join(projectDir, "eslint-report.json"),
     join(projectDir, ".eslint-report.json"),
     join(projectDir, "reports", "eslint.json"),
   ];
-
-  let eslintJson: string | null = null;
   for (const p of reportCandidates) {
     try {
-      eslintJson = await readFile(p, "utf-8");
-      break;
+      return await readFile(p, "utf-8");
     } catch {
-      /* try next */
+      /* file not found — try next */
     }
   }
+  return null;
+}
 
-  // Strategy 2: run eslint if no pre-generated report
-  if (!eslintJson) {
+async function runEslintJson(projectDir: string): Promise<string | null> {
+  try {
     try {
-      let stdout: string;
-      try {
-        ({ stdout } = await execFileAsync(
-          "npx",
-          ["--no-install", "eslint", "--format", "json", "--no-eslintrc", "--rule", "{}", projectDir],
-          { cwd: projectDir, timeout: ESLINT_TIMEOUT_MS },
-        ));
-        eslintJson = stdout;
-      } catch (err: unknown) {
-        const e = err as { stdout?: string };
-        eslintJson = e.stdout ?? null;
-      }
-    } catch {
-      // The ESLint CLI is not available — skip lint findings
+      const { stdout } = await execFileAsync(
+        "npx",
+        ["--no-install", "eslint", "--format", "json", "--no-eslintrc", "--rule", "{}", projectDir],
+        { cwd: projectDir, timeout: ESLINT_TIMEOUT_MS },
+      );
+      return stdout;
+    } catch (err: unknown) {
+      const e = err as { stdout?: string };
+      return e.stdout ?? null;
     }
+  } catch {
+    /* ESLint CLI not available — skip */
+    return null;
   }
+}
 
-  if (eslintJson) {
-    try {
-      const results = JSON.parse(eslintJson) as EslintFileResult[];
-      for (const fileResult of results) {
-        for (const msg of fileResult.messages ?? []) {
-          if (!msg.ruleId) continue;
-          findings.push({
-            id: nextId(),
-            severity: msg.severity === 2 ? "medium" : "low",
-            title: `ESLint [${msg.ruleId}]: ${msg.message.substring(0, MAX_TITLE_EXCERPT_LENGTH)}`,
-            description: `ESLint rule '${msg.ruleId}' triggered: ${msg.message}`,
-            domain: "conventions",
-            rule: `eslint/${msg.ruleId}`,
-            confidence: 1.0,
-            evidence: [
-              {
-                file: relative(projectDir, fileResult.filePath),
-                line: msg.line,
-                snippet: msg.source?.trim().substring(0, MAX_SNIPPET_LENGTH),
-              },
-            ],
-            recommendation: `Fix the ESLint violation for rule '${msg.ruleId}'.`,
-            effort: "trivial",
-            tags: ["eslint", "lint"],
-          });
-        }
+function parseEslintFindings(eslintJson: string, projectDir: string, nextId: () => string): Finding[] {
+  const findings: Finding[] = [];
+  try {
+    const parsed: unknown = JSON.parse(eslintJson);
+    if (!Array.isArray(parsed)) return [];
+    const results = parsed as EslintFileResult[];
+    for (const fileResult of results) {
+      for (const msg of fileResult.messages ?? []) {
+        if (!msg.ruleId) continue;
+        findings.push({
+          id: nextId(),
+          severity: msg.severity === 2 ? "medium" : "low",
+          title: `ESLint [${msg.ruleId}]: ${msg.message.substring(0, MAX_TITLE_EXCERPT_LENGTH)}`,
+          description: `ESLint rule '${msg.ruleId}' triggered: ${msg.message}`,
+          domain: "conventions",
+          rule: `eslint/${msg.ruleId}`,
+          confidence: 1.0,
+          evidence: [
+            {
+              file: relative(projectDir, fileResult.filePath),
+              line: msg.line,
+              snippet: msg.source?.trim().substring(0, MAX_SNIPPET_LENGTH),
+            },
+          ],
+          recommendation: `Fix the ESLint violation for rule '${msg.ruleId}'.`,
+          effort: "trivial",
+          tags: ["eslint", "lint"],
+        });
       }
-    } catch {
-      /* malformed JSON */
     }
+  } catch {
+    /* malformed JSON */
   }
+  return findings;
+}
 
-  // Strategy 3: look for Checkstyle XML
+async function parseCheckstyleFindings(projectDir: string, nextId: () => string): Promise<Finding[]> {
+  const findings: Finding[] = [];
   const checkstyleCandidates = [
     join(projectDir, "target", "checkstyle-result.xml"),
     join(projectDir, "build", "reports", "checkstyle", "main.xml"),
     join(projectDir, "checkstyle-result.xml"),
   ];
-
   for (const p of checkstyleCandidates) {
     try {
       const xml = await readFile(p, "utf-8");
@@ -264,7 +267,6 @@ export async function parseLintOutput(projectDir: string): Promise<Finding[]> {
       );
       const fileMatch = xml.match(/<file\s+name="([^"]*)"/);
       const filePath = fileMatch ? relative(projectDir, fileMatch[1]) : p;
-
       for (const m of errorMatches) {
         const [, line, severity, message, source] = m;
         const ruleName = source.split(".").pop() ?? source;
@@ -284,23 +286,25 @@ export async function parseLintOutput(projectDir: string): Promise<Finding[]> {
       }
       break;
     } catch {
-      /* try next */
+      /* file not found — try next */
     }
   }
-
   return findings;
 }
 
-interface EslintFileResult {
-  filePath: string;
-  messages: Array<{
-    ruleId: string | null;
-    severity: number;
-    message: string;
-    line: number;
-    column?: number;
-    source?: string;
-  }>;
+/**
+ * Parses an ESLint JSON report (if present) or runs ESLint with no-op rules
+ * to collect linting findings. Also parses Checkstyle XML reports for Java projects.
+ *
+ * @param projectDir - Absolute path to the project root.
+ * @returns Array of `Finding` objects from ESLint / Checkstyle output.
+ */
+export async function parseLintOutput(projectDir: string): Promise<Finding[]> {
+  const nextId = createIdSequence("CNV", 150);
+  const eslintJson = (await findEslintReport(projectDir)) ?? (await runEslintJson(projectDir));
+  const eslintFindings = eslintJson ? parseEslintFindings(eslintJson, projectDir, nextId) : [];
+  const checkstyleFindings = await parseCheckstyleFindings(projectDir, nextId);
+  return [...eslintFindings, ...checkstyleFindings];
 }
 
 /**

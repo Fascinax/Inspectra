@@ -9,43 +9,43 @@ const SARIF_SCHEMA =
 const TOOL_NAME = "Inspectra";
 const TOOL_INFO_URI = "https://github.com/inspectra/inspectra";
 
-interface SarifMessage {
+type SarifMessage = {
   text: string;
-}
-interface SarifArtifactLocation {
+};
+type SarifArtifactLocation = {
   uri: string;
-}
-interface SarifRegion {
+};
+type SarifRegion = {
   startLine?: number;
-}
+};
 
-interface SarifPhysicalLocation {
+type SarifPhysicalLocation = {
   artifactLocation: SarifArtifactLocation;
   region?: SarifRegion;
-}
+};
 
-interface SarifLocation {
+type SarifLocation = {
   physicalLocation: SarifPhysicalLocation;
-}
+};
 
 type SarifLevel = "error" | "warning" | "note" | "none";
 
-interface SarifResult {
+type SarifResult = {
   ruleId: string;
   level: SarifLevel;
   message: SarifMessage;
   locations: SarifLocation[];
   properties: Record<string, unknown>;
-}
+};
 
-interface SarifReportingDescriptor {
+type SarifReportingDescriptor = {
   id: string;
   shortDescription: SarifMessage;
   helpUri?: string;
   properties: Record<string, unknown>;
-}
+};
 
-interface SarifRun {
+type SarifRun = {
   tool: {
     driver: {
       name: string;
@@ -59,13 +59,13 @@ interface SarifRun {
     executionSuccessful: boolean;
     endTimeUtc?: string;
   }>;
-}
+};
 
-interface SarifLog {
+type SarifLog = {
   version: string;
   $schema: string;
   runs: SarifRun[];
-}
+};
 
 const SEVERITY_TO_SARIF_LEVEL: Record<string, SarifLevel> = {
   critical: "error",

@@ -31,10 +31,12 @@ export async function parseCoverage(projectDir: string, profile?: ProfileConfig)
     try {
       await access(coveragePath);
       const raw = await readFile(coveragePath, "utf-8");
-      const data = JSON.parse(raw);
+      const parsed: unknown = JSON.parse(raw);
+      if (typeof parsed !== "object" || parsed === null) break;
+      const { total } = parsed as { total?: { lines?: { pct: number }; branches?: { pct: number }; functions?: { pct: number } } };
 
-      if (data.total) {
-        const { lines, branches, functions } = data.total;
+      if (total) {
+        const { lines, branches, functions } = total;
         const thresholds = {
           lines: profile?.coverage?.lines?.target ?? 80,
           branches: profile?.coverage?.branches?.target ?? 70,
@@ -42,16 +44,16 @@ export async function parseCoverage(projectDir: string, profile?: ProfileConfig)
         };
 
         if (lines?.pct !== undefined && lines.pct < thresholds.lines) {
-          findings.push(buildCoverageFinding(nextId(), "lines", lines.pct, thresholds.lines, coveragePath, projectDir));
+          findings.push(buildCoverageFinding({ id: nextId(), metric: "lines", actual: lines.pct, threshold: thresholds.lines, coveragePath, projectDir }));
         }
         if (branches?.pct !== undefined && branches.pct < thresholds.branches) {
           findings.push(
-            buildCoverageFinding(nextId(), "branches", branches.pct, thresholds.branches, coveragePath, projectDir),
+            buildCoverageFinding({ id: nextId(), metric: "branches", actual: branches.pct, threshold: thresholds.branches, coveragePath, projectDir }),
           );
         }
         if (functions?.pct !== undefined && functions.pct < thresholds.functions) {
           findings.push(
-            buildCoverageFinding(nextId(), "functions", functions.pct, thresholds.functions, coveragePath, projectDir),
+            buildCoverageFinding({ id: nextId(), metric: "functions", actual: functions.pct, threshold: thresholds.functions, coveragePath, projectDir }),
           );
         }
       }
@@ -225,17 +227,17 @@ export async function parsePlaywrightReport(projectDir: string): Promise<Finding
   return findings;
 }
 
-interface PlaywrightReport {
+type PlaywrightReport = {
   suites?: PlaywrightSuite[];
-}
+};
 
-interface PlaywrightSuite {
+type PlaywrightSuite = {
   title: string;
   suites?: PlaywrightSuite[];
   tests?: PlaywrightTest[];
-}
+};
 
-interface PlaywrightTest {
+type PlaywrightTest = {
   title: string;
   retries?: number;
   results?: Array<{
@@ -243,25 +245,14 @@ interface PlaywrightTest {
     duration?: number;
     error?: { message?: string };
   }>;
-}
+};
 
-/**
- * Detects flaky tests by checking JUnit XML for rerun markers
- * or Playwright reports for tests with multiple attempts.
- *
- * @param projectDir - Absolute path to the project root.
- * @returns Array of `Finding` objects for each detected flaky test.
- */
-export async function detectFlakyTests(projectDir: string): Promise<Finding[]> {
+async function detectJunitFlakyTests(projectDir: string, nextId: () => string): Promise<Finding[]> {
   const findings: Finding[] = [];
-  const nextId = createIdSequence("TST", 200);
-
-  // Strategy 1: JUnit XML — detect <rerunFailure> or <flakyFailure> elements
   const junitPath = join(projectDir, "test-results", "junit.xml");
   try {
     await access(junitPath);
     const xml = await readFile(junitPath, "utf-8");
-
     const reruns = xml.matchAll(
       /<testcase\s[^>]*?\bname="([^"]*)"[^>]*>[\s\S]*?<(?:rerunFailure|flakyFailure)[^/][\s\S]*?<\/testcase>/g,
     );
@@ -284,8 +275,11 @@ export async function detectFlakyTests(projectDir: string): Promise<Finding[]> {
   } catch {
     /* no junit report */
   }
+  return findings;
+}
 
-  // Strategy 2: Playwright — tests that needed retries to pass
+async function detectPlaywrightFlakyTests(projectDir: string, nextId: () => string): Promise<Finding[]> {
+  const findings: Finding[] = [];
   const playwrightPaths = [
     join(projectDir, "playwright-report", "results.json"),
     join(projectDir, "test-results", "results.json"),
@@ -335,14 +329,31 @@ export async function detectFlakyTests(projectDir: string): Promise<Finding[]> {
   return findings;
 }
 
-function buildCoverageFinding(
-  id: string,
-  metric: string,
-  actual: number,
-  threshold: number,
-  coveragePath: string,
-  projectDir: string,
-): Finding {
+/**
+ * Detects flaky tests by checking JUnit XML for rerun markers
+ * or Playwright reports for tests with multiple attempts.
+ *
+ * @param projectDir - Absolute path to the project root.
+ * @returns Array of `Finding` objects for each detected flaky test.
+ */
+export async function detectFlakyTests(projectDir: string): Promise<Finding[]> {
+  const nextId = createIdSequence("TST", 200);
+  const junitFindings = await detectJunitFlakyTests(projectDir, nextId);
+  const playwrightFindings = await detectPlaywrightFlakyTests(projectDir, nextId);
+  return [...junitFindings, ...playwrightFindings];
+}
+
+type BuildCoverageParams = {
+  id: string;
+  metric: string;
+  actual: number;
+  threshold: number;
+  coveragePath: string;
+  projectDir: string;
+};
+
+function buildCoverageFinding(params: BuildCoverageParams): Finding {
+  const { id, metric, actual, threshold, coveragePath, projectDir } = params;
   return {
     id,
     severity: actual < threshold - 20 ? "high" : "medium",

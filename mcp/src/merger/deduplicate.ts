@@ -30,10 +30,10 @@ export function deduplicateFindings(findings: ReadonlyArray<Finding>, config?: D
   return Array.from(seen.values());
 }
 
-interface AliasEntry {
+type AliasEntry = {
   canonical: string;
   keep_domain: string;
-}
+};
 
 function buildAliasMap(aliases: DeduplicationAlias[]): Map<string, AliasEntry> {
   const map = new Map<string, AliasEntry>();

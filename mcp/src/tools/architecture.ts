@@ -159,21 +159,21 @@ export async function detectCircularDependencies(projectDir: string): Promise<Fi
       }
       graph.set(filePath, deps);
     } catch {
+      /* unreadable — skip */
       graph.set(filePath, []);
     }
   }
 
   // DFS cycle detection
-  const WHITE = 0,
-    GREY = 1,
-    BLACK = 2;
-  const color = new Map<string, number>(files.map((f) => [f, WHITE]));
+  const DFS_COLOR = { WHITE: 0, GREY: 1, BLACK: 2 } as const;
+  type DfsColor = (typeof DFS_COLOR)[keyof typeof DFS_COLOR];
+  const color = new Map<string, DfsColor>(files.map((f) => [f, DFS_COLOR.WHITE]));
   const cycles = new Set<string>(); // deduplicate by cycle key
 
   function dfs(node: string, path: string[]): void {
-    color.set(node, GREY);
+    color.set(node, DFS_COLOR.GREY);
     for (const dep of graph.get(node) ?? []) {
-      if (color.get(dep) === GREY) {
+      if (color.get(dep) === DFS_COLOR.GREY) {
         // Back edge found — extract the cycle
         const cycleStart = path.indexOf(dep);
         if (cycleStart !== -1) {
@@ -201,15 +201,15 @@ export async function detectCircularDependencies(projectDir: string): Promise<Fi
             });
           }
         }
-      } else if (color.get(dep) === WHITE) {
+      } else if (color.get(dep) === DFS_COLOR.WHITE) {
         dfs(dep, [...path, node]);
       }
     }
-    color.set(node, BLACK);
+    color.set(node, DFS_COLOR.BLACK);
   }
 
   for (const node of files) {
-    if (color.get(node) === WHITE) {
+    if (color.get(node) === DFS_COLOR.WHITE) {
       dfs(node, []);
     }
   }
