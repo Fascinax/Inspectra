@@ -188,5 +188,5 @@ function groupBySeverity(findings: Finding[]): [string, Finding[]][] {
     map.set(f.severity, list);
   }
 
-  return order.filter((s) => map.has(s)).map((s) => [s, map.get(s)!]);
+  return order.filter((s) => map.has(s)).map((s) => [s, map.get(s) ?? []]);
 }

@@ -11,7 +11,6 @@ const execFileAsync = promisify(execFile);
 
 const MAX_SNIPPET_LENGTH = 120;
 const MAX_TITLE_EXCERPT_LENGTH = 80;
-const MAX_DESCRIPTION_LENGTH = 500;
 const ESLINT_TIMEOUT_MS = 30_000;
 
 const NAMING_CONVENTIONS: Array<{ pattern: RegExp; expected: string; rule: string }> = [

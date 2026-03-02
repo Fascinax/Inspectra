@@ -204,6 +204,20 @@ TARGET_PROJECT=/path/to/project PROFILE=generic FORMAT=markdown \
 | `make init TARGET=/path` | Copy agents into a project |
 | `make help` | List all commands |
 
+## npm Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run build` | Compile the MCP server (TypeScript → `mcp/dist/`) |
+| `npm test` | Run 171 unit + integration tests (Vitest) |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run test:coverage` | Run tests with V8 coverage report |
+| `npm run lint` | TypeScript type-check + ESLint |
+| `npm run lint:fix` | Auto-fix ESLint violations |
+| `npm run format` | Format source with Prettier |
+| `npm run format:check` | Check Prettier formatting (CI-safe) |
+| `npm run audit-local` | Run a local audit via CLI |
+
 ---
 
 ## Extending

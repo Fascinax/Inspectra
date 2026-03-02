@@ -1,4 +1,5 @@
-﻿import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+﻿/* eslint-disable no-console */
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";

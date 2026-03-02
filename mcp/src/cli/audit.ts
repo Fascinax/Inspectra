@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable no-console */
 
 /**
  * Inspectra CLI — Run a full audit locally without Copilot.

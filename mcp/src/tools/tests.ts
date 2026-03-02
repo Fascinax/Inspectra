@@ -5,7 +5,6 @@ import type { ProfileConfig } from "../policies/loader.js";
 import { collectSourceFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
 
-const MAX_SNIPPET_LENGTH = 120;
 const MAX_DESCRIPTION_LENGTH = 500;
 
 const SOURCE_EXTENSIONS = [".ts", ".js", ".java"];
@@ -209,7 +208,7 @@ export async function parsePlaywrightReport(projectDir: string): Promise<Finding
               domain: "tests",
               rule: "playwright-test-failure",
               confidence: 1.0,
-              evidence: [{ file: relative(projectDir, reportPath!), snippet: `Suite: ${title}` }],
+              evidence: [{ file: relative(projectDir, reportPath ?? ""), snippet: `Suite: ${title}` }],
               recommendation: "Fix the failing Playwright test or update expected behavior.",
               effort: "medium",
               tags: ["playwright", "test-failure"],

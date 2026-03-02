@@ -1,5 +1,4 @@
-import type { Finding } from "../types.js";
-import { SEVERITY_RANK } from "../types.js";
+import { SEVERITY_RANK, type Finding } from "../types.js";
 import type { DeduplicationConfig, DeduplicationAlias } from "../policies/loader.js";
 
 export function deduplicateFindings(findings: ReadonlyArray<Finding>, config?: DeduplicationConfig): Finding[] {

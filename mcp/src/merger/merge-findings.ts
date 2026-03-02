@@ -1,5 +1,4 @@
-import type { DomainReport, Finding, ConsolidatedReport } from "../types.js";
-import { SEVERITY_RANK } from "../types.js";
+import { SEVERITY_RANK, type DomainReport, type Finding, type ConsolidatedReport } from "../types.js";
 import type { MergeOptions, GradeConfig, ConfidenceAdjustment, SeverityMatrixConfig } from "../policies/loader.js";
 import { deduplicateFindings } from "./deduplicate.js";
 import { computeOverallScore, deriveGrade } from "./score.js";

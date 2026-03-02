@@ -12,7 +12,7 @@ Inspectra is a functional multi-agent code audit system with:
 - SARIF output for CI integration
 - 4 stack-specific profiles
 - CI workflows for validation, PR audits, and report generation
-- 139 unit tests
+- 171 unit + integration tests
 
 ## v0.2.0 — Tool Depth ✅ COMPLETE
 
