@@ -85,8 +85,8 @@ export async function parseTestResults(projectDir: string): Promise<Finding[]> {
       /<testcase\s[^>]*?\bname="([^"]*)"[^>]*>[\s\S]*?<failure[^>]*message="([^"]*)"[\s\S]*?<\/testcase>/g,
     );
     for (const match of failureMatches) {
-      const testName = match[1];
-      const message = match[2];
+      const testName = match[1] ?? "(unknown test)";
+      const message = match[2] ?? "";
       findings.push({
         id: nextId(),
         severity: "high",
@@ -298,7 +298,7 @@ async function detectPlaywrightFlakyTests(projectDir: string, nextId: () => stri
           for (const test of suite.tests ?? []) {
             const results = test.results ?? [];
             const hasFailure = results.some((r) => r.status === "failed" || r.status === "timedOut");
-            const hasFinalPass = results.length > 1 && results[results.length - 1].status === "passed";
+            const hasFinalPass = results.length > 1 && results.at(-1)?.status === "passed";
             if (hasFailure && hasFinalPass) {
               findings.push({
                 id: nextId(),

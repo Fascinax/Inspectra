@@ -11,7 +11,7 @@
   "scripts": {
     "build": "npm run build --workspace=mcp",
     "dev": "npm run dev --workspace=mcp",
-    "lint": "tsc --noEmit --project mcp/tsconfig.json && eslint mcp/src/",
+    "lint": "tsc --noEmit --project mcp/tsconfig.src.json && eslint mcp/src/",
     "lint:fix": "eslint mcp/src/ --fix",
     "format": "prettier --write mcp/src/",
     "format:check": "prettier --check mcp/src/",

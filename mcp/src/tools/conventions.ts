@@ -140,10 +140,11 @@ export async function checkTodoFixmes(projectDir: string): Promise<Finding[]> {
 
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
+        if (!line) continue;
         const todoMatch = line.match(/\/\/\s*(TODO|FIXME|HACK|XXX|WORKAROUND)\b[:\s]*(.*)/i);
         if (todoMatch) {
-          const tag = todoMatch[1].toUpperCase();
-          const message = todoMatch[2].trim() || "(no description)";
+          const tag = todoMatch[1]!.toUpperCase();
+          const message = todoMatch[2]?.trim() || "(no description)";
           const isUrgent = tag === "FIXME" || tag === "HACK" || tag === "XXX";
 
           findings.push({
@@ -265,9 +266,10 @@ async function parseCheckstyleFindings(projectDir: string, nextId: () => string)
         /<error\s+line="(\d+)"[^>]*severity="([^"]*)"[^>]*message="([^"]*)"[^>]*source="([^"]*)"/g,
       );
       const fileMatch = xml.match(/<file\s+name="([^"]*)"/);
-      const filePath = fileMatch ? relative(projectDir, fileMatch[1]) : p;
+      const filePath = fileMatch ? relative(projectDir, fileMatch[1]!) : p;
       for (const m of errorMatches) {
         const [, line, severity, message, source] = m;
+        if (!line || !severity || !message || !source) continue;
         const ruleName = source.split(".").pop() ?? source;
         findings.push({
           id: nextId(),
@@ -396,7 +398,7 @@ function followsDirectoryConvention(filePath: string): boolean {
     /\/(controller|service|repository|component|pipe|guard|interceptor|model|entity|dto)s?\//i,
   );
   if (!dirMatch) return true;
-  const dirType = dirMatch[1].toLowerCase();
+  const dirType = dirMatch[1]!.toLowerCase();
   const fileName = normalized.split("/").pop() ?? "";
   return fileName.includes(`.${dirType}.`) || fileName.includes(`.${dirType}s.`);
 }

@@ -250,7 +250,7 @@ function extractImports(content: string): string[] {
   const matches: string[] = [];
   let match: RegExpExecArray | null;
   while ((match = importRegex.exec(content)) !== null) {
-    matches.push(match[1]);
+    matches.push(match[1]!);
   }
   return matches;
 }
@@ -260,7 +260,7 @@ function findDuplicatedPrefixes(pkgs: string[]): Array<{ prefix: string; package
   for (const pkg of pkgs) {
     const parts = pkg.replace(/^@[^/]+\//, "").split("-");
     if (parts.length >= 2) {
-      const prefix = parts[0];
+      const prefix = parts[0]!;
       const existing = prefixMap.get(prefix) ?? [];
       existing.push(pkg);
       prefixMap.set(prefix, existing);

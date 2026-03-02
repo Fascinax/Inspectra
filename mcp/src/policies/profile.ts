@@ -32,13 +32,13 @@ export async function loadProfile(policiesDir: string, profileName: string): Pro
     coverage: coverage
       ? {
           lines: coverage.lines
-            ? { minimum: coverage.lines.minimum, target: coverage.lines.target }
+            ? { minimum: coverage.lines["minimum"] ?? 60, target: coverage.lines["target"] ?? 80 }
             : DEFAULT_PROFILE.coverage?.lines ?? { minimum: 60, target: 80 },
           branches: coverage.branches
-            ? { minimum: coverage.branches.minimum, target: coverage.branches.target }
+            ? { minimum: coverage.branches["minimum"] ?? 50, target: coverage.branches["target"] ?? 70 }
             : DEFAULT_PROFILE.coverage?.branches ?? { minimum: 50, target: 70 },
           functions: coverage.functions
-            ? { minimum: coverage.functions.minimum, target: coverage.functions.target }
+            ? { minimum: coverage.functions["minimum"] ?? 60, target: coverage.functions["target"] ?? 80 }
             : DEFAULT_PROFILE.coverage?.functions ?? { minimum: 60, target: 80 },
         }
       : DEFAULT_PROFILE.coverage,

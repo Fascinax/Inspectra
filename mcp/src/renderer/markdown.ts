@@ -142,10 +142,9 @@ function renderRecommendations(report: ConsolidatedReport): string {
   lines.push("Prioritized list of the most impactful fixes:");
   lines.push("");
 
-  for (let i = 0; i < actionable.length; i++) {
-    const f = actionable[i];
+  actionable.forEach((f, i) => {
     lines.push(`${i + 1}. **[${f.severity.toUpperCase()}]** ${f.recommendation} _(${f.id})_`);
-  }
+  });
 
   lines.push("");
   return lines.join("\n");

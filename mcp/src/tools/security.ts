@@ -65,6 +65,7 @@ export async function scanSecrets(
       for (const { rule, pattern, severity } of allPatterns) {
         for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
           const line = lines[lineIndex];
+          if (!line) continue;
           const regex = new RegExp(pattern.source, pattern.flags);
           if (regex.test(line)) {
             findings.push({
@@ -176,7 +177,7 @@ export async function runSemgrep(projectDir: string): Promise<Finding[]> {
       evidence: [{ file: r.path, line: r.start.line, snippet: r.extra.lines?.trim().substring(0, MAX_SNIPPET_LENGTH) }],
       recommendation: r.extra.fix ?? "Review and address the flagged pattern.",
       effort: "small" as const,
-      tags: ["semgrep", r.check_id.split(".")[0]],
+      tags: ["semgrep", r.check_id.split(".")[0] ?? r.check_id],
     }));
   } catch {
     return [];
