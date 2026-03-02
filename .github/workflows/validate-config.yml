@@ -65,8 +65,23 @@ jobs:
 
       - name: Validate policies YAML syntax
         run: |
-          npm install -g yaml-lint
-          yaml-lint policies/**/*.yml
+          python -m pip install --upgrade pip
+          python -m pip install pyyaml
+          python - <<'PY'
+          from pathlib import Path
+          import sys
+          import yaml
+
+          files = sorted(Path("policies").rglob("*.yml"))
+          if not files:
+              print("No policy files found under policies/**/*.yml")
+              sys.exit(1)
+
+          for file in files:
+              with file.open("r", encoding="utf-8") as f:
+                  yaml.safe_load(f)
+              print(f"OK: {file}")
+          PY
 
   lint-agents:
     runs-on: ubuntu-latest
