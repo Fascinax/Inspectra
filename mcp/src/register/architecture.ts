@@ -12,12 +12,21 @@ import { validateProjectDir } from "../utils/paths.js";
  * @param policiesDir - Absolute path to the policies directory.
  */
 export function registerArchitectureTools(server: McpServer, policiesDir: string): void {
-  server.tool(
+  server.registerTool(
     "check-layering",
-    "Verify clean architecture layer dependencies (presentation → application → domain ← infrastructure)",
     {
-      projectDir: z.string().describe("Absolute path to the project root"),
-      profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
+      title: "Check Layering",
+      description: "Verify clean architecture layer dependencies (presentation → application → domain ← infrastructure)",
+      inputSchema: {
+        projectDir: z.string().describe("Absolute path to the project root"),
+        profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
     },
     async ({ projectDir, profile }) => {
       const safeDir = await validateProjectDir(projectDir);
@@ -27,10 +36,21 @@ export function registerArchitectureTools(server: McpServer, policiesDir: string
     },
   );
 
-  server.tool(
+  server.registerTool(
     "analyze-dependencies",
-    "Analyze package.json dependencies for excessive count or duplication",
-    { projectDir: z.string().describe("Absolute path to the project root") },
+    {
+      title: "Analyze Dependencies",
+      description: "Analyze package.json dependencies for excessive count or duplication",
+      inputSchema: {
+        projectDir: z.string().describe("Absolute path to the project root"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await analyzeModuleDependencies(safeDir);
@@ -38,10 +58,21 @@ export function registerArchitectureTools(server: McpServer, policiesDir: string
     },
   );
 
-  server.tool(
+  server.registerTool(
     "detect-circular-deps",
-    "Detect circular import chains between source files",
-    { projectDir: z.string().describe("Absolute path to the project root") },
+    {
+      title: "Detect Circular Dependencies",
+      description: "Detect circular import chains between source files",
+      inputSchema: {
+        projectDir: z.string().describe("Absolute path to the project root"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectCircularDependencies(safeDir);

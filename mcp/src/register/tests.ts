@@ -18,12 +18,21 @@ import { validateProjectDir } from "../utils/paths.js";
  * @param policiesDir - Absolute path to the policies directory.
  */
 export function registerTestsTools(server: McpServer, policiesDir: string): void {
-  server.tool(
+  server.registerTool(
     "parse-coverage",
-    "Parse coverage reports and flag metrics below thresholds",
     {
-      projectDir: z.string().describe("Absolute path to the project root"),
-      profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
+      title: "Parse Coverage",
+      description: "Parse coverage reports and flag metrics below thresholds",
+      inputSchema: {
+        projectDir: z.string().describe("Absolute path to the project root"),
+        profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
     },
     async ({ projectDir, profile }) => {
       const safeDir = await validateProjectDir(projectDir);
@@ -33,10 +42,21 @@ export function registerTestsTools(server: McpServer, policiesDir: string): void
     },
   );
 
-  server.tool(
+  server.registerTool(
     "parse-test-results",
-    "Parse JUnit XML test results and report failures",
-    { projectDir: z.string().describe("Absolute path to the project root") },
+    {
+      title: "Parse Test Results",
+      description: "Parse JUnit XML test results and report failures",
+      inputSchema: {
+        projectDir: z.string().describe("Absolute path to the project root"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await parseTestResults(safeDir);
@@ -44,10 +64,21 @@ export function registerTestsTools(server: McpServer, policiesDir: string): void
     },
   );
 
-  server.tool(
+  server.registerTool(
     "detect-missing-tests",
-    "Detect source files that lack a corresponding test file",
-    { projectDir: z.string().describe("Absolute path to the project root") },
+    {
+      title: "Detect Missing Tests",
+      description: "Detect source files that lack a corresponding test file",
+      inputSchema: {
+        projectDir: z.string().describe("Absolute path to the project root"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectMissingTests(safeDir);
@@ -55,10 +86,21 @@ export function registerTestsTools(server: McpServer, policiesDir: string): void
     },
   );
 
-  server.tool(
+  server.registerTool(
     "parse-playwright-report",
-    "Parse Playwright JSON test reports and report failures",
-    { projectDir: z.string().describe("Absolute path to the project root") },
+    {
+      title: "Parse Playwright Report",
+      description: "Parse Playwright JSON test reports and report failures",
+      inputSchema: {
+        projectDir: z.string().describe("Absolute path to the project root"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await parsePlaywrightReport(safeDir);
@@ -66,10 +108,21 @@ export function registerTestsTools(server: McpServer, policiesDir: string): void
     },
   );
 
-  server.tool(
+  server.registerTool(
     "detect-flaky-tests",
-    "Detect flaky tests from JUnit XML rerun markers or Playwright retry results",
-    { projectDir: z.string().describe("Absolute path to the project root") },
+    {
+      title: "Detect Flaky Tests",
+      description: "Detect flaky tests from JUnit XML rerun markers or Playwright retry results",
+      inputSchema: {
+        projectDir: z.string().describe("Absolute path to the project root"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectFlakyTests(safeDir);

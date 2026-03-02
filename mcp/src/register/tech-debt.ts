@@ -8,10 +8,21 @@ import { validateProjectDir } from "../utils/paths.js";
  * Registers all tech-debt-domain MCP tools on the given server instance.
  */
 export function registerTechDebtTools(server: McpServer): void {
-  server.tool(
+  server.registerTool(
     "analyze-complexity",
-    "Estimate code complexity and flag high-maintenance files",
-    { projectDir: z.string().describe("Absolute path to the project root") },
+    {
+      title: "Analyze Complexity",
+      description: "Estimate code complexity and flag high-maintenance files",
+      inputSchema: {
+        projectDir: z.string().describe("Absolute path to the project root"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await analyzeComplexity(safeDir);
@@ -19,10 +30,21 @@ export function registerTechDebtTools(server: McpServer): void {
     },
   );
 
-  server.tool(
+  server.registerTool(
     "age-todos",
-    "Find aged TODO/FIXME comments from inline dates",
-    { projectDir: z.string().describe("Absolute path to the project root") },
+    {
+      title: "Age TODOs",
+      description: "Find aged TODO/FIXME comments from inline dates",
+      inputSchema: {
+        projectDir: z.string().describe("Absolute path to the project root"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await ageTodos(safeDir);
@@ -30,10 +52,21 @@ export function registerTechDebtTools(server: McpServer): void {
     },
   );
 
-  server.tool(
+  server.registerTool(
     "check-dependency-staleness",
-    "Detect dependency staleness risks from manifest version patterns",
-    { projectDir: z.string().describe("Absolute path to the project root") },
+    {
+      title: "Check Dependency Staleness",
+      description: "Detect dependency staleness risks from manifest version patterns",
+      inputSchema: {
+        projectDir: z.string().describe("Absolute path to the project root"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkDependencyStaleness(safeDir);

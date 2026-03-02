@@ -8,10 +8,21 @@ import { validateProjectDir } from "../utils/paths.js";
  * Registers all performance-domain MCP tools on the given server instance.
  */
 export function registerPerformanceTools(server: McpServer): void {
-  server.tool(
+  server.registerTool(
     "analyze-bundle-size",
-    "Analyze bundle size from build outputs and flag oversized artifacts",
-    { projectDir: z.string().describe("Absolute path to the project root") },
+    {
+      title: "Analyze Bundle Size",
+      description: "Analyze bundle size from build outputs and flag oversized artifacts",
+      inputSchema: {
+        projectDir: z.string().describe("Absolute path to the project root"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await analyzeBundleSize(safeDir);
@@ -19,10 +30,21 @@ export function registerPerformanceTools(server: McpServer): void {
     },
   );
 
-  server.tool(
+  server.registerTool(
     "check-build-timings",
-    "Parse build timing metrics and flag slow or unstable builds",
-    { projectDir: z.string().describe("Absolute path to the project root") },
+    {
+      title: "Check Build Timings",
+      description: "Parse build timing metrics and flag slow or unstable builds",
+      inputSchema: {
+        projectDir: z.string().describe("Absolute path to the project root"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkBuildTimings(safeDir);
@@ -30,10 +52,21 @@ export function registerPerformanceTools(server: McpServer): void {
     },
   );
 
-  server.tool(
+  server.registerTool(
     "detect-runtime-metrics",
-    "Detect static runtime performance hotspots (sync I/O, blocking calls)",
-    { projectDir: z.string().describe("Absolute path to the project root") },
+    {
+      title: "Detect Runtime Metrics",
+      description: "Detect static runtime performance hotspots (sync I/O, blocking calls)",
+      inputSchema: {
+        projectDir: z.string().describe("Absolute path to the project root"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectRuntimeMetrics(safeDir);

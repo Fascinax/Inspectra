@@ -8,10 +8,21 @@ import { validateProjectDir } from "../utils/paths.js";
  * Registers all documentation-domain MCP tools on the given server instance.
  */
 export function registerDocumentationTools(server: McpServer): void {
-  server.tool(
+  server.registerTool(
     "check-readme-completeness",
-    "Evaluate README presence and completeness against baseline sections",
-    { projectDir: z.string().describe("Absolute path to the project root") },
+    {
+      title: "Check README Completeness",
+      description: "Evaluate README presence and completeness against baseline sections",
+      inputSchema: {
+        projectDir: z.string().describe("Absolute path to the project root"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkReadmeCompleteness(safeDir);
@@ -19,10 +30,21 @@ export function registerDocumentationTools(server: McpServer): void {
     },
   );
 
-  server.tool(
+  server.registerTool(
     "check-adr-presence",
-    "Check whether ADR documents are present under docs/adr or docs/adrs",
-    { projectDir: z.string().describe("Absolute path to the project root") },
+    {
+      title: "Check ADR Presence",
+      description: "Check whether ADR documents are present under docs/adr or docs/adrs",
+      inputSchema: {
+        projectDir: z.string().describe("Absolute path to the project root"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkAdrPresence(safeDir);
@@ -30,10 +52,21 @@ export function registerDocumentationTools(server: McpServer): void {
     },
   );
 
-  server.tool(
+  server.registerTool(
     "detect-doc-code-drift",
-    "Detect mismatches between package scripts and README usage instructions",
-    { projectDir: z.string().describe("Absolute path to the project root") },
+    {
+      title: "Detect Doc-Code Drift",
+      description: "Detect mismatches between package scripts and README usage instructions",
+      inputSchema: {
+        projectDir: z.string().describe("Absolute path to the project root"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectDocCodeDrift(safeDir);

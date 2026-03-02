@@ -12,12 +12,21 @@ import { validateProjectDir, validateFilePathsCsv } from "../utils/paths.js";
  * @param policiesDir - Absolute path to the policies directory.
  */
 export function registerSecurityTools(server: McpServer, policiesDir: string): void {
-  server.tool(
+  server.registerTool(
     "scan-secrets",
-    "Scan source files for hardcoded secrets, API keys, and credentials",
     {
-      filePathsCsv: z.string().describe("Comma-separated absolute paths to files to scan"),
-      profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
+      title: "Scan Secrets",
+      description: "Scan source files for hardcoded secrets, API keys, and credentials",
+      inputSchema: {
+        filePathsCsv: z.string().describe("Comma-separated absolute paths to files to scan"),
+        profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
     },
     async ({ filePathsCsv, profile }) => {
       const filePaths = await validateFilePathsCsv(filePathsCsv);
@@ -27,10 +36,21 @@ export function registerSecurityTools(server: McpServer, policiesDir: string): v
     },
   );
 
-  server.tool(
+  server.registerTool(
     "check-deps-vulns",
-    "Run npm audit to find vulnerable dependencies",
-    { projectDir: z.string().describe("Absolute path to the project root") },
+    {
+      title: "Check Dependency Vulnerabilities",
+      description: "Run npm audit to find vulnerable dependencies",
+      inputSchema: {
+        projectDir: z.string().describe("Absolute path to the project root"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    },
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkDependencyVulnerabilities(safeDir);
@@ -38,10 +58,21 @@ export function registerSecurityTools(server: McpServer, policiesDir: string): v
     },
   );
 
-  server.tool(
+  server.registerTool(
     "run-semgrep",
-    "Run Semgrep static analysis to detect deep security and code quality patterns",
-    { projectDir: z.string().describe("Absolute path to the project root") },
+    {
+      title: "Run Semgrep",
+      description: "Run Semgrep static analysis to detect deep security and code quality patterns",
+      inputSchema: {
+        projectDir: z.string().describe("Absolute path to the project root"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    },
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await runSemgrep(safeDir);
@@ -49,10 +80,21 @@ export function registerSecurityTools(server: McpServer, policiesDir: string): v
     },
   );
 
-  server.tool(
+  server.registerTool(
     "check-maven-deps",
-    "Analyze Maven pom.xml for dependency count, SNAPSHOT versions, and outdated libraries",
-    { projectDir: z.string().describe("Absolute path to the project root") },
+    {
+      title: "Check Maven Dependencies",
+      description: "Analyze Maven pom.xml for dependency count, SNAPSHOT versions, and outdated libraries",
+      inputSchema: {
+        projectDir: z.string().describe("Absolute path to the project root"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkMavenDependencies(safeDir);

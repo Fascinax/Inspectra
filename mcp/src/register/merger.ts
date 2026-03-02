@@ -13,13 +13,22 @@ import { DomainReportSchema, FindingSchema } from "../types.js";
  * @param policiesDir - Absolute path to the policies directory.
  */
 export function registerMergerTools(server: McpServer, policiesDir: string): void {
-  server.tool(
+  server.registerTool(
     "merge-domain-reports",
-    "Merge multiple domain reports into a consolidated audit report with scoring and deduplication",
     {
-      domainReportsJson: z.string().describe("JSON string — array of domain report objects"),
-      target: z.string().describe("Repository or path being audited"),
-      profile: z.string().describe("Policy profile used (e.g., java-angular-playwright)"),
+      title: "Merge Domain Reports",
+      description: "Merge multiple domain reports into a consolidated audit report with scoring and deduplication",
+      inputSchema: {
+        domainReportsJson: z.string().describe("JSON string — array of domain report objects"),
+        target: z.string().describe("Repository or path being audited"),
+        profile: z.string().describe("Policy profile used (e.g., java-angular-playwright)"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
     },
     async ({ domainReportsJson, target, profile }) => {
       let domainReports;
@@ -38,10 +47,21 @@ export function registerMergerTools(server: McpServer, policiesDir: string): voi
     },
   );
 
-  server.tool(
+  server.registerTool(
     "score-findings",
-    "Compute a domain score from a list of findings",
-    { findingsJson: z.string().describe("JSON string — array of finding objects") },
+    {
+      title: "Score Findings",
+      description: "Compute a domain score from a list of findings",
+      inputSchema: {
+        findingsJson: z.string().describe("JSON string — array of finding objects"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     async ({ findingsJson }) => {
       let findings;
       try {
