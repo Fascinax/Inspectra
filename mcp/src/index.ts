@@ -7,10 +7,10 @@ import { fileURLToPath } from "node:url";
 import { scanSecrets, checkDependencyVulnerabilities } from "./tools/security.js";
 import { parseCoverage, parseTestResults, detectMissingTests } from "./tools/tests.js";
 import { checkLayering, analyzeModuleDependencies } from "./tools/architecture.js";
-import { checkNamingConventions, checkFileLengths, checkTodoFixmes } from "./tools/code-quality.js";
+import { checkNamingConventions, checkFileLengths, checkTodoFixmes } from "./tools/conventions.js";
 import { mergeReports } from "./merger/merge-findings.js";
 import { scoreDomain } from "./merger/score.js";
-import { loadAllPolicies, loadScoringRules } from "./policies/loader.js";
+import { loadAllPolicies, loadScoringRules, loadProfile } from "./policies/loader.js";
 import { DomainReportSchema, FindingSchema } from "./types.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -26,10 +26,14 @@ const server = new McpServer({
 server.tool(
   "scan-secrets",
   "Scan source files for hardcoded secrets, API keys, and credentials",
-  { filePathsCsv: z.string().describe("Comma-separated absolute paths to files to scan") },
-  async ({ filePathsCsv }) => {
+  {
+    filePathsCsv: z.string().describe("Comma-separated absolute paths to files to scan"),
+    profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
+  },
+  async ({ filePathsCsv, profile }) => {
     const filePaths = filePathsCsv.split(",").map((p) => p.trim()).filter(Boolean);
-    const findings = await scanSecrets(filePaths);
+    const profileConfig = profile ? await loadProfile(POLICIES_DIR, profile) : undefined;
+    const findings = await scanSecrets(filePaths, profileConfig?.security?.additional_patterns);
     return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
   }
 );
@@ -49,9 +53,13 @@ server.tool(
 server.tool(
   "parse-coverage",
   "Parse coverage reports and flag metrics below thresholds",
-  { projectDir: z.string().describe("Absolute path to the project root") },
-  async ({ projectDir }) => {
-    const findings = await parseCoverage(projectDir);
+  {
+    projectDir: z.string().describe("Absolute path to the project root"),
+    profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
+  },
+  async ({ projectDir, profile }) => {
+    const profileConfig = profile ? await loadProfile(POLICIES_DIR, profile) : undefined;
+    const findings = await parseCoverage(projectDir, profileConfig);
     return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
   }
 );
@@ -81,9 +89,13 @@ server.tool(
 server.tool(
   "check-layering",
   "Verify clean architecture layer dependencies (presentation → application → domain ← infrastructure)",
-  { projectDir: z.string().describe("Absolute path to the project root") },
-  async ({ projectDir }) => {
-    const findings = await checkLayering(projectDir);
+  {
+    projectDir: z.string().describe("Absolute path to the project root"),
+    profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
+  },
+  async ({ projectDir, profile }) => {
+    const profileConfig = profile ? await loadProfile(POLICIES_DIR, profile) : undefined;
+    const findings = await checkLayering(projectDir, profileConfig?.architecture?.allowed_dependencies);
     return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
   }
 );
@@ -98,14 +110,18 @@ server.tool(
   }
 );
 
-// ─── Code Quality Tools ─────────────────────────────────────────────────────
+// ─── Conventions Tools ──────────────────────────────────────────────────────
 
 server.tool(
   "check-naming",
   "Verify file and class naming conventions",
-  { projectDir: z.string().describe("Absolute path to the project root") },
-  async ({ projectDir }) => {
-    const findings = await checkNamingConventions(projectDir);
+  {
+    projectDir: z.string().describe("Absolute path to the project root"),
+    profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
+  },
+  async ({ projectDir, profile }) => {
+    const profileConfig = profile ? await loadProfile(POLICIES_DIR, profile) : undefined;
+    const findings = await checkNamingConventions(projectDir, profileConfig);
     return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
   }
 );
@@ -113,9 +129,13 @@ server.tool(
 server.tool(
   "check-file-lengths",
   "Flag files exceeding length thresholds",
-  { projectDir: z.string().describe("Absolute path to the project root") },
-  async ({ projectDir }) => {
-    const findings = await checkFileLengths(projectDir);
+  {
+    projectDir: z.string().describe("Absolute path to the project root"),
+    profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
+  },
+  async ({ projectDir, profile }) => {
+    const profileConfig = profile ? await loadProfile(POLICIES_DIR, profile) : undefined;
+    const findings = await checkFileLengths(projectDir, profileConfig);
     return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
   }
 );
@@ -123,7 +143,10 @@ server.tool(
 server.tool(
   "check-todos",
   "Find unresolved TODO, FIXME, HACK, and XXX comments",
-  { projectDir: z.string().describe("Absolute path to the project root") },
+  {
+    projectDir: z.string().describe("Absolute path to the project root"),
+    profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
+  },
   async ({ projectDir }) => {
     const findings = await checkTodoFixmes(projectDir);
     return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };

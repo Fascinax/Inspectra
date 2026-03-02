@@ -8,6 +8,7 @@ import {
   loadDeduplicationRules,
   loadProfile,
   loadAllPolicies,
+  loadSeverityMatrix,
   DEFAULT_SCORING,
   DEFAULT_CONFIDENCE,
 } from "../policies/loader.js";
@@ -129,6 +130,38 @@ file_lengths:
     const profile = await loadProfile(tempDir, "nonexistent");
     expect(profile.profile).toBe("generic");
     expect(profile.file_lengths?.warning).toBe(400);
+  });
+});
+
+describe("loadSeverityMatrix", () => {
+  let tempDir: string;
+
+  beforeEach(() => { tempDir = makeTempDir(); });
+  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
+
+  it("loads sla_days per severity level", async () => {
+    writeFileSync(join(tempDir, "severity-matrix.yml"), `
+severity_defaults:
+  critical:
+    description: "Immediate risk"
+    sla_days: 1
+  high:
+    description: "Significant risk"
+    sla_days: 7
+  medium:
+    description: "Moderate risk"
+    sla_days: 14
+`);
+    const matrix = await loadSeverityMatrix(tempDir);
+    expect(matrix).not.toBeNull();
+    expect(matrix!.severity_defaults.critical.sla_days).toBe(1);
+    expect(matrix!.severity_defaults.high.sla_days).toBe(7);
+    expect(matrix!.severity_defaults.medium.description).toBe("Moderate risk");
+  });
+
+  it("returns null when file is missing", async () => {
+    const matrix = await loadSeverityMatrix(tempDir);
+    expect(matrix).toBeNull();
   });
 });
 

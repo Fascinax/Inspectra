@@ -12,7 +12,7 @@ const NAMING_CONVENTIONS: Array<{ pattern: RegExp; expected: string; rule: strin
 const DEFAULT_FILE_LENGTH_WARNING = 400;
 const DEFAULT_FILE_LENGTH_ERROR = 800;
 
-export async function checkNamingConventions(projectDir: string): Promise<Finding[]> {
+export async function checkNamingConventions(projectDir: string, _profile?: ProfileConfig): Promise<Finding[]> {
   const findings: Finding[] = [];
   let counter = 1;
 

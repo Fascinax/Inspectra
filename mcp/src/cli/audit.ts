@@ -19,7 +19,7 @@ import { globby } from "globby";
 import { scanSecrets, checkDependencyVulnerabilities } from "../tools/security.js";
 import { parseCoverage, parseTestResults, detectMissingTests } from "../tools/tests.js";
 import { checkLayering, analyzeModuleDependencies } from "../tools/architecture.js";
-import { checkNamingConventions, checkFileLengths, checkTodoFixmes } from "../tools/code-quality.js";
+import { checkNamingConventions, checkFileLengths, checkTodoFixmes } from "../tools/conventions.js";
 import { scoreDomain } from "../merger/score.js";
 import { mergeReports } from "../merger/merge-findings.js";
 import { renderMarkdown } from "../renderer/markdown.js";

@@ -66,7 +66,7 @@ inspectra/
 │     │  ├─ security.ts      # scan-secrets, check-deps-vulns
 │     │  ├─ tests.ts         # parse-coverage, parse-test-results, detect-missing-tests
 │     │  ├─ architecture.ts  # check-layering, analyze-dependencies
-│     │  └─ code-quality.ts  # check-naming, check-file-lengths, check-todos
+│     │  └─ conventions.ts  # check-naming, check-file-lengths, check-todos
 │     └─ merger/
 │        ├─ merge-findings.ts  # merge-domain-reports tool
 │        ├─ deduplicate.ts     # Deduplication logic
@@ -102,7 +102,11 @@ inspectra/
 │
 ├─ docs/                # Documentation
 │  ├─ architecture.md
-│  └─ adding-a-tool.md
+│  ├─ adding-a-tool.md
+│  ├─ adding-an-agent.md
+│  ├─ output-format.md
+│  ├─ scoring-model.md
+│  └─ roadmap.md
 │
 ├─ Makefile             # Unified command runner
 └─ bin/init.mjs         # Copy agents into a target project
@@ -189,7 +193,11 @@ TARGET_PROJECT=/path/to/project PROFILE=generic FORMAT=markdown \
 ## Extending
 
 - **Add a tool**: See [docs/adding-a-tool.md](docs/adding-a-tool.md)
+- **Add an agent**: See [docs/adding-an-agent.md](docs/adding-an-agent.md)
 - **Architecture guide**: See [docs/architecture.md](docs/architecture.md)
+- **Output formats**: See [docs/output-format.md](docs/output-format.md)
+- **Scoring model**: See [docs/scoring-model.md](docs/scoring-model.md)
+- **Roadmap**: See [docs/roadmap.md](docs/roadmap.md)
 - **Add a domain**: Create a new agent in `.github/agents/`, add tools in `mcp/src/tools/`, update scoring weights
 - **Add a profile**: Create a YAML file in `policies/profiles/`
 

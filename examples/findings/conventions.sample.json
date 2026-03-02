@@ -1,7 +1,7 @@
 {
   "domain": "conventions",
   "score": 81,
-  "summary": "0 high, 1 medium, 3 low",
+  "summary": "0 high, 2 medium, 2 low",
   "findings": [
     {
       "id": "CNV-050",
@@ -58,7 +58,7 @@
     },
     {
       "id": "CNV-101",
-      "severity": "low",
+      "severity": "medium",
       "title": "FIXME comment: race condition on concurrent checkouts",
       "description": "Unresolved FIXME marker found in source file.",
       "domain": "conventions",

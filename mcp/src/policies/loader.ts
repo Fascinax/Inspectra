@@ -47,6 +47,15 @@ export interface SecurityPatternOverride {
   severity: string;
 }
 
+export interface SeverityMatrixLevel {
+  description: string;
+  sla_days: number | null;
+}
+
+export interface SeverityMatrixConfig {
+  severity_defaults: Record<string, SeverityMatrixLevel>;
+}
+
 export interface ProfileConfig {
   profile: string;
   coverage?: {
@@ -73,6 +82,7 @@ export interface MergeOptions {
   confidence?: ConfidenceConfig;
   deduplication?: DeduplicationConfig;
   profile?: ProfileConfig;
+  severityMatrix?: SeverityMatrixConfig;
 }
 
 const DEFAULT_SCORING: ScoringConfig = {
@@ -204,15 +214,34 @@ export async function loadProfile(policiesDir: string, profileName: string): Pro
   };
 }
 
+export async function loadSeverityMatrix(policiesDir: string): Promise<SeverityMatrixConfig | null> {
+  const data = await loadYaml<Record<string, unknown>>(join(policiesDir, "severity-matrix.yml"));
+  if (!data) return null;
+
+  const rawDefaults = data.severity_defaults as Record<string, Record<string, unknown>> | undefined;
+  if (!rawDefaults) return null;
+
+  const severity_defaults: Record<string, SeverityMatrixLevel> = {};
+  for (const [level, config] of Object.entries(rawDefaults)) {
+    severity_defaults[level] = {
+      description: (config.description as string) ?? "",
+      sla_days: config.sla_days != null ? (config.sla_days as number) : null,
+    };
+  }
+
+  return { severity_defaults };
+}
+
 export async function loadAllPolicies(policiesDir: string, profileName: string): Promise<MergeOptions> {
-  const [scoring, confidence, deduplication, profile] = await Promise.all([
+  const [scoring, confidence, deduplication, profile, severityMatrix] = await Promise.all([
     loadScoringRules(policiesDir),
     loadConfidenceRules(policiesDir),
     loadDeduplicationRules(policiesDir),
     loadProfile(policiesDir, profileName),
+    loadSeverityMatrix(policiesDir),
   ]);
 
-  return { scoring, confidence, deduplication, profile };
+  return { scoring, confidence, deduplication, profile, ...(severityMatrix ? { severityMatrix } : {}) };
 }
 
 export { DEFAULT_SCORING, DEFAULT_CONFIDENCE };

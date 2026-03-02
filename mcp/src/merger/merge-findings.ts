@@ -1,5 +1,5 @@
 import type { DomainReport, Finding, ConsolidatedReport } from "../types.js";
-import type { MergeOptions, GradeConfig, ConfidenceAdjustment } from "../policies/loader.js";
+import type { MergeOptions, GradeConfig, ConfidenceAdjustment, SeverityMatrixConfig } from "../policies/loader.js";
 import { deduplicateFindings } from "./deduplicate.js";
 import { computeOverallScore, deriveGrade } from "./score.js";
 
@@ -49,7 +49,7 @@ export function mergeReports(
     byDomain[f.domain] = (byDomain[f.domain] ?? 0) + 1;
   }
 
-  const summary = buildSummary(overallScore, bySeverity, domainReports, options?.scoring?.grades);
+  const summary = buildSummary(overallScore, bySeverity, domainReports, options?.scoring?.grades, options?.severityMatrix);
 
   return {
     overall_score: overallScore,
@@ -76,6 +76,7 @@ function buildSummary(
   bySeverity: Record<string, number>,
   domainReports: DomainReport[],
   grades?: Record<string, GradeConfig>,
+  severityMatrix?: SeverityMatrixConfig,
 ): string {
   const grade = deriveGrade(score, grades);
   const parts = Object.entries(bySeverity)
@@ -89,6 +90,18 @@ function buildSummary(
   let text = `Overall score: ${score}/100 (Grade ${grade}). Findings: ${parts.join(", ") || "none"}.`;
   if (worstDomain && worstDomain.score < 70) {
     text += ` Priority area: ${worstDomain.domain} (${worstDomain.score}/100).`;
+  }
+  if (severityMatrix) {
+    const slaItems = (["critical", "high", "medium"] as const)
+      .filter((sev) => (bySeverity[sev] ?? 0) > 0)
+      .map((sev) => {
+        const lvl = severityMatrix.severity_defaults[sev];
+        return lvl?.sla_days != null ? `${sev} ≤${lvl.sla_days}d` : null;
+      })
+      .filter((s): s is string => s !== null);
+    if (slaItems.length > 0) {
+      text += ` Fix SLA: ${slaItems.join(", ")}.`;
+    }
   }
 
   return text;
