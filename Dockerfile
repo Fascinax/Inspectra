@@ -10,4 +10,6 @@ RUN npm ci --ignore-scripts
 COPY . .
 RUN npm run build
 
+USER node
+
 CMD ["node", "mcp/dist/index.js"]

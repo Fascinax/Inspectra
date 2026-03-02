@@ -1,10 +1,10 @@
 # Roadmap
 
-## Current State (v0.1.0)
+## Current State (v0.2.0)
 
 Inspectra is a functional multi-agent code audit system with:
 - 5 Copilot Custom Agents (orchestrator + 4 domain agents)
-- 10 MCP tools across 4 domains
+- 19 MCP tools across 4 domains (12 from v0.1.0 + 7 new in v0.2.0)
 - CLI orchestrator for local audits without Copilot
 - JSON Schema contracts for all outputs
 - Scoring engine with weighted domains and grade system
@@ -12,19 +12,19 @@ Inspectra is a functional multi-agent code audit system with:
 - SARIF output for CI integration
 - 4 stack-specific profiles
 - CI workflows for validation, PR audits, and report generation
-- 100+ unit tests
+- 139 unit tests
 
-## v0.2.0 — Tool Depth
+## v0.2.0 — Tool Depth ✅ COMPLETE
 
 **Goal:** Make existing tools smarter and more accurate.
 
-- [ ] **Security:** Integrate Semgrep for deeper static analysis (beyond regex)
-- [ ] **Security:** Support Maven dependency analysis (`mvn dependency:tree`)
-- [ ] **Tests:** Parse Playwright HTML reports
-- [ ] **Tests:** Detect flaky tests (retry patterns, timeline analysis)
-- [ ] **Architecture:** Detect circular dependencies between modules
-- [ ] **Conventions:** Integrate ESLint/Checkstyle output parsing
-- [ ] **Conventions:** Detect copy-paste / DRY violations
+- [x] **Security:** Integrate Semgrep for deeper static analysis (beyond regex)
+- [x] **Security:** Support Maven dependency analysis (`mvn dependency:tree`)
+- [x] **Tests:** Parse Playwright HTML reports
+- [x] **Tests:** Detect flaky tests (retry patterns, timeline analysis)
+- [x] **Architecture:** Detect circular dependencies between modules
+- [x] **Conventions:** Integrate ESLint/Checkstyle output parsing
+- [x] **Conventions:** Detect copy-paste / DRY violations
 
 ## v0.3.0 — New Domains
 

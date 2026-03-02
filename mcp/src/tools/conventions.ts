@@ -1,7 +1,12 @@
-import { readFile, readdir } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { join, relative, extname } from "node:path";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import type { Finding } from "../types.js";
 import type { ProfileConfig } from "../policies/loader.js";
+import { collectAllFiles } from "../utils/files.js";
+
+const execFileAsync = promisify(execFile);
 
 const NAMING_CONVENTIONS: Array<{ pattern: RegExp; expected: string; rule: string }> = [
   { pattern: /\.(component|service|module|pipe|directive|guard|interceptor|resolver)\.ts$/, expected: "Angular naming", rule: "angular-naming-convention" },
@@ -12,6 +17,14 @@ const NAMING_CONVENTIONS: Array<{ pattern: RegExp; expected: string; rule: strin
 const DEFAULT_FILE_LENGTH_WARNING = 400;
 const DEFAULT_FILE_LENGTH_ERROR = 800;
 
+/**
+ * Checks that files follow expected naming conventions for Angular components,
+ * Java layer classes, test files, and generic kebab-case modules.
+ *
+ * @param projectDir - Absolute path to the project root.
+ * @param _profile - Optional policy profile (reserved for future profile-based rules).
+ * @returns Array of `Finding` objects for each naming violation.
+ */
 export async function checkNamingConventions(projectDir: string, _profile?: ProfileConfig): Promise<Finding[]> {
   const findings: Finding[] = [];
   let counter = 1;
@@ -45,6 +58,14 @@ export async function checkNamingConventions(projectDir: string, _profile?: Prof
   return findings;
 }
 
+/**
+ * Flags files exceeding configured line-length thresholds.
+ * Default threshold is 300 lines; profile-based overrides are supported.
+ *
+ * @param projectDir - Absolute path to the project root.
+ * @param profile - Optional policy profile with custom `max_file_lines` threshold.
+ * @returns Array of `Finding` objects for each overly long file.
+ */
 export async function checkFileLengths(projectDir: string, profile?: ProfileConfig): Promise<Finding[]> {
   const findings: Finding[] = [];
   let counter = 50;
@@ -84,6 +105,12 @@ export async function checkFileLengths(projectDir: string, profile?: ProfileConf
   return findings;
 }
 
+/**
+ * Finds unresolved TODO, FIXME, HACK, and XXX comments in source files.
+ *
+ * @param projectDir - Absolute path to the project root.
+ * @returns Array of `Finding` objects, one per detected comment marker.
+ */
 export async function checkTodoFixmes(projectDir: string): Promise<Finding[]> {
   const findings: Finding[] = [];
   let counter = 100;
@@ -127,6 +154,207 @@ export async function checkTodoFixmes(projectDir: string): Promise<Finding[]> {
   return findings;
 }
 
+/**
+ * Parses an ESLint JSON report (if present) or runs ESLint with no-op rules
+ * to collect linting findings. Also parses Checkstyle XML reports for Java projects.
+ *
+ * @param projectDir - Absolute path to the project root.
+ * @returns Array of `Finding` objects from ESLint / Checkstyle output.
+ */
+export async function parseLintOutput(projectDir: string): Promise<Finding[]> {
+  const findings: Finding[] = [];
+  let counter = 150;
+
+  // Strategy 1: look for pre-generated ESLint JSON report
+  const reportCandidates = [
+    join(projectDir, "eslint-report.json"),
+    join(projectDir, ".eslint-report.json"),
+    join(projectDir, "reports", "eslint.json"),
+  ];
+
+  let eslintJson: string | null = null;
+  for (const p of reportCandidates) {
+    try { eslintJson = await readFile(p, "utf-8"); break; } catch { /* try next */ }
+  }
+
+  // Strategy 2: run eslint if no pre-generated report
+  if (!eslintJson) {
+    try {
+      let stdout: string;
+      try {
+        ({ stdout } = await execFileAsync(
+          "npx",
+          ["--no-install", "eslint", "--format", "json", "--no-eslintrc", "--rule", "{}", projectDir],
+          { cwd: projectDir, timeout: 30_000 },
+        ));
+        eslintJson = stdout;
+      } catch (err: unknown) {
+        const e = err as { stdout?: string };
+        eslintJson = e.stdout ?? null;
+      }
+    } catch {
+      /* eslint not available */
+    }
+  }
+
+  if (eslintJson) {
+    try {
+      const results = JSON.parse(eslintJson) as EslintFileResult[];
+      for (const fileResult of results) {
+        for (const msg of fileResult.messages ?? []) {
+          if (!msg.ruleId) continue;
+          findings.push({
+            id: `CNV-${String(counter++).padStart(3, "0")}`,
+            severity: msg.severity === 2 ? "medium" : "low",
+            title: `ESLint [${msg.ruleId}]: ${msg.message.substring(0, 80)}`,
+            description: `ESLint rule '${msg.ruleId}' triggered: ${msg.message}`,
+            domain: "conventions",
+            rule: `eslint/${msg.ruleId}`,
+            confidence: 1.0,
+            evidence: [{
+              file: relative(projectDir, fileResult.filePath),
+              line: msg.line,
+              snippet: msg.source?.trim().substring(0, 120),
+            }],
+            recommendation: `Fix the ESLint violation for rule '${msg.ruleId}'.`,
+            effort: "trivial",
+            tags: ["eslint", "lint"],
+          });
+        }
+      }
+    } catch {
+      /* malformed JSON */
+    }
+  }
+
+  // Strategy 3: look for Checkstyle XML
+  const checkstyleCandidates = [
+    join(projectDir, "target", "checkstyle-result.xml"),
+    join(projectDir, "build", "reports", "checkstyle", "main.xml"),
+    join(projectDir, "checkstyle-result.xml"),
+  ];
+
+  for (const p of checkstyleCandidates) {
+    try {
+      const xml = await readFile(p, "utf-8");
+      const errorMatches = xml.matchAll(
+        /<error\s+line="(\d+)"[^>]*severity="([^"]*)"[^>]*message="([^"]*)"[^>]*source="([^"]*)"/g,
+      );
+      const fileMatch = xml.match(/<file\s+name="([^"]*)"/);
+      const filePath = fileMatch ? relative(projectDir, fileMatch[1]) : p;
+
+      for (const m of errorMatches) {
+        const [, line, severity, message, source] = m;
+        const ruleName = source.split(".").pop() ?? source;
+        findings.push({
+          id: `CNV-${String(counter++).padStart(3, "0")}`,
+          severity: severity === "error" ? "medium" : "low",
+          title: `Checkstyle [${ruleName}]: ${message.substring(0, 80)}`,
+          description: message,
+          domain: "conventions",
+          rule: `checkstyle/${ruleName}`,
+          confidence: 1.0,
+          evidence: [{ file: relative(projectDir, filePath), line: parseInt(line, 10) }],
+          recommendation: `Fix the Checkstyle violation for rule '${ruleName}'.`,
+          effort: "trivial",
+          tags: ["checkstyle", "lint"],
+        });
+      }
+      break;
+    } catch {
+      /* try next */
+    }
+  }
+
+  return findings;
+}
+
+interface EslintFileResult {
+  filePath: string;
+  messages: Array<{
+    ruleId: string | null;
+    severity: number;
+    message: string;
+    line: number;
+    column?: number;
+    source?: string;
+  }>;
+}
+
+/**
+ * Detects copy-paste / DRY violations by finding near-identical code blocks
+ * (>= 6 consecutive lines) that appear in multiple files.
+ *
+ * @param projectDir - Absolute path to the project root.
+ * @returns Array of `Finding` objects for each duplicated block detected.
+ */
+export async function detectDryViolations(projectDir: string): Promise<Finding[]> {
+  const findings: Finding[] = [];
+  let counter = 200;
+
+  const files = await collectAllFiles(projectDir);
+  const srcFiles = files.filter((f) => [".ts", ".js", ".java"].includes(extname(f)));
+
+  const BLOCK_SIZE = 6; // minimum consecutive non-trivial lines to flag
+  const blockMap = new Map<string, Array<{ file: string; startLine: number }>>();
+
+  for (const filePath of srcFiles) {
+    try {
+      const content = await readFile(filePath, "utf-8");
+      const lines = content.split("\n");
+      const normalized = lines.map((l) => l.trim()).filter((l) =>
+        l.length > 2 &&
+        !l.startsWith("//") &&
+        !l.startsWith("*") &&
+        !l.startsWith("import ") &&
+        l !== "{" &&
+        l !== "}" &&
+        l !== "})" &&
+        l !== "});" &&
+        l !== "});",
+      );
+
+      for (let i = 0; i <= normalized.length - BLOCK_SIZE; i++) {
+        const block = normalized.slice(i, i + BLOCK_SIZE).join("\n");
+        if (block.length < 80) continue; // skip trivial small blocks
+        const existing = blockMap.get(block) ?? [];
+        existing.push({ file: relative(projectDir, filePath), startLine: i + 1 });
+        blockMap.set(block, existing);
+      }
+    } catch {
+      /* skip */
+    }
+  }
+
+  const alreadyFlagged = new Set<string>();
+  for (const [, locations] of blockMap) {
+    if (locations.length < 2) continue;
+
+    const uniqueFiles = [...new Set(locations.map((l) => l.file))];
+    if (uniqueFiles.length < 2) continue; // same file duplications are less critical
+
+    const key = uniqueFiles.sort().join("|");
+    if (alreadyFlagged.has(key)) continue;
+    alreadyFlagged.add(key);
+
+    findings.push({
+      id: `CNV-${String(counter++).padStart(3, "0")}`,
+      severity: "low",
+      title: `Duplicated code block across ${uniqueFiles.length} files`,
+      description: `A block of ${BLOCK_SIZE}+ lines appears in multiple files: ${uniqueFiles.slice(0, 3).join(", ")}. This violates the DRY (Don't Repeat Yourself) principle.`,
+      domain: "conventions",
+      rule: "dry-violation",
+      confidence: 0.7,
+      evidence: locations.slice(0, 3).map((l) => ({ file: l.file, line: l.startLine })),
+      recommendation: "Extract the duplicated logic into a shared utility function or module.",
+      effort: "medium",
+      tags: ["dry", "duplication", "maintainability"],
+    });
+  }
+
+  return findings;
+}
+
 function isInConventionalDirectory(filePath: string): boolean {
   const normalized = filePath.replaceAll("\\", "/");
   return /\/(controllers?|services?|repositories?|components?|pipes?|guards?|interceptors?|models?|entities?|dtos?)\//i.test(normalized);
@@ -141,20 +369,4 @@ function followsDirectoryConvention(filePath: string): boolean {
   return fileName.includes(`.${dirType}.`) || fileName.includes(`.${dirType}s.`);
 }
 
-async function collectAllFiles(dir: string, collected: string[] = []): Promise<string[]> {
-  try {
-    const entries = await readdir(dir, { withFileTypes: true });
-    for (const entry of entries) {
-      const fullPath = join(dir, entry.name);
-      if (entry.name === "node_modules" || entry.name === "dist" || entry.name.startsWith(".")) continue;
-      if (entry.isDirectory()) {
-        await collectAllFiles(fullPath, collected);
-      } else {
-        collected.push(fullPath);
-      }
-    }
-  } catch {
-    /* skip */
-  }
-  return collected;
-}
+

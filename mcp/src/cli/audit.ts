@@ -16,10 +16,10 @@ import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { globby } from "globby";
 
-import { scanSecrets, checkDependencyVulnerabilities } from "../tools/security.js";
-import { parseCoverage, parseTestResults, detectMissingTests } from "../tools/tests.js";
-import { checkLayering, analyzeModuleDependencies } from "../tools/architecture.js";
-import { checkNamingConventions, checkFileLengths, checkTodoFixmes } from "../tools/conventions.js";
+import { scanSecrets, checkDependencyVulnerabilities, runSemgrep, checkMavenDependencies } from "../tools/security.js";
+import { parseCoverage, parseTestResults, detectMissingTests, parsePlaywrightReport, detectFlakyTests } from "../tools/tests.js";
+import { checkLayering, analyzeModuleDependencies, detectCircularDependencies } from "../tools/architecture.js";
+import { checkNamingConventions, checkFileLengths, checkTodoFixmes, parseLintOutput, detectDryViolations } from "../tools/conventions.js";
 import { scoreDomain } from "../merger/score.js";
 import { mergeReports } from "../merger/merge-findings.js";
 import { renderMarkdown } from "../renderer/markdown.js";
@@ -52,7 +52,7 @@ function parseArgs(argv: string[]): CliOptions {
   return { target, profile, format, output };
 }
 
-function extractFlag(args: string[], flag: string): string | undefined {
+export function extractFlag(args: string[], flag: string): string | undefined {
   const arg = args.find((a) => a.startsWith(`${flag}=`));
   return arg?.split("=")[1];
 }
@@ -99,10 +99,16 @@ async function runSecurityAudit(projectDir: string, sourceFiles: string[], confi
   console.error("  [security] Checking dependency vulnerabilities...");
   const vulnFindings = await checkDependencyVulnerabilities(projectDir);
 
-  const findings = [...secretFindings, ...vulnFindings];
+  console.error("  [security] Running Semgrep analysis...");
+  const semgrepFindings = await runSemgrep(projectDir);
+
+  console.error("  [security] Checking Maven dependencies...");
+  const mavenFindings = await checkMavenDependencies(projectDir);
+
+  const findings = [...secretFindings, ...vulnFindings, ...semgrepFindings, ...mavenFindings];
   const score = scoreDomain(findings, config);
 
-  return buildDomainReport("security", "audit-security", findings, score, start, ["scan-secrets", "check-deps-vulns"]);
+  return buildDomainReport("security", "audit-security", findings, score, start, ["scan-secrets", "check-deps-vulns", "run-semgrep", "check-maven-deps"]);
 }
 
 async function runTestsAudit(projectDir: string, profile?: ProfileConfig, config?: ScoringConfig): Promise<DomainReport> {
@@ -116,11 +122,17 @@ async function runTestsAudit(projectDir: string, profile?: ProfileConfig, config
   console.error("  [tests] Detecting missing tests...");
   const missingTestFindings = await detectMissingTests(projectDir);
 
-  const findings = [...coverageFindings, ...testResultFindings, ...missingTestFindings];
+  console.error("  [tests] Parsing Playwright report...");
+  const playwrightFindings = await parsePlaywrightReport(projectDir);
+
+  console.error("  [tests] Detecting flaky tests...");
+  const flakyFindings = await detectFlakyTests(projectDir);
+
+  const findings = [...coverageFindings, ...testResultFindings, ...missingTestFindings, ...playwrightFindings, ...flakyFindings];
   const score = scoreDomain(findings, config);
 
   return buildDomainReport("tests", "audit-tests", findings, score, start, [
-    "parse-coverage", "parse-test-results", "detect-missing-tests",
+    "parse-coverage", "parse-test-results", "detect-missing-tests", "parse-playwright-report", "detect-flaky-tests",
   ]);
 }
 
@@ -132,11 +144,14 @@ async function runArchitectureAudit(projectDir: string, config?: ScoringConfig, 
   console.error("  [architecture] Analyzing module dependencies...");
   const depFindings = await analyzeModuleDependencies(projectDir);
 
-  const findings = [...layerFindings, ...depFindings];
+  console.error("  [architecture] Detecting circular dependencies...");
+  const circularFindings = await detectCircularDependencies(projectDir);
+
+  const findings = [...layerFindings, ...depFindings, ...circularFindings];
   const score = scoreDomain(findings, config);
 
   return buildDomainReport("architecture", "audit-architecture", findings, score, start, [
-    "check-layering", "analyze-dependencies",
+    "check-layering", "analyze-dependencies", "detect-circular-deps",
   ]);
 }
 
@@ -151,15 +166,21 @@ async function runConventionsAudit(projectDir: string, profile?: ProfileConfig, 
   console.error("  [conventions] Checking TODO/FIXME comments...");
   const todoFindings = await checkTodoFixmes(projectDir);
 
-  const findings = [...namingFindings, ...lengthFindings, ...todoFindings];
+  console.error("  [conventions] Parsing lint output...");
+  const lintFindings = await parseLintOutput(projectDir);
+
+  console.error("  [conventions] Detecting DRY violations...");
+  const dryFindings = await detectDryViolations(projectDir);
+
+  const findings = [...namingFindings, ...lengthFindings, ...todoFindings, ...lintFindings, ...dryFindings];
   const score = scoreDomain(findings, config);
 
   return buildDomainReport("conventions", "audit-conventions", findings, score, start, [
-    "check-naming", "check-file-lengths", "check-todos",
+    "check-naming", "check-file-lengths", "check-todos", "parse-lint-output", "detect-dry-violations",
   ]);
 }
 
-function buildDomainReport(
+export function buildDomainReport(
   domain: DomainReport["domain"],
   agent: string,
   findings: Finding[],
@@ -254,7 +275,11 @@ async function main(): Promise<void> {
   console.error(`  Duration: ${((Date.now() - totalStart) / 1000).toFixed(1)}s\n`);
 }
 
-main().catch((err) => {
-  console.error("Audit failed:", err);
-  process.exit(1);
-});
+// Only run when invoked directly (not when imported by tests or other modules)
+const isMain = fileURLToPath(import.meta.url) === resolve(process.argv[1] ?? "");
+if (isMain) {
+  main().catch((err) => {
+    console.error("Audit failed:", err);
+    process.exit(1);
+  });
+}

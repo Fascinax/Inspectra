@@ -82,5 +82,6 @@ After merging, produce a Markdown report with:
 
 - Never skip the merge step — always use `merge-domain-reports` to produce the consolidated JSON.
 - Never invent findings — only report what domain agents found.
-- If a domain agent fails, note it in the report and proceed with available data.
+- If a domain agent fails **because the MCP server is unavailable**, propagate its setup error message to the user and **abort the full audit** — do not produce a partial report.
+- If a domain agent fails for any other reason (e.g. target path issue, schema error), note it in the report and proceed with available data.
 - Always include metadata: timestamp, target, profile, agents invoked.

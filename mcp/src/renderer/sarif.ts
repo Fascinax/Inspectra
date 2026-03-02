@@ -1,4 +1,7 @@
+import { createRequire } from "node:module";
 import type { ConsolidatedReport, Finding } from "../types.js";
+
+const { version: TOOL_VERSION } = createRequire(import.meta.url)("../../package.json") as { version: string };
 
 const SARIF_VERSION = "2.1.0";
 const SARIF_SCHEMA = "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json";
@@ -137,7 +140,7 @@ export function renderSarif(report: ConsolidatedReport): string {
         tool: {
           driver: {
             name: TOOL_NAME,
-            version: "0.1.0",
+            version: TOOL_VERSION,
             informationUri: TOOL_INFO_URI,
             rules,
           },

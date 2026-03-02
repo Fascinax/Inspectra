@@ -11,6 +11,16 @@ const SEVERITY_ORDER: Record<Finding["severity"], number> = {
   info: 4,
 };
 
+/**
+ * Merges domain reports into a single consolidated audit report.
+ * Applies confidence filtering, deduplication, scoring, and grade derivation.
+ *
+ * @param domainReports - Array of domain-level reports from the audit agents.
+ * @param target - Repository URL or path that was audited.
+ * @param profile - Policy profile name used for the audit.
+ * @param options - Optional merge and scoring configuration.
+ * @returns A fully consolidated `ConsolidatedReport` ready for rendering.
+ */
 export function mergeReports(
   domainReports: DomainReport[],
   target: string,

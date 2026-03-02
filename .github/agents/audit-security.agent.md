@@ -74,10 +74,31 @@ Return a **single JSON object** following this exact structure:
 - **low**: Informational security headers missing, minor config issues
 - **info**: Best practice suggestions
 
+## MCP Prerequisite
+
+Before running any audit step, verify that the required MCP tools (`scan-secrets`, `check-deps-vulns`) are reachable by calling one of them with a minimal probe.
+
+If **any** required MCP tool is unavailable:
+
+1. **Stop immediately** — do not attempt manual fallback, do not produce partial findings.
+2. Inform the user with this message:
+
+> ⚠️ **Inspectra MCP server is not available.**
+> The security audit requires the `inspectra` MCP server to be running.
+>
+> **To fix this:**
+> 1. Make sure the MCP server is built: `cd mcp && npm run build`
+> 2. Check that your `.vscode/mcp.json` (or `mcp.json`) declares the `inspectra` server pointing to `mcp/dist/index.js`.
+> 3. Restart VS Code or reload the MCP configuration.
+> 4. Re-run the audit once the server appears as ✅ in the MCP panel.
+>
+> If the server still doesn't start, run `node mcp/dist/index.js` in a terminal to see startup errors.
+
 ## Rules
 
 - Every finding MUST have an `id` matching pattern `SEC-XXX`.
 - Every finding MUST have evidence with at least one file path.
+- Never produce findings without MCP tools — partial results are worse than no results for security.
 - Do NOT report false positives in test fixtures or example files.
 - Set confidence < 0.7 when you are unsure about a finding.
 - Score = 100 means no security issues found.

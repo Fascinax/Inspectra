@@ -1,11 +1,19 @@
-import { readFile, readdir, access } from "node:fs/promises";
+import { readFile, access } from "node:fs/promises";
 import { join, relative, extname } from "node:path";
 import type { Finding } from "../types.js";
 import type { ProfileConfig } from "../policies/loader.js";
+import { collectSourceFiles } from "../utils/files.js";
 
 const SOURCE_EXTENSIONS = [".ts", ".js", ".java"];
 const TEST_PATTERNS = [/\.(test|spec)\.(ts|js|java)$/, /Test\.java$/];
 
+/**
+ * Parses coverage reports (JSON summary or lcov) and flags metrics below profile thresholds.
+ *
+ * @param projectDir - Absolute path to the project root.
+ * @param profile - Optional policy profile with coverage thresholds.
+ * @returns Array of `Finding` objects for metrics below threshold.
+ */
 export async function parseCoverage(projectDir: string, profile?: ProfileConfig): Promise<Finding[]> {
   const findings: Finding[] = [];
   let counter = 1;
@@ -49,6 +57,12 @@ export async function parseCoverage(projectDir: string, profile?: ProfileConfig)
   return findings;
 }
 
+/**
+ * Parses JUnit XML test result files and reports test failures and errors.
+ *
+ * @param projectDir - Absolute path to the project root.
+ * @returns Array of `Finding` objects for each failed or errored test case.
+ */
 export async function parseTestResults(projectDir: string): Promise<Finding[]> {
   const findings: Finding[] = [];
   let counter = 50;
@@ -83,6 +97,13 @@ export async function parseTestResults(projectDir: string): Promise<Finding[]> {
   return findings;
 }
 
+/**
+ * Detects source files that have no corresponding test file based
+ * on common naming conventions (`*.test.ts`, `*Test.java`, etc.).
+ *
+ * @param projectDir - Absolute path to the project root.
+ * @returns Array of `Finding` objects for each untested source file.
+ */
 export async function detectMissingTests(projectDir: string): Promise<Finding[]> {
   const findings: Finding[] = [];
   let counter = 100;
@@ -127,23 +148,186 @@ export async function detectMissingTests(projectDir: string): Promise<Finding[]>
   return findings;
 }
 
-async function collectSourceFiles(dir: string, collected: string[] = []): Promise<string[]> {
+/**
+ * Parses Playwright JSON test reports and flags test failures.
+ *
+ * @param projectDir - Absolute path to the project root.
+ * @returns Array of `Finding` objects for each failing Playwright test.
+ */
+export async function parsePlaywrightReport(projectDir: string): Promise<Finding[]> {
+  const findings: Finding[] = [];
+  let counter = 150;
+
+  const candidatePaths = [
+    join(projectDir, "playwright-report", "results.json"),
+    join(projectDir, "test-results", "results.json"),
+    join(projectDir, "test-results.json"),
+  ];
+
+  let reportPath: string | null = null;
+  let raw: string | null = null;
+
+  for (const p of candidatePaths) {
+    try {
+      await access(p);
+      raw = await readFile(p, "utf-8");
+      reportPath = p;
+      break;
+    } catch {
+      /* try next */
+    }
+  }
+
+  if (!raw || !reportPath) return findings;
+
   try {
-    const entries = await readdir(dir, { withFileTypes: true });
-    for (const entry of entries) {
-      const fullPath = join(dir, entry.name);
-      if (entry.name === "node_modules" || entry.name === "dist" || entry.name.startsWith(".")) continue;
-      if (entry.isDirectory()) {
-        await collectSourceFiles(fullPath, collected);
-      } else if (SOURCE_EXTENSIONS.includes(extname(entry.name))) {
-        collected.push(fullPath);
+    const report = JSON.parse(raw) as PlaywrightReport;
+
+    function collectTests(suites: PlaywrightSuite[], parentTitle = ""): void {
+      for (const suite of suites) {
+        const title = parentTitle ? `${parentTitle} > ${suite.title}` : suite.title;
+        if (suite.suites) collectTests(suite.suites, title);
+        for (const test of suite.tests ?? []) {
+          const lastResult = test.results?.[test.results.length - 1];
+          if (!lastResult) continue;
+          if (lastResult.status === "failed" || lastResult.status === "timedOut") {
+            findings.push({
+              id: `TST-${String(counter++).padStart(3, "0")}`,
+              severity: "high",
+              title: `Playwright failure: ${test.title}`,
+              description: lastResult.error?.message?.substring(0, 500) ?? `Test ${lastResult.status} in ${title}`,
+              domain: "tests",
+              rule: "playwright-test-failure",
+              confidence: 1.0,
+              evidence: [{ file: relative(projectDir, reportPath!), snippet: `Suite: ${title}` }],
+              recommendation: "Fix the failing Playwright test or update expected behavior.",
+              effort: "medium",
+              tags: ["playwright", "test-failure"],
+            });
+          }
+        }
       }
     }
+
+    collectTests(report.suites ?? []);
   } catch {
-    /* directory not readable */
+    /* malformed report */
   }
-  return collected;
+
+  return findings;
 }
+
+interface PlaywrightReport {
+  suites?: PlaywrightSuite[];
+}
+
+interface PlaywrightSuite {
+  title: string;
+  suites?: PlaywrightSuite[];
+  tests?: PlaywrightTest[];
+}
+
+interface PlaywrightTest {
+  title: string;
+  retries?: number;
+  results?: Array<{
+    status: "passed" | "failed" | "timedOut" | "skipped";
+    duration?: number;
+    error?: { message?: string };
+  }>;
+}
+
+/**
+ * Detects flaky tests by checking JUnit XML for rerun markers
+ * or Playwright reports for tests with multiple attempts.
+ *
+ * @param projectDir - Absolute path to the project root.
+ * @returns Array of `Finding` objects for each detected flaky test.
+ */
+export async function detectFlakyTests(projectDir: string): Promise<Finding[]> {
+  const findings: Finding[] = [];
+  let counter = 200;
+
+  // Strategy 1: JUnit XML — detect <rerunFailure> or <flakyFailure> elements
+  const junitPath = join(projectDir, "test-results", "junit.xml");
+  try {
+    await access(junitPath);
+    const xml = await readFile(junitPath, "utf-8");
+
+    const reruns = xml.matchAll(
+      /<testcase\s[^>]*?\bname="([^"]*)"[^>]*>[\s\S]*?<(?:rerunFailure|flakyFailure)[^/][\s\S]*?<\/testcase>/g,
+    );
+    for (const match of reruns) {
+      const testName = match[1];
+      findings.push({
+        id: `TST-${String(counter++).padStart(3, "0")}`,
+        severity: "medium",
+        title: `Flaky test detected: ${testName}`,
+        description: `The test '${testName}' passed on retry, indicating non-deterministic behavior (flakiness).`,
+        domain: "tests",
+        rule: "flaky-test",
+        confidence: 0.9,
+        evidence: [{ file: relative(projectDir, junitPath) }],
+        recommendation: "Investigate sources of non-determinism: async timing, shared state, external dependencies.",
+        effort: "medium",
+        tags: ["flaky-test", "reliability"],
+      });
+    }
+  } catch {
+    /* no junit report */
+  }
+
+  // Strategy 2: Playwright — tests that needed retries to pass
+  const playwrightPaths = [
+    join(projectDir, "playwright-report", "results.json"),
+    join(projectDir, "test-results", "results.json"),
+    join(projectDir, "test-results.json"),
+  ];
+
+  for (const p of playwrightPaths) {
+    try {
+      await access(p);
+      const raw = await readFile(p, "utf-8");
+      const report = JSON.parse(raw) as PlaywrightReport;
+
+      function findFlaky(suites: PlaywrightSuite[], parentTitle = ""): void {
+        for (const suite of suites) {
+          const title = parentTitle ? `${parentTitle} > ${suite.title}` : suite.title;
+          if (suite.suites) findFlaky(suite.suites, title);
+          for (const test of suite.tests ?? []) {
+            const results = test.results ?? [];
+            const hasFailure = results.some((r) => r.status === "failed" || r.status === "timedOut");
+            const hasFinalPass = results.length > 1 && results[results.length - 1].status === "passed";
+            if (hasFailure && hasFinalPass) {
+              findings.push({
+                id: `TST-${String(counter++).padStart(3, "0")}`,
+                severity: "medium",
+                title: `Flaky Playwright test: ${test.title}`,
+                description: `'${test.title}' failed on first attempt(s) but passed after retry (${results.length} attempts).`,
+                domain: "tests",
+                rule: "flaky-test",
+                confidence: 0.85,
+                evidence: [{ file: relative(projectDir, p), snippet: `Suite: ${title}` }],
+                recommendation: "Isolate test dependencies, fix race conditions or timing issues.",
+                effort: "medium",
+                tags: ["flaky-test", "playwright", "reliability"],
+              });
+            }
+          }
+        }
+      }
+
+      findFlaky(report.suites ?? []);
+      break;
+    } catch {
+      /* try next */
+    }
+  }
+
+  return findings;
+}
+
+
 
 function buildCoverageFinding(counter: number, metric: string, actual: number, threshold: number, coveragePath: string, projectDir: string): Finding {
   return {

@@ -14,27 +14,43 @@ Inspectra coordinates specialized audit agents — security, tests, architecture
 - npm 10+
 - GitHub Copilot with Custom Agents support
 
-### Setup
+### Global Install (once)
 
 ```bash
-# Full setup (install + build + test)
-make bootstrap
+# Clone and install globally
+git clone https://github.com/Fascinax/Inspectra.git
+cd Inspectra
+npm install && npm run build
+npm install -g .
 
-# Or step by step
-npm install
-npm run build
-npm test
+# Register the MCP server in VS Code (one-time)
+inspectra setup
 ```
+
+### Activate on a Project
+
+```bash
+# Copy agents + configure MCP in any project
+inspectra init /path/to/my-project
+```
+
+This creates in the target project:
+- `.github/agents/` — agents visible in the Copilot dropdown
+- `.github/prompts/` — audit prompt shortcuts
+- `.vscode/mcp.json` — MCP server auto-starts when the project opens
+- `policies/` + `schemas/`
 
 ### Run an Audit
 
-1. Open the project to audit in VS Code.
-2. In Copilot Chat, select the `audit-orchestrator` agent.
-3. Use the `audit-full` prompt or type your request.
+Open the target project in VS Code and use Copilot Chat:
+- Select the `audit-orchestrator` agent
+- Type `/audit-full` for a full audit or `/audit-pr` for a PR-scoped audit
 
-Alternatively, use prompt files:
-- `/audit-full` — Full multi-domain audit
-- `/audit-pr` — Focused PR audit
+Alternatively, use the CLI directly:
+
+```bash
+inspectra-audit /path/to/project --profile=generic --format=markdown
+```
 
 ---
 

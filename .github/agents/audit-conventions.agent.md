@@ -78,6 +78,26 @@ Return a **single JSON object** following this structure:
 - **low**: Minor style inconsistencies, informational TODOs
 - **info**: Style improvement suggestions
 
+## MCP Prerequisite
+
+Before running any audit step, verify that the required MCP tools (`check-naming`, `check-file-lengths`, `check-todos`) are reachable by calling one of them with a minimal probe.
+
+If **any** required MCP tool is unavailable:
+
+1. **Stop immediately** — do not attempt manual fallback, do not produce partial findings.
+2. Inform the user with this message:
+
+> ⚠️ **Inspectra MCP server is not available.**
+> The conventions audit requires the `inspectra` MCP server to be running.
+>
+> **To fix this:**
+> 1. Make sure the MCP server is built: `cd mcp && npm run build`
+> 2. Check that your `.vscode/mcp.json` (or `mcp.json`) declares the `inspectra` server pointing to `mcp/dist/index.js`.
+> 3. Restart VS Code or reload the MCP configuration.
+> 4. Re-run the audit once the server appears as ✅ in the MCP panel.
+>
+> If the server still doesn't start, run `node mcp/dist/index.js` in a terminal to see startup errors.
+
 ## Rules
 
 - Finding IDs MUST match pattern `CNV-XXX`.

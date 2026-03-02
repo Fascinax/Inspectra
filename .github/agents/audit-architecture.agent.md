@@ -74,9 +74,30 @@ Return a **single JSON object** following this structure:
 - **low**: Minor structural inconsistencies, non-critical coupling
 - **info**: Architecture improvement suggestions
 
+## MCP Prerequisite
+
+Before running any audit step, verify that the required MCP tools (`check-layering`, `analyze-dependencies`) are reachable by calling one of them with a minimal probe.
+
+If **any** required MCP tool is unavailable:
+
+1. **Stop immediately** — do not attempt manual fallback, do not produce partial findings.
+2. Inform the user with this message:
+
+> ⚠️ **Inspectra MCP server is not available.**
+> The architecture audit requires the `inspectra` MCP server to be running.
+>
+> **To fix this:**
+> 1. Make sure the MCP server is built: `cd mcp && npm run build`
+> 2. Check that your `.vscode/mcp.json` (or `mcp.json`) declares the `inspectra` server pointing to `mcp/dist/index.js`.
+> 3. Restart VS Code or reload the MCP configuration.
+> 4. Re-run the audit once the server appears as ✅ in the MCP panel.
+>
+> If the server still doesn't start, run `node mcp/dist/index.js` in a terminal to see startup errors.
+
 ## Rules
 
 - Finding IDs MUST match pattern `ARC-XXX`.
 - Respect the project's stated architecture pattern before flagging violations.
+- Never produce findings without MCP tools — layer graph analysis requires tool-computed data.
 - Clearly distinguish between "violation" and "suggestion" in your findings.
 - Score = 100 means clean architecture with proper boundaries and no violations.

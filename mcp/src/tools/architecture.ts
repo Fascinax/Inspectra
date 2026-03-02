@@ -1,6 +1,7 @@
-import { readFile, readdir } from "node:fs/promises";
-import { join, relative, extname } from "node:path";
+import { readFile } from "node:fs/promises";
+import { join, relative, extname, resolve, dirname } from "node:path";
 import type { Finding } from "../types.js";
+import { collectSourceFiles } from "../utils/files.js";
 
 const LAYER_ORDER = ["presentation", "application", "domain", "infrastructure"] as const;
 
@@ -11,6 +12,15 @@ const LAYER_PATTERNS: Record<string, RegExp> = {
   infrastructure: /\/(repositor(?:y|ies)|adapters?|gateways?|clients?|config|persistence)\//i,
 };
 
+/**
+ * Verifies clean architecture layer boundaries in the project's source files.
+ * Flags imports that violate the allowed dependency direction
+ * (presentation → application → domain, infrastructure is isolated).
+ *
+ * @param projectDir - Absolute path to the project root.
+ * @param allowedDependencies - Optional override of allowed inter-layer dependencies.
+ * @returns Array of `Finding` objects for each layer violation detected.
+ */
 export async function checkLayering(
   projectDir: string,
   allowedDependencies?: Record<string, string[]>,
@@ -56,6 +66,13 @@ export async function checkLayering(
   return findings;
 }
 
+/**
+ * Analyzes `package.json` (and `pom.xml`) for dependency health issues:
+ * excessive count, duplicated prefixes, and missing a lock file.
+ *
+ * @param projectDir - Absolute path to the project root.
+ * @returns Array of architecture `Finding` objects.
+ */
 export async function analyzeModuleDependencies(projectDir: string): Promise<Finding[]> {
   const findings: Finding[] = [];
   let counter = 50;
@@ -106,6 +123,93 @@ export async function analyzeModuleDependencies(projectDir: string): Promise<Fin
   return findings;
 }
 
+/**
+ * Detects circular import chains between source files by building
+ * an in-memory dependency graph and running DFS cycle detection.
+ *
+ * @param projectDir - Absolute path to the project root.
+ * @returns Array of `Finding` objects, one per detected cycle.
+ */
+export async function detectCircularDependencies(projectDir: string): Promise<Finding[]> {
+  const findings: Finding[] = [];
+  let counter = 100;
+
+  const files = await collectSourceFiles(projectDir);
+  if (files.length === 0) return findings;
+
+  // Build adjacency map: abs filePath → [abs dep paths]
+  const graph = new Map<string, string[]>();
+
+  for (const filePath of files) {
+    try {
+      const content = await readFile(filePath, "utf-8");
+      const rawImports = extractImports(content);
+      const dir = dirname(filePath);
+
+      const deps: string[] = [];
+      for (const imp of rawImports) {
+        if (!imp.startsWith(".")) continue; // only local imports
+        const ext = extname(imp);
+        const candidates = ext
+          ? [resolve(dir, imp)]
+          : [resolve(dir, `${imp}.ts`), resolve(dir, `${imp}.js`), resolve(dir, imp, "index.ts")];
+        const resolved = candidates.find((c) => files.includes(c));
+        if (resolved) deps.push(resolved);
+      }
+      graph.set(filePath, deps);
+    } catch {
+      graph.set(filePath, []);
+    }
+  }
+
+  // DFS cycle detection
+  const WHITE = 0, GREY = 1, BLACK = 2;
+  const color = new Map<string, number>(files.map((f) => [f, WHITE]));
+  const cycles = new Set<string>(); // deduplicate by cycle key
+
+  function dfs(node: string, path: string[]): void {
+    color.set(node, GREY);
+    for (const dep of graph.get(node) ?? []) {
+      if (color.get(dep) === GREY) {
+        // Back edge found — extract the cycle
+        const cycleStart = path.indexOf(dep);
+        if (cycleStart !== -1) {
+          const cycle = [...path.slice(cycleStart), node, dep];
+          const key = cycle.map((f) => relative(projectDir, f)).sort().join("|");
+          if (!cycles.has(key)) {
+            cycles.add(key);
+            const cycleFiles = cycle.slice(0, -1).map((f) => relative(projectDir, f));
+            findings.push({
+              id: `ARC-${String(counter++).padStart(3, "0")}`,
+              severity: "high",
+              title: `Circular dependency detected: ${cycleFiles[0]} → … → ${cycleFiles[0]}`,
+              description: `A circular import chain was detected: ${cycleFiles.join(" → ")} → ${cycleFiles[0]}`,
+              domain: "architecture",
+              rule: "no-circular-dependency",
+              confidence: 0.95,
+              evidence: cycleFiles.slice(0, 3).map((f) => ({ file: f })),
+              recommendation: "Break the cycle by extracting shared logic into a separate module or using dependency injection.",
+              effort: "large",
+              tags: ["circular-dependency", "coupling"],
+            });
+          }
+        }
+      } else if (color.get(dep) === WHITE) {
+        dfs(dep, [...path, node]);
+      }
+    }
+    color.set(node, BLACK);
+  }
+
+  for (const node of files) {
+    if (color.get(node) === WHITE) {
+      dfs(node, []);
+    }
+  }
+
+  return findings;
+}
+
 function detectLayer(filePath: string): string | undefined {
   const normalized = filePath.replace(/\\/g, "/");
   for (const [layer, pattern] of Object.entries(LAYER_PATTERNS)) {
@@ -144,23 +248,7 @@ function extractImports(content: string): string[] {
   return matches;
 }
 
-async function collectSourceFiles(dir: string, collected: string[] = []): Promise<string[]> {
-  try {
-    const entries = await readdir(dir, { withFileTypes: true });
-    for (const entry of entries) {
-      const fullPath = join(dir, entry.name);
-      if (entry.name === "node_modules" || entry.name === "dist" || entry.name.startsWith(".")) continue;
-      if (entry.isDirectory()) {
-        await collectSourceFiles(fullPath, collected);
-      } else if ([".ts", ".js", ".java"].includes(extname(entry.name))) {
-        collected.push(fullPath);
-      }
-    }
-  } catch {
-    /* directory not readable */
-  }
-  return collected;
-}
+
 
 function findDuplicatedPrefixes(pkgs: string[]): Array<{ prefix: string; packages: string[] }> {
   const prefixMap = new Map<string, string[]>();
