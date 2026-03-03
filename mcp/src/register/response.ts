@@ -1,6 +1,7 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { CHARACTER_LIMIT, DEFAULT_PAGE_SIZE } from "../constants.js";
 import { InspectraError } from "../errors.js";
+import { logger } from "../logger.js";
 import type { ConsolidatedReport, Finding } from "../types.js";
 import { renderFindingsAsMarkdown } from "../renderer/markdown.js";
 import { renderMarkdown } from "../renderer/markdown.js";
@@ -227,8 +228,13 @@ type AsyncHandler<T> = (params: T) => Promise<CallToolResult>;
 export function withErrorHandling<T>(handler: AsyncHandler<T>, toolName?: string): AsyncHandler<T> {
   return async (params: T): Promise<CallToolResult> => {
     try {
-      return await handler(params);
+      logger.debug(`tool:call ${toolName ?? "unknown"}`, params as Record<string, unknown>);
+      const result = await handler(params);
+      logger.debug(`tool:ok ${toolName ?? "unknown"}`);
+      return result;
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error(`tool:error ${toolName ?? "unknown"}: ${message}`);
       return errorResponse(error, toolName);
     }
   };

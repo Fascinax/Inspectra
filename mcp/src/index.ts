@@ -16,6 +16,7 @@ import { registerMergerTools } from "./register/merger.js";
 import { registerResources } from "./register/resources.js";
 import { registerPrompts } from "./register/prompts.js";
 import { SERVER_NAME } from "./constants.js";
+import { logger } from "./logger.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const POLICIES_DIR = resolve(__dirname, "..", "..", "policies");
@@ -52,10 +53,10 @@ registerPrompts(server, PROMPTS_DIR);
 async function main(): Promise<void> {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("Inspectra MCP server running on stdio");
+  logger.info(`${SERVER_NAME} v${SERVER_VERSION} running on stdio`);
 }
 
 main().catch((error) => {
-  console.error("Failed to start Inspectra MCP server:", error);
+  logger.error("Failed to start Inspectra MCP server", { error: String(error) });
   process.exit(1);
 });
