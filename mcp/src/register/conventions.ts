@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { findingsResponse, withErrorHandling } from "./response.js";
-import { FindingsOutputSchema, ResponseFormatField } from "./schemas.js";
+import { FindingsOutputSchema, ResponseFormatField, LimitField, OffsetField } from "./schemas.js";
 import {
   checkNamingConventions,
   checkFileLengths,
@@ -37,6 +37,8 @@ Error handling:
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
+        limit: LimitField,
+        offset: OffsetField,
       },
       outputSchema: FindingsOutputSchema,
       annotations: {
@@ -46,10 +48,10 @@ Error handling:
         openWorldHint: false,
       },
     },
-    withErrorHandling(async ({ projectDir, responseFormat }) => {
+    withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkNamingConventions(safeDir);
-      return findingsResponse(findings, responseFormat);
+      return findingsResponse(findings, responseFormat, { limit, offset });
     }),
   );
 
@@ -73,6 +75,8 @@ Error handling:
         projectDir: z.string().describe("Absolute path to the project root"),
         profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
         responseFormat: ResponseFormatField,
+        limit: LimitField,
+        offset: OffsetField,
       },
       outputSchema: FindingsOutputSchema,
       annotations: {
@@ -82,11 +86,11 @@ Error handling:
         openWorldHint: false,
       },
     },
-    withErrorHandling(async ({ projectDir, profile, responseFormat }) => {
+    withErrorHandling(async ({ projectDir, profile, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
       const profileConfig = profile ? await loadProfile(policiesDir, profile) : undefined;
       const findings = await checkFileLengths(safeDir, profileConfig);
-      return findingsResponse(findings, responseFormat);
+      return findingsResponse(findings, responseFormat, { limit, offset });
     }),
   );
 
@@ -110,6 +114,8 @@ Error handling:
         projectDir: z.string().describe("Absolute path to the project root"),
         profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
         responseFormat: ResponseFormatField,
+        limit: LimitField,
+        offset: OffsetField,
       },
       outputSchema: FindingsOutputSchema,
       annotations: {
@@ -119,10 +125,10 @@ Error handling:
         openWorldHint: false,
       },
     },
-    withErrorHandling(async ({ projectDir, responseFormat }) => {
+    withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkTodoFixmes(safeDir);
-      return findingsResponse(findings, responseFormat);
+      return findingsResponse(findings, responseFormat, { limit, offset });
     }),
   );
 
@@ -145,6 +151,8 @@ Error handling:
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
+        limit: LimitField,
+        offset: OffsetField,
       },
       outputSchema: FindingsOutputSchema,
       annotations: {
@@ -154,10 +162,10 @@ Error handling:
         openWorldHint: true,
       },
     },
-    withErrorHandling(async ({ projectDir, responseFormat }) => {
+    withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await parseLintOutput(safeDir);
-      return findingsResponse(findings, responseFormat);
+      return findingsResponse(findings, responseFormat, { limit, offset });
     }),
   );
 
@@ -179,6 +187,8 @@ Error handling:
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
+        limit: LimitField,
+        offset: OffsetField,
       },
       outputSchema: FindingsOutputSchema,
       annotations: {
@@ -188,10 +198,10 @@ Error handling:
         openWorldHint: false,
       },
     },
-    withErrorHandling(async ({ projectDir, responseFormat }) => {
+    withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectDryViolations(safeDir);
-      return findingsResponse(findings, responseFormat);
+      return findingsResponse(findings, responseFormat, { limit, offset });
     }),
   );
 }

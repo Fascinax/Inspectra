@@ -80,13 +80,24 @@ describe("jsonResponse", () => {
 });
 
 describe("findingsResponse", () => {
-  it("defaults to JSON format", () => {
+  it("defaults to JSON format with pagination envelope", () => {
     const findings = [makeFinding()];
     const result = findingsResponse(findings);
 
     const text = (result.content[0] as { type: "text"; text: string }).text;
-    expect(() => JSON.parse(text)).not.toThrow();
-    expect(result.structuredContent).toEqual(findings);
+    const parsed = JSON.parse(text);
+    expect(parsed.findings).toEqual(findings);
+    expect(parsed.total).toBe(1);
+    expect(parsed.count).toBe(1);
+    expect(parsed.has_more).toBe(false);
+    expect(parsed.next_offset).toBeNull();
+    expect(result.structuredContent).toEqual({
+      findings,
+      total: 1,
+      count: 1,
+      has_more: false,
+      next_offset: null,
+    });
   });
 
   it("returns markdown text when format is markdown", () => {
@@ -101,11 +112,31 @@ describe("findingsResponse", () => {
     expect(text).not.toContain("[{");
   });
 
-  it("keeps structuredContent as JSON even in markdown mode", () => {
+  it("keeps structuredContent as paginated envelope even in markdown mode", () => {
     const findings = [makeFinding()];
     const result = findingsResponse(findings, "markdown");
 
-    expect(result.structuredContent).toEqual(findings);
+    expect(result.structuredContent).toEqual({
+      findings,
+      total: 1,
+      count: 1,
+      has_more: false,
+      next_offset: null,
+    });
+  });
+
+  it("paginates findings with limit and offset", () => {
+    const findings = Array.from({ length: 5 }, (_, i) => makeFinding({ id: `SEC-${String(i + 1).padStart(3, "0")}` }));
+    const result = findingsResponse(findings, "json", { limit: 2, offset: 1 });
+
+    const parsed = JSON.parse((result.content[0] as { type: "text"; text: string }).text);
+    expect(parsed.findings).toHaveLength(2);
+    expect(parsed.findings[0].id).toBe("SEC-002");
+    expect(parsed.findings[1].id).toBe("SEC-003");
+    expect(parsed.total).toBe(5);
+    expect(parsed.count).toBe(2);
+    expect(parsed.has_more).toBe(true);
+    expect(parsed.next_offset).toBe(3);
   });
 
   it("returns no-findings message for empty array in markdown mode", () => {

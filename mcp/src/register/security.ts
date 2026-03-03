@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { findingsResponse, withErrorHandling } from "./response.js";
-import { FindingsOutputSchema, ResponseFormatField } from "./schemas.js";
+import { FindingsOutputSchema, ResponseFormatField, LimitField, OffsetField } from "./schemas.js";
 import { scanSecrets, checkDependencyVulnerabilities, runSemgrep, checkMavenDependencies } from "../tools/security.js";
 import { loadProfile } from "../policies/loader.js";
 import { validateProjectDir, validateFilePathsCsv } from "../utils/paths.js";
@@ -34,6 +34,8 @@ Error handling:
         filePathsCsv: z.string().describe("Comma-separated absolute paths to files to scan"),
         profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
         responseFormat: ResponseFormatField,
+        limit: LimitField,
+        offset: OffsetField,
       },
       outputSchema: FindingsOutputSchema,
       annotations: {
@@ -43,11 +45,11 @@ Error handling:
         openWorldHint: false,
       },
     },
-    withErrorHandling(async ({ filePathsCsv, profile, responseFormat }) => {
+    withErrorHandling(async ({ filePathsCsv, profile, responseFormat, limit, offset }) => {
       const filePaths = await validateFilePathsCsv(filePathsCsv);
       const profileConfig = profile ? await loadProfile(policiesDir, profile) : undefined;
       const findings = await scanSecrets(filePaths, profileConfig?.security?.additional_patterns);
-      return findingsResponse(findings, responseFormat);
+      return findingsResponse(findings, responseFormat, { limit, offset });
     }),
   );
 
@@ -71,6 +73,8 @@ Error handling:
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
+        limit: LimitField,
+        offset: OffsetField,
       },
       outputSchema: FindingsOutputSchema,
       annotations: {
@@ -80,10 +84,10 @@ Error handling:
         openWorldHint: true,
       },
     },
-    withErrorHandling(async ({ projectDir, responseFormat }) => {
+    withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkDependencyVulnerabilities(safeDir);
-      return findingsResponse(findings, responseFormat);
+      return findingsResponse(findings, responseFormat, { limit, offset });
     }),
   );
 
@@ -106,6 +110,8 @@ Error handling:
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
+        limit: LimitField,
+        offset: OffsetField,
       },
       outputSchema: FindingsOutputSchema,
       annotations: {
@@ -115,10 +121,10 @@ Error handling:
         openWorldHint: true,
       },
     },
-    withErrorHandling(async ({ projectDir, responseFormat }) => {
+    withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await runSemgrep(safeDir);
-      return findingsResponse(findings, responseFormat);
+      return findingsResponse(findings, responseFormat, { limit, offset });
     }),
   );
 
@@ -141,6 +147,8 @@ Error handling:
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
+        limit: LimitField,
+        offset: OffsetField,
       },
       outputSchema: FindingsOutputSchema,
       annotations: {
@@ -150,10 +158,10 @@ Error handling:
         openWorldHint: false,
       },
     },
-    withErrorHandling(async ({ projectDir, responseFormat }) => {
+    withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkMavenDependencies(safeDir);
-      return findingsResponse(findings, responseFormat);
+      return findingsResponse(findings, responseFormat, { limit, offset });
     }),
   );
 }

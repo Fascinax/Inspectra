@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { findingsResponse, withErrorHandling } from "./response.js";
-import { FindingsOutputSchema, ResponseFormatField } from "./schemas.js";
+import { FindingsOutputSchema, ResponseFormatField, LimitField, OffsetField } from "./schemas.js";
 import { checkReadmeCompleteness, checkAdrPresence, detectDocCodeDrift } from "../tools/documentation.js";
 import { validateProjectDir } from "../utils/paths.js";
 
@@ -28,6 +28,8 @@ Error handling:
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
+        limit: LimitField,
+        offset: OffsetField,
       },
       outputSchema: FindingsOutputSchema,
       annotations: {
@@ -37,10 +39,10 @@ Error handling:
         openWorldHint: false,
       },
     },
-    withErrorHandling(async ({ projectDir, responseFormat }) => {
+    withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkReadmeCompleteness(safeDir);
-      return findingsResponse(findings, responseFormat);
+      return findingsResponse(findings, responseFormat, { limit, offset });
     }),
   );
 
@@ -62,6 +64,8 @@ Error handling:
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
+        limit: LimitField,
+        offset: OffsetField,
       },
       outputSchema: FindingsOutputSchema,
       annotations: {
@@ -71,10 +75,10 @@ Error handling:
         openWorldHint: false,
       },
     },
-    withErrorHandling(async ({ projectDir, responseFormat }) => {
+    withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkAdrPresence(safeDir);
-      return findingsResponse(findings, responseFormat);
+      return findingsResponse(findings, responseFormat, { limit, offset });
     }),
   );
 
@@ -97,6 +101,8 @@ Error handling:
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
+        limit: LimitField,
+        offset: OffsetField,
       },
       outputSchema: FindingsOutputSchema,
       annotations: {
@@ -106,10 +112,10 @@ Error handling:
         openWorldHint: false,
       },
     },
-    withErrorHandling(async ({ projectDir, responseFormat }) => {
+    withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectDocCodeDrift(safeDir);
-      return findingsResponse(findings, responseFormat);
+      return findingsResponse(findings, responseFormat, { limit, offset });
     }),
   );
 }

@@ -7,6 +7,22 @@ export const ResponseFormatField = z
   .default("json")
   .describe("Output format: json for structured data, markdown for human-readable text");
 
+/** Maximum number of findings to return (pagination). */
+export const LimitField = z
+  .number()
+  .int()
+  .positive()
+  .default(50)
+  .describe("Maximum number of findings to return (default: 50)");
+
+/** Number of findings to skip (pagination offset). */
+export const OffsetField = z
+  .number()
+  .int()
+  .nonnegative()
+  .default(0)
+  .describe("Number of findings to skip for pagination (default: 0)");
+
 /**
  * Shared Zod output schema for tool responses that return an array of findings.
  * Used as `outputSchema` in `registerTool` to give agents structured type information.
@@ -35,6 +51,10 @@ export const FindingsOutputSchema = {
       tags: z.array(z.string()).optional().describe("Classification tags"),
     }),
   ),
+  total: z.number().int().describe("Total number of findings before pagination"),
+  count: z.number().int().describe("Number of findings returned in this page"),
+  has_more: z.boolean().describe("Whether more findings are available beyond this page"),
+  next_offset: z.number().int().nullable().describe("Offset to use for the next page, or null if no more pages"),
 };
 
 /** Output schema for the score-findings tool. */

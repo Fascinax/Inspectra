@@ -132,21 +132,44 @@ export function errorResponse(error: unknown): CallToolResult {
   };
 }
 
+export interface PaginationParams {
+  limit?: number;
+  offset?: number;
+}
+
 /**
- * Returns findings in the requested format.
+ * Returns findings in the requested format with pagination support.
  * Text content adapts to the format; structuredContent is always JSON.
  */
 export function findingsResponse(
   findings: Finding[],
   format: ResponseFormat = "json",
+  pagination: PaginationParams = {},
 ): CallToolResult {
+  const { limit = 50, offset = 0 } = pagination;
+  const total = findings.length;
+  const page = findings.slice(offset, offset + limit);
+  const hasMore = offset + limit < total;
+  const nextOffset = hasMore ? offset + limit : null;
+
+  const envelope = {
+    findings: page,
+    total,
+    count: page.length,
+    has_more: hasMore,
+    next_offset: nextOffset,
+  };
+
   if (format === "markdown") {
+    const header = total > page.length
+      ? `> Showing ${page.length} of ${total} findings (offset ${offset}, limit ${limit})\n\n`
+      : "";
     return {
-      content: [{ type: "text", text: renderFindingsAsMarkdown(findings) }],
-      structuredContent: findings as unknown as Record<string, unknown>,
+      content: [{ type: "text", text: header + renderFindingsAsMarkdown(page) }],
+      structuredContent: envelope as unknown as Record<string, unknown>,
     };
   }
-  return jsonResponse(findings);
+  return jsonResponse(envelope);
 }
 
 /**
