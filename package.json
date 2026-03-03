@@ -20,6 +20,7 @@
     "test:coverage": "vitest run --coverage",
     "audit-local": "node mcp/dist/cli/audit.js",
     "validate:schemas": "bash scripts/validate-schemas.sh",
+    "test:inspector": "node scripts/test-mcp-inspector.mjs",
     "clean": "rimraf mcp/dist",
     "init": "node bin/init.mjs"
   },
