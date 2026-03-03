@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { jsonResponse } from "./response.js";
+import { FindingsOutputSchema } from "./schemas.js";
 import { analyzeComplexity, ageTodos, checkDependencyStaleness } from "../tools/tech-debt.js";
 import { validateProjectDir } from "../utils/paths.js";
 
@@ -12,10 +13,21 @@ export function registerTechDebtTools(server: McpServer): void {
     "inspectra_analyze_complexity",
     {
       title: "Analyze Complexity",
-      description: "Estimate code complexity and flag high-maintenance files",
+      description: `Estimate code complexity using line count, nesting depth, and function length heuristics to flag high-maintenance files.
+
+Scans TypeScript, JavaScript, and Java source files. Computes a composite complexity score per file based on total lines, maximum nesting depth, number of functions exceeding 50 lines, and parameter counts.
+
+Args:
+  - projectDir (string): Absolute path to the project root.
+
+Returns: Array of Finding objects (domain: "tech-debt", prefix: DEBT-). Each finding identifies the complex file, its complexity score, and the dominant complexity driver.
+
+Error handling:
+  - Throws if projectDir does not exist or is not a directory.`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
       },
+      outputSchema: FindingsOutputSchema,
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -34,10 +46,22 @@ export function registerTechDebtTools(server: McpServer): void {
     "inspectra_age_todos",
     {
       title: "Age TODOs",
-      description: "Find aged TODO/FIXME comments from inline dates",
+      description: `Find aged TODO and FIXME comments by extracting inline dates and computing their age in days.
+
+Searches for TODO/FIXME markers with date patterns like "TODO(2023-01-15)" or "FIXME 2024/03/01". Reports findings for markers older than 90 days, indicating stale technical debt.
+
+Args:
+  - projectDir (string): Absolute path to the project root.
+
+Returns: Array of Finding objects (domain: "tech-debt", prefix: DEBT-). Each finding includes the marker text, file path, line number, date found, and age in days.
+
+Error handling:
+  - Returns empty findings if no dated TODO markers are found.
+  - Throws if projectDir does not exist or is not a directory.`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
       },
+      outputSchema: FindingsOutputSchema,
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -56,10 +80,22 @@ export function registerTechDebtTools(server: McpServer): void {
     "inspectra_check_dependency_staleness",
     {
       title: "Check Dependency Staleness",
-      description: "Detect dependency staleness risks from manifest version patterns",
+      description: `Detect dependency staleness risks by analyzing version pinning patterns in package.json and pom.xml manifests.
+
+Flags dependencies using wildcard ranges (>=, *), very old pinned versions, and packages without lock file entries. Stale dependencies increase security and compatibility risks.
+
+Args:
+  - projectDir (string): Absolute path to the project root.
+
+Returns: Array of Finding objects (domain: "tech-debt", prefix: DEBT-). Each finding identifies the stale dependency, its current version specifier, and the staleness risk type.
+
+Error handling:
+  - Returns empty findings if no manifest files are found.
+  - Throws if projectDir does not exist or is not a directory.`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
       },
+      outputSchema: FindingsOutputSchema,
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,

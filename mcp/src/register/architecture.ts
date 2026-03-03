@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { jsonResponse } from "./response.js";
+import { FindingsOutputSchema } from "./schemas.js";
 import { checkLayering, analyzeModuleDependencies, detectCircularDependencies } from "../tools/architecture.js";
 import { loadProfile } from "../policies/loader.js";
 import { validateProjectDir } from "../utils/paths.js";
@@ -16,11 +17,23 @@ export function registerArchitectureTools(server: McpServer, policiesDir: string
     "inspectra_check_layering",
     {
       title: "Check Layering",
-      description: "Verify clean architecture layer dependencies (presentation → application → domain ← infrastructure)",
+      description: `Verify clean architecture layer dependencies and detect forbidden cross-layer imports.
+
+Enforces a directed dependency graph: presentation -> application -> domain <- infrastructure. Any import that violates this layering produces a finding.
+
+Args:
+  - projectDir (string): Absolute path to the project root.
+  - profile (string, optional): Policy profile with custom allowed dependencies (e.g., "java-angular-playwright").
+
+Returns: Array of Finding objects (domain: "architecture", prefix: ARC-). Each finding identifies the importing file, the imported module, and the violated layer rule.
+
+Error handling:
+  - Throws if projectDir does not exist or is not a directory.`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
       },
+      outputSchema: FindingsOutputSchema,
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -40,10 +53,22 @@ export function registerArchitectureTools(server: McpServer, policiesDir: string
     "inspectra_analyze_dependencies",
     {
       title: "Analyze Dependencies",
-      description: "Analyze package.json dependencies for excessive count or duplication",
+      description: `Analyze package.json dependencies for health issues including excessive count, duplicated packages, and missing peer dependencies.
+
+Reads package.json and optional lock files to assess dependency health. Flags bloated dependency trees and potential version conflicts.
+
+Args:
+  - projectDir (string): Absolute path to the project root.
+
+Returns: Array of Finding objects (domain: "architecture", prefix: ARC-). Each finding identifies the problematic dependency and the issue type (excessive count, duplication, missing peer).
+
+Error handling:
+  - Returns empty findings if no package.json is found.
+  - Throws if projectDir does not exist or is not a directory.`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
       },
+      outputSchema: FindingsOutputSchema,
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -62,10 +87,21 @@ export function registerArchitectureTools(server: McpServer, policiesDir: string
     "inspectra_detect_circular_deps",
     {
       title: "Detect Circular Dependencies",
-      description: "Detect circular import chains between source files",
+      description: `Detect circular import chains between source files that create tight coupling and complicate module loading.
+
+Builds an import graph from TypeScript/JavaScript source files and runs cycle detection. Each cycle found is reported as a finding.
+
+Args:
+  - projectDir (string): Absolute path to the project root.
+
+Returns: Array of Finding objects (domain: "architecture", prefix: ARC-). Each finding includes the full cycle path (A -> B -> C -> A) and affected file paths.
+
+Error handling:
+  - Throws if projectDir does not exist or is not a directory.`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
       },
+      outputSchema: FindingsOutputSchema,
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,

@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { jsonResponse } from "./response.js";
+import { FindingsOutputSchema, ScoreOutputSchema } from "./schemas.js";
 import { mergeReports } from "../merger/merge-findings.js";
 import { scoreDomain } from "../merger/score.js";
 import { loadAllPolicies, loadScoringRules } from "../policies/loader.js";
@@ -17,9 +18,21 @@ export function registerMergerTools(server: McpServer, policiesDir: string): voi
     "inspectra_merge_domain_reports",
     {
       title: "Merge Domain Reports",
-      description: "Merge multiple domain reports into a consolidated audit report with scoring and deduplication",
+      description: `Merge multiple domain reports into a single consolidated audit report with scoring and deduplication.
+
+Accepts an array of domain report JSON objects (one per audited domain). Applies deduplication rules to remove redundant findings, computes weighted domain scores, and produces the final consolidated report with an overall grade.
+
+Args:
+  - domainReportsJson (string): A JSON string containing an array of domain report objects conforming to domain-report.schema.json.
+  - target (string): Repository name or path being audited (e.g., "my-org/my-repo").
+  - profile (string): Policy profile used for scoring weights (e.g., "java-angular-playwright", "generic").
+
+Returns: A consolidated report object containing all domain scores, the overall weighted score, grade (A-F), and the merged findings array.
+
+Error handling:
+  - Returns isError: true if domainReportsJson fails Zod validation.`,
       inputSchema: {
-        domainReportsJson: z.string().describe("JSON string â€” array of domain report objects"),
+        domainReportsJson: z.string().describe("JSON string — array of domain report objects"),
         target: z.string().describe("Repository or path being audited"),
         profile: z.string().describe("Policy profile used (e.g., java-angular-playwright)"),
       },
@@ -51,10 +64,21 @@ export function registerMergerTools(server: McpServer, policiesDir: string): voi
     "inspectra_score_findings",
     {
       title: "Score Findings",
-      description: "Compute a domain score from a list of findings",
+      description: `Compute a domain score (0-100) from a list of findings using the configured scoring rules.
+
+Applies severity-based penalties from scoring-rules.yml. Each finding reduces the score based on its severity and confidence. The result is clamped to the 0-100 range.
+
+Args:
+  - findingsJson (string): A JSON string containing an array of finding objects conforming to finding.schema.json.
+
+Returns: An object with a single "score" field (integer, 0-100). A score of 100 means no issues found.
+
+Error handling:
+  - Returns isError: true if findingsJson fails Zod validation.`,
       inputSchema: {
-        findingsJson: z.string().describe("JSON string â€” array of finding objects"),
+        findingsJson: z.string().describe("JSON string — array of finding objects"),
       },
+      outputSchema: ScoreOutputSchema,
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
