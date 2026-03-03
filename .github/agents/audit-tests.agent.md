@@ -5,9 +5,9 @@ tools:
   - read
   - search
   - execute
-  - inspectra/parse-coverage
-  - inspectra/parse-test-results
-  - inspectra/detect-missing-tests
+  - inspectra_parse_coverage
+  - inspectra_parse_test_results
+  - inspectra_detect_missing_tests
 ---
 
 You are **Inspectra Tests Agent**, a specialized test quality auditor.
@@ -29,9 +29,9 @@ Evaluate the test quality of the target codebase and produce a structured domain
 
 ## Workflow
 
-1. Use `parse-coverage` to analyze coverage reports.
-2. Use `parse-test-results` to check for test failures.
-3. Use `detect-missing-tests` to find untested source files.
+1. Use `inspectra_parse_coverage` to analyze coverage reports.
+2. Use `inspectra_parse_test_results` to check for test failures.
+3. Use `inspectra_detect_missing_tests` to find untested source files.
 4. Use `read` and `search` to manually inspect test quality patterns.
 5. Combine all findings into a single domain report.
 
@@ -61,7 +61,7 @@ Return a **single JSON object** following this structure:
   "metadata": {
     "agent": "audit-tests",
     "timestamp": "<ISO 8601>",
-    "tools_used": ["parse-coverage", "parse-test-results", "detect-missing-tests"]
+    "tools_used": ["inspectra_parse_coverage", "inspectra_parse_test_results", "inspectra_detect_missing_tests"]
   }
 }
 ```
@@ -76,7 +76,7 @@ Return a **single JSON object** following this structure:
 
 ## MCP Prerequisite
 
-Before running any audit step, verify that the required MCP tools (`parse-coverage`, `parse-test-results`, `detect-missing-tests`) are reachable by calling one of them with a minimal probe.
+Before running any audit step, verify that the required MCP tools (`inspectra_parse_coverage`, `inspectra_parse_test_results`, `inspectra_detect_missing_tests`) are reachable by calling one of them with a minimal probe.
 
 If **any** required MCP tool is unavailable:
 

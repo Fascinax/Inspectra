@@ -46,7 +46,7 @@ describe("extractFlag", () => {
 
 describe("buildDomainReport", () => {
   it("returns 'No issues found' summary when findings is empty", () => {
-    const report = buildDomainReport({ domain: "security", agent: "audit-security", findings: [], score: 100, startMs: Date.now(), tools: ["scan-secrets"] });
+    const report = buildDomainReport({ domain: "security", agent: "audit-security", findings: [], score: 100, startMs: Date.now(), tools: ["inspectra_scan_secrets"] });
     expect(report.summary).toBe("No issues found");
   });
 
@@ -56,12 +56,12 @@ describe("buildDomainReport", () => {
   });
 
   it("sets the agent in metadata", () => {
-    const report = buildDomainReport({ domain: "architecture", agent: "audit-architecture", findings: [], score: 90, startMs: Date.now(), tools: ["check-layering"] });
+    const report = buildDomainReport({ domain: "architecture", agent: "audit-architecture", findings: [], score: 90, startMs: Date.now(), tools: ["inspectra_check_layering"] });
     expect(report.metadata?.agent).toBe("audit-architecture");
   });
 
   it("includes tools_used in metadata", () => {
-    const tools = ["scan-secrets", "check-deps-vulns"];
+    const tools = ["inspectra_scan_secrets", "inspectra_check_deps_vulns"];
     const report = buildDomainReport({ domain: "security", agent: "audit-security", findings: [], score: 80, startMs: Date.now(), tools });
     expect(report.metadata?.tools_used).toEqual(tools);
   });

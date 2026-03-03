@@ -68,8 +68,8 @@ Add the new tool to the relevant agent's `tools` list in `.github/agents/`:
 tools:
   - read
   - search
-  - inspectra/scan-secrets
-  - inspectra/check-deps-vulns
+  - inspectra/inspectra_scan_secrets
+  - inspectra/inspectra_check_deps_vulns
   - inspectra/my-new-check        # ← add here
 ```
 

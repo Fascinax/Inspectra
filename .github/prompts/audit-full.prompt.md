@@ -16,7 +16,7 @@ Run a comprehensive code audit on the project in the current workspace, covering
    - `audit-documentation` — README completeness, ADRs, doc-code drift
    - `audit-tech-debt` — complexity, stale TODOs, dependency staleness
 2. Collect all domain reports (each conforming to `schemas/domain-report.schema.json`)
-3. Call `inspectra/merge-domain-reports` with the collected domain reports
+3. Call `inspectra_merge_domain_reports` with the collected domain reports
 4. Produce a consolidated Markdown report
 
 ## Scoring

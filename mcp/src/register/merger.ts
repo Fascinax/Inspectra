@@ -14,7 +14,7 @@ import { DomainReportSchema, FindingSchema } from "../types.js";
  */
 export function registerMergerTools(server: McpServer, policiesDir: string): void {
   server.registerTool(
-    "merge-domain-reports",
+    "inspectra_merge_domain_reports",
     {
       title: "Merge Domain Reports",
       description: "Merge multiple domain reports into a consolidated audit report with scoring and deduplication",
@@ -48,7 +48,7 @@ export function registerMergerTools(server: McpServer, policiesDir: string): voi
   );
 
   server.registerTool(
-    "score-findings",
+    "inspectra_score_findings",
     {
       title: "Score Findings",
       description: "Compute a domain score from a list of findings",

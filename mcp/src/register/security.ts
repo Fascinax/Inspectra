@@ -13,7 +13,7 @@ import { validateProjectDir, validateFilePathsCsv } from "../utils/paths.js";
  */
 export function registerSecurityTools(server: McpServer, policiesDir: string): void {
   server.registerTool(
-    "scan-secrets",
+    "inspectra_scan_secrets",
     {
       title: "Scan Secrets",
       description: "Scan source files for hardcoded secrets, API keys, and credentials",
@@ -37,7 +37,7 @@ export function registerSecurityTools(server: McpServer, policiesDir: string): v
   );
 
   server.registerTool(
-    "check-deps-vulns",
+    "inspectra_check_deps_vulns",
     {
       title: "Check Dependency Vulnerabilities",
       description: "Run npm audit to find vulnerable dependencies",
@@ -59,7 +59,7 @@ export function registerSecurityTools(server: McpServer, policiesDir: string): v
   );
 
   server.registerTool(
-    "run-semgrep",
+    "inspectra_run_semgrep",
     {
       title: "Run Semgrep",
       description: "Run Semgrep static analysis to detect deep security and code quality patterns",
@@ -81,7 +81,7 @@ export function registerSecurityTools(server: McpServer, policiesDir: string): v
   );
 
   server.registerTool(
-    "check-maven-deps",
+    "inspectra_check_maven_deps",
     {
       title: "Check Maven Dependencies",
       description: "Analyze Maven pom.xml for dependency count, SNAPSHOT versions, and outdated libraries",

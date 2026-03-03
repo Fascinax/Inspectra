@@ -34,13 +34,13 @@ adjustments:
 # Tool-specific confidence floors
 # Some MCP tools produce inherently more reliable results.
 tool_floors:
-  scan-secrets: 0.80
-  check-deps-vulns: 0.90
-  parse-coverage: 0.95
-  parse-test-results: 0.95
-  detect-missing-tests: 0.70
-  check-layering: 0.75
-  analyze-dependencies: 0.85
-  check-naming: 0.65
-  check-file-lengths: 0.95
-  check-todos: 0.90
+  inspectra_scan_secrets: 0.80
+  inspectra_check_deps_vulns: 0.90
+  inspectra_parse_coverage: 0.95
+  inspectra_parse_test_results: 0.95
+  inspectra_detect_missing_tests: 0.70
+  inspectra_check_layering: 0.75
+  inspectra_analyze_dependencies: 0.85
+  inspectra_check_naming: 0.65
+  inspectra_check_file_lengths: 0.95
+  inspectra_check_todos: 0.90

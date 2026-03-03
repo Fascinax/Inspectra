@@ -29,7 +29,7 @@ Inspectra is a multi-agent code audit system built on GitHub Copilot Custom Agen
 │  │  Security   │ │   Tests    │ │  Architecture    │   │
 │  │  Tools      │ │   Tools    │ │  Tools           │   │
 │  │             │ │            │ │                  │   │
-│  │ scan-secrets│ │parse-cover │ │ check-layering  │   │
+│  │ inspectra_scan_secrets│ │parse-cover │ │ inspectra_check_layering  │   │
 │  │ check-deps  │ │parse-tests │ │ analyze-deps    │   │
 │  └─────────────┘ │detect-miss │ └──────────────────┘   │
 │                   └────────────┘                        │
@@ -37,8 +37,8 @@ Inspectra is a multi-agent code audit system built on GitHub Copilot Custom Agen
 │  │ Code Quality│ │     Merger         │                │
 │  │             │ │                    │                │
 │  │ check-name  │ │ merge-domain-rpts  │                │
-│  │ check-length│ │ score-findings     │                │
-│  │ check-todos │ │ deduplicate        │                │
+│  │ check-length│ │ inspectra_score_findings     │                │
+│  │ inspectra_check_todos │ │ deduplicate        │                │
 │  └─────────────┘ └────────────────────┘                │
 └─────────────────────────────────────────────────────────┘
          │
@@ -59,7 +59,7 @@ Inspectra is a multi-agent code audit system built on GitHub Copilot Custom Agen
 3. The orchestrator delegates to domain-specific agents.
 4. Each domain agent calls MCP tools to gather data.
 5. Each domain agent returns a **domain report** (JSON conforming to `domain-report.schema.json`).
-6. The orchestrator calls `merge-domain-reports` to combine results.
+6. The orchestrator calls `inspectra_merge_domain_reports` to combine results.
 7. The orchestrator produces the final **consolidated report** in Markdown.
 
 ## Key Design Decisions

@@ -13,7 +13,7 @@ import { validateProjectDir } from "../utils/paths.js";
  */
 export function registerArchitectureTools(server: McpServer, policiesDir: string): void {
   server.registerTool(
-    "check-layering",
+    "inspectra_check_layering",
     {
       title: "Check Layering",
       description: "Verify clean architecture layer dependencies (presentation → application → domain ← infrastructure)",
@@ -37,7 +37,7 @@ export function registerArchitectureTools(server: McpServer, policiesDir: string
   );
 
   server.registerTool(
-    "analyze-dependencies",
+    "inspectra_analyze_dependencies",
     {
       title: "Analyze Dependencies",
       description: "Analyze package.json dependencies for excessive count or duplication",
@@ -59,7 +59,7 @@ export function registerArchitectureTools(server: McpServer, policiesDir: string
   );
 
   server.registerTool(
-    "detect-circular-deps",
+    "inspectra_detect_circular_deps",
     {
       title: "Detect Circular Dependencies",
       description: "Detect circular import chains between source files",

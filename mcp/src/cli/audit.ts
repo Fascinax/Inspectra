@@ -134,7 +134,7 @@ async function runSecurityAudit(
     findings,
     score,
     startMs: start,
-    tools: ["scan-secrets", "check-deps-vulns", "run-semgrep", "check-maven-deps"],
+    tools: ["inspectra_scan_secrets", "inspectra_check_deps_vulns", "inspectra_run_semgrep", "inspectra_check_maven_deps"],
   });
 }
 
@@ -174,7 +174,7 @@ async function runTestsAudit(
     findings,
     score,
     startMs: start,
-    tools: ["parse-coverage", "parse-test-results", "detect-missing-tests", "parse-playwright-report", "detect-flaky-tests"],
+    tools: ["inspectra_parse_coverage", "inspectra_parse_test_results", "inspectra_detect_missing_tests", "inspectra_parse_playwright_report", "inspectra_detect_flaky_tests"],
   });
 }
 
@@ -202,7 +202,7 @@ async function runArchitectureAudit(
     findings,
     score,
     startMs: start,
-    tools: ["check-layering", "analyze-dependencies", "detect-circular-deps"],
+    tools: ["inspectra_check_layering", "inspectra_analyze_dependencies", "inspectra_detect_circular_deps"],
   });
 }
 
@@ -236,7 +236,7 @@ async function runConventionsAudit(
     findings,
     score,
     startMs: start,
-    tools: ["check-naming", "check-file-lengths", "check-todos", "parse-lint-output", "detect-dry-violations"],
+    tools: ["inspectra_check_naming", "inspectra_check_file_lengths", "inspectra_check_todos", "inspectra_parse_lint_output", "inspectra_detect_dry_violations"],
   });
 }
 
@@ -260,7 +260,7 @@ async function runPerformanceAudit(projectDir: string, config?: ScoringConfig): 
     findings,
     score,
     startMs: start,
-    tools: ["analyze-bundle-size", "check-build-timings", "detect-runtime-metrics"],
+    tools: ["inspectra_analyze_bundle_size", "inspectra_check_build_timings", "inspectra_detect_runtime_metrics"],
   });
 }
 
@@ -284,7 +284,7 @@ async function runDocumentationAudit(projectDir: string, config?: ScoringConfig)
     findings,
     score,
     startMs: start,
-    tools: ["check-readme-completeness", "check-adr-presence", "detect-doc-code-drift"],
+    tools: ["inspectra_check_readme_completeness", "inspectra_check_adr_presence", "inspectra_detect_doc_code_drift"],
   });
 }
 
@@ -308,7 +308,7 @@ async function runTechDebtAudit(projectDir: string, config?: ScoringConfig): Pro
     findings,
     score,
     startMs: start,
-    tools: ["analyze-complexity", "age-todos", "check-dependency-staleness"],
+    tools: ["inspectra_analyze_complexity", "inspectra_age_todos", "inspectra_check_dependency_staleness"],
   });
 }
 

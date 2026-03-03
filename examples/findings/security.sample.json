@@ -80,6 +80,6 @@
     "agent": "audit-security",
     "timestamp": "2026-02-27T10:30:00.000Z",
     "duration_ms": 4520,
-    "tools_used": ["scan-secrets", "check-deps-vulns"]
+    "tools_used": ["inspectra_scan_secrets", "inspectra_check_deps_vulns"]
   }
 }

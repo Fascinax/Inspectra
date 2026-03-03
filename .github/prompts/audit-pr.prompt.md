@@ -17,7 +17,7 @@ Run a focused audit on the files changed in this pull request only.
    - Docs or README files changed → invoke `audit-documentation`
    - Legacy hotspots or TODO-heavy files changed → invoke `audit-tech-debt`
 3. Pass only the changed file paths to each relevant agent
-4. Call `inspectra/merge-domain-reports` with the collected domain reports
+4. Call `inspectra_merge_domain_reports` with the collected domain reports
 5. Produce a concise PR review report
 
 ## Scope Rules

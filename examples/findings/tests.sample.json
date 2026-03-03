@@ -57,6 +57,6 @@
     "agent": "audit-tests",
     "timestamp": "2026-02-27T10:30:15.000Z",
     "duration_ms": 3200,
-    "tools_used": ["parse-coverage", "detect-missing-tests"]
+    "tools_used": ["inspectra_parse_coverage", "inspectra_detect_missing_tests"]
   }
 }

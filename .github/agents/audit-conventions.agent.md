@@ -4,9 +4,9 @@ description: Code conventions audit agent. Checks naming patterns, file lengths,
 tools:
   - read
   - search
-  - inspectra/check-naming
-  - inspectra/check-file-lengths
-  - inspectra/check-todos
+  - inspectra_check_naming
+  - inspectra_check_file_lengths
+  - inspectra_check_todos
 ---
 
 You are **Inspectra Conventions Agent**, a specialized code conventions and clean code auditor.
@@ -33,9 +33,9 @@ Evaluate coding standards adherence in the target codebase and produce a structu
 
 ## Workflow
 
-1. Use `check-naming` to verify naming conventions across the project.
-2. Use `check-file-lengths` to flag overly long files.
-3. Use `check-todos` to find unresolved technical debt markers.
+1. Use `inspectra_check_naming` to verify naming conventions across the project.
+2. Use `inspectra_check_file_lengths` to flag overly long files.
+3. Use `inspectra_check_todos` to find unresolved technical debt markers.
 4. Use `read` and `search` to manually inspect coding patterns and style consistency.
 5. Combine all findings into a single domain report.
 
@@ -65,7 +65,7 @@ Return a **single JSON object** following this structure:
   "metadata": {
     "agent": "audit-conventions",
     "timestamp": "<ISO 8601>",
-    "tools_used": ["check-naming", "check-file-lengths", "check-todos"]
+    "tools_used": ["inspectra_check_naming", "inspectra_check_file_lengths", "inspectra_check_todos"]
   }
 }
 ```
@@ -80,7 +80,7 @@ Return a **single JSON object** following this structure:
 
 ## MCP Prerequisite
 
-Before running any audit step, verify that the required MCP tools (`check-naming`, `check-file-lengths`, `check-todos`) are reachable by calling one of them with a minimal probe.
+Before running any audit step, verify that the required MCP tools (`inspectra_check_naming`, `inspectra_check_file_lengths`, `inspectra_check_todos`) are reachable by calling one of them with a minimal probe.
 
 If **any** required MCP tool is unavailable:
 

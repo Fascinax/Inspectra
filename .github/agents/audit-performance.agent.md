@@ -5,9 +5,9 @@ tools:
   - read
   - search
   - execute
-  - inspectra/analyze-bundle-size
-  - inspectra/check-build-timings
-  - inspectra/detect-runtime-metrics
+  - inspectra_analyze_bundle_size
+  - inspectra_check_build_timings
+  - inspectra_detect_runtime_metrics
 ---
 
 You are **Inspectra Performance Agent**, a specialized performance auditor.
@@ -33,9 +33,9 @@ Evaluate the performance characteristics of the target codebase and produce a st
 
 ## Workflow
 
-1. Use `analyze-bundle-size` to measure and flag oversized bundles or chunks.
-2. Use `check-build-timings` to detect slow build steps.
-3. Use `detect-runtime-metrics` to identify runtime performance issues.
+1. Use `inspectra_analyze_bundle_size` to measure and flag oversized bundles or chunks.
+2. Use `inspectra_check_build_timings` to detect slow build steps.
+3. Use `inspectra_detect_runtime_metrics` to identify runtime performance issues.
 4. Use `read` and `search` to manually inspect build config, lazy loading patterns, and rendering logic.
 5. Combine all findings into a single domain report.
 
@@ -66,7 +66,7 @@ Return a **single JSON object** following this structure:
   "metadata": {
     "agent": "audit-performance",
     "timestamp": "<ISO 8601>",
-    "tools_used": ["analyze-bundle-size", "check-build-timings", "detect-runtime-metrics"]
+    "tools_used": ["inspectra_analyze_bundle_size", "inspectra_check_build_timings", "inspectra_detect_runtime_metrics"]
   }
 }
 ```
@@ -81,7 +81,7 @@ Return a **single JSON object** following this structure:
 
 ## MCP Prerequisite
 
-Before running any audit step, verify that the required MCP tools (`analyze-bundle-size`, `check-build-timings`, `detect-runtime-metrics`) are reachable by calling one of them with a minimal probe.
+Before running any audit step, verify that the required MCP tools (`inspectra_analyze_bundle_size`, `inspectra_check_build_timings`, `inspectra_detect_runtime_metrics`) are reachable by calling one of them with a minimal probe.
 
 If **any** required MCP tool is unavailable:
 

@@ -19,7 +19,7 @@ import { validateProjectDir } from "../utils/paths.js";
  */
 export function registerTestsTools(server: McpServer, policiesDir: string): void {
   server.registerTool(
-    "parse-coverage",
+    "inspectra_parse_coverage",
     {
       title: "Parse Coverage",
       description: "Parse coverage reports and flag metrics below thresholds",
@@ -43,7 +43,7 @@ export function registerTestsTools(server: McpServer, policiesDir: string): void
   );
 
   server.registerTool(
-    "parse-test-results",
+    "inspectra_parse_test_results",
     {
       title: "Parse Test Results",
       description: "Parse JUnit XML test results and report failures",
@@ -65,7 +65,7 @@ export function registerTestsTools(server: McpServer, policiesDir: string): void
   );
 
   server.registerTool(
-    "detect-missing-tests",
+    "inspectra_detect_missing_tests",
     {
       title: "Detect Missing Tests",
       description: "Detect source files that lack a corresponding test file",
@@ -87,7 +87,7 @@ export function registerTestsTools(server: McpServer, policiesDir: string): void
   );
 
   server.registerTool(
-    "parse-playwright-report",
+    "inspectra_parse_playwright_report",
     {
       title: "Parse Playwright Report",
       description: "Parse Playwright JSON test reports and report failures",
@@ -109,7 +109,7 @@ export function registerTestsTools(server: McpServer, policiesDir: string): void
   );
 
   server.registerTool(
-    "detect-flaky-tests",
+    "inspectra_detect_flaky_tests",
     {
       title: "Detect Flaky Tests",
       description: "Detect flaky tests from JUnit XML rerun markers or Playwright retry results",

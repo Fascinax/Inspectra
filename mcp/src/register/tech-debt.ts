@@ -9,7 +9,7 @@ import { validateProjectDir } from "../utils/paths.js";
  */
 export function registerTechDebtTools(server: McpServer): void {
   server.registerTool(
-    "analyze-complexity",
+    "inspectra_analyze_complexity",
     {
       title: "Analyze Complexity",
       description: "Estimate code complexity and flag high-maintenance files",
@@ -31,7 +31,7 @@ export function registerTechDebtTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "age-todos",
+    "inspectra_age_todos",
     {
       title: "Age TODOs",
       description: "Find aged TODO/FIXME comments from inline dates",
@@ -53,7 +53,7 @@ export function registerTechDebtTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "check-dependency-staleness",
+    "inspectra_check_dependency_staleness",
     {
       title: "Check Dependency Staleness",
       description: "Detect dependency staleness risks from manifest version patterns",

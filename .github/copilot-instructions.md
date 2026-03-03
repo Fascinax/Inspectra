@@ -36,22 +36,22 @@ Every finding MUST include:
 
 ### MCP Tools
 
-Tools are registered in the `inspectra` MCP server. Agents should call them by prefixed name (e.g., `inspectra/scan-secrets`). Available tools:
+Tools are registered in the `inspectra` MCP server. Agents should call them by prefixed name (e.g., `inspectra_scan_secrets`). Available tools:
 
 | Tool | Domain | Purpose |
 |------|--------|---------|
-| `scan-secrets` | Security | Detect hardcoded secrets |
-| `check-deps-vulns` | Security | npm audit for vulnerabilities |
-| `parse-coverage` | Tests | Parse coverage reports |
-| `parse-test-results` | Tests | Parse JUnit XML results |
-| `detect-missing-tests` | Tests | Find untested source files |
-| `check-layering` | Architecture | Verify layer dependencies |
-| `analyze-dependencies` | Architecture | Analyze dependency health |
-| `check-naming` | Conventions | Verify naming patterns |
-| `check-file-lengths` | Conventions | Flag long files |
-| `check-todos` | Conventions | Find TODO/FIXME markers |
-| `merge-domain-reports` | Orchestrator | Merge and score reports |
-| `score-findings` | Orchestrator | Compute a domain score |
+| `inspectra_scan_secrets` | Security | Detect hardcoded secrets |
+| `inspectra_check_deps_vulns` | Security | npm audit for vulnerabilities |
+| `inspectra_parse_coverage` | Tests | Parse coverage reports |
+| `inspectra_parse_test_results` | Tests | Parse JUnit XML results |
+| `inspectra_detect_missing_tests` | Tests | Find untested source files |
+| `inspectra_check_layering` | Architecture | Verify layer dependencies |
+| `inspectra_analyze_dependencies` | Architecture | Analyze dependency health |
+| `inspectra_check_naming` | Conventions | Verify naming patterns |
+| `inspectra_check_file_lengths` | Conventions | Flag long files |
+| `inspectra_check_todos` | Conventions | Find TODO/FIXME markers |
+| `inspectra_merge_domain_reports` | Orchestrator | Merge and score reports |
+| `inspectra_score_findings` | Orchestrator | Compute a domain score |
 
 ### Technology Stack
 

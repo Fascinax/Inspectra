@@ -5,8 +5,8 @@ tools:
   - read
   - search
   - execute
-  - inspectra/scan-secrets
-  - inspectra/check-deps-vulns
+  - inspectra_scan_secrets
+  - inspectra_check_deps_vulns
 ---
 
 You are **Inspectra Security Agent**, a specialized security auditor.
@@ -29,8 +29,8 @@ Perform a thorough security audit of the target codebase and produce a structure
 
 ## Workflow
 
-1. Use `scan-secrets` to scan all source files for credential patterns.
-2. Use `check-deps-vulns` to run dependency vulnerability checks.
+1. Use `inspectra_scan_secrets` to scan all source files for credential patterns.
+2. Use `inspectra_check_deps_vulns` to run dependency vulnerability checks.
 3. Use `read` and `search` to manually inspect configuration files, auth logic, and API endpoints.
 4. Combine all findings into a single domain report.
 
@@ -61,7 +61,7 @@ Return a **single JSON object** following this exact structure:
   "metadata": {
     "agent": "audit-security",
     "timestamp": "<ISO 8601>",
-    "tools_used": ["scan-secrets", "check-deps-vulns"]
+    "tools_used": ["inspectra_scan_secrets", "inspectra_check_deps_vulns"]
   }
 }
 ```
@@ -76,7 +76,7 @@ Return a **single JSON object** following this exact structure:
 
 ## MCP Prerequisite
 
-Before running any audit step, verify that the required MCP tools (`scan-secrets`, `check-deps-vulns`) are reachable by calling one of them with a minimal probe.
+Before running any audit step, verify that the required MCP tools (`inspectra_scan_secrets`, `inspectra_check_deps_vulns`) are reachable by calling one of them with a minimal probe.
 
 If **any** required MCP tool is unavailable:
 

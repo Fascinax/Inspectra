@@ -63,7 +63,7 @@ Produced by each domain agent after completing its audit.
     "agent": "audit-security",
     "timestamp": "2026-01-15T10:00:00.000Z",
     "duration_ms": 1200,
-    "tools_used": ["scan-secrets", "check-deps-vulns"]
+    "tools_used": ["inspectra_scan_secrets", "inspectra_check_deps_vulns"]
   }
 }
 ```

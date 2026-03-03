@@ -9,7 +9,7 @@ import { validateProjectDir } from "../utils/paths.js";
  */
 export function registerPerformanceTools(server: McpServer): void {
   server.registerTool(
-    "analyze-bundle-size",
+    "inspectra_analyze_bundle_size",
     {
       title: "Analyze Bundle Size",
       description: "Analyze bundle size from build outputs and flag oversized artifacts",
@@ -31,7 +31,7 @@ export function registerPerformanceTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "check-build-timings",
+    "inspectra_check_build_timings",
     {
       title: "Check Build Timings",
       description: "Parse build timing metrics and flag slow or unstable builds",
@@ -53,7 +53,7 @@ export function registerPerformanceTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "detect-runtime-metrics",
+    "inspectra_detect_runtime_metrics",
     {
       title: "Detect Runtime Metrics",
       description: "Detect static runtime performance hotspots (sync I/O, blocking calls)",

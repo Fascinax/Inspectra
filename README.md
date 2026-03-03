@@ -79,12 +79,12 @@ inspectra/
 │     ├─ index.ts       # Server entry point (12 tools registered)
 │     ├─ types.ts       # Zod schemas & TypeScript types
 │     ├─ tools/
-│     │  ├─ security.ts      # scan-secrets, check-deps-vulns
-│     │  ├─ tests.ts         # parse-coverage, parse-test-results, detect-missing-tests
-│     │  ├─ architecture.ts  # check-layering, analyze-dependencies
-│     │  └─ conventions.ts  # check-naming, check-file-lengths, check-todos
+│     │  ├─ security.ts      # inspectra_scan_secrets, inspectra_check_deps_vulns
+│     │  ├─ tests.ts         # inspectra_parse_coverage, inspectra_parse_test_results, inspectra_detect_missing_tests
+│     │  ├─ architecture.ts  # inspectra_check_layering, inspectra_analyze_dependencies
+│     │  └─ conventions.ts  # inspectra_check_naming, inspectra_check_file_lengths, inspectra_check_todos
 │     └─ merger/
-│        ├─ merge-findings.ts  # merge-domain-reports tool
+│        ├─ merge-findings.ts  # inspectra_merge_domain_reports tool
 │        ├─ deduplicate.ts     # Deduplication logic
 │        └─ score.ts           # Scoring engine
 │
@@ -176,13 +176,13 @@ TARGET_PROJECT=/path/to/project PROFILE=generic FORMAT=markdown \
 
 | Domain | Agent | MCP Tools | Prefix |
 |--------|-------|-----------|--------|
-| Security | `audit-security` | `scan-secrets`, `check-deps-vulns`, `run-semgrep`, `check-maven-deps` | `SEC-` |
-| Tests | `audit-tests` | `parse-coverage`, `parse-test-results`, `detect-missing-tests`, `parse-playwright-report`, `detect-flaky-tests` | `TST-` |
-| Architecture | `audit-architecture` | `check-layering`, `analyze-dependencies`, `detect-circular-deps` | `ARC-` |
-| Conventions | `audit-conventions` | `check-naming`, `check-file-lengths`, `check-todos`, `parse-lint-output`, `detect-dry-violations` | `CNV-` |
-| Performance | `audit-performance` | `analyze-bundle-size`, `check-build-timings`, `detect-runtime-metrics` | `PRF-` |
-| Documentation | `audit-documentation` | `check-readme-completeness`, `check-adr-presence`, `detect-doc-code-drift` | `DOC-` |
-| Tech debt | `audit-tech-debt` | `analyze-complexity`, `age-todos`, `check-dependency-staleness` | `DEBT-` |
+| Security | `audit-security` | `inspectra_scan_secrets`, `inspectra_check_deps_vulns`, `inspectra_run_semgrep`, `inspectra_check_maven_deps` | `SEC-` |
+| Tests | `audit-tests` | `inspectra_parse_coverage`, `inspectra_parse_test_results`, `inspectra_detect_missing_tests`, `inspectra_parse_playwright_report`, `inspectra_detect_flaky_tests` | `TST-` |
+| Architecture | `audit-architecture` | `inspectra_check_layering`, `inspectra_analyze_dependencies`, `inspectra_detect_circular_deps` | `ARC-` |
+| Conventions | `audit-conventions` | `inspectra_check_naming`, `inspectra_check_file_lengths`, `inspectra_check_todos`, `inspectra_parse_lint_output`, `inspectra_detect_dry_violations` | `CNV-` |
+| Performance | `audit-performance` | `inspectra_analyze_bundle_size`, `inspectra_check_build_timings`, `inspectra_detect_runtime_metrics` | `PRF-` |
+| Documentation | `audit-documentation` | `inspectra_check_readme_completeness`, `inspectra_check_adr_presence`, `inspectra_detect_doc_code_drift` | `DOC-` |
+| Tech debt | `audit-tech-debt` | `inspectra_analyze_complexity`, `inspectra_age_todos`, `inspectra_check_dependency_staleness` | `DEBT-` |
 
 ---
 

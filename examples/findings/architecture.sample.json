@@ -44,6 +44,6 @@
     "agent": "audit-architecture",
     "timestamp": "2026-02-27T10:30:20.000Z",
     "duration_ms": 2800,
-    "tools_used": ["check-layering", "analyze-dependencies"]
+    "tools_used": ["inspectra_check_layering", "inspectra_analyze_dependencies"]
   }
 }

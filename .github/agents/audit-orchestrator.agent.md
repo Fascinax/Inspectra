@@ -5,8 +5,8 @@ tools:
   - agent
   - read
   - search
-  - inspectra/merge-domain-reports
-  - inspectra/score-findings
+  - inspectra_merge_domain_reports
+  - inspectra_score_findings
 handoffs:
   - label: Security Audit
     agent: audit-security
@@ -49,7 +49,7 @@ You receive an audit request and delegate it to specialized domain agents. You d
    - `audit-documentation` — README completeness, ADRs, doc-code drift
    - `audit-tech-debt` — complexity, stale TODOs, dependency staleness
 3. **Collect** each agent's domain report (JSON following `schemas/domain-report.schema.json`).
-4. **Merge** all domain reports using the `inspectra/merge-domain-reports` tool.
+4. **Merge** all domain reports using the `inspectra_merge_domain_reports` tool.
 5. **Produce** a final consolidated report in Markdown.
 
 ## Delegation Rules
@@ -100,7 +100,7 @@ After merging, produce a Markdown report with this structure:
 
 ## Rules
 
-- Never skip the merge step — always use `inspectra/merge-domain-reports` to produce the consolidated JSON.
+- Never skip the merge step — always use `inspectra_merge_domain_reports` to produce the consolidated JSON.
 - Never invent findings — only report what domain agents found.
 - If a domain agent fails **because the MCP server is unavailable**, propagate its setup error message to the user and **abort the full audit** — do not produce a partial report.
 - If a domain agent fails for any other reason (e.g. target path issue, schema error), note it in the report and proceed with available data.

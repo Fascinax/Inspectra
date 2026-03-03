@@ -9,7 +9,7 @@ import { validateProjectDir } from "../utils/paths.js";
  */
 export function registerDocumentationTools(server: McpServer): void {
   server.registerTool(
-    "check-readme-completeness",
+    "inspectra_check_readme_completeness",
     {
       title: "Check README Completeness",
       description: "Evaluate README presence and completeness against baseline sections",
@@ -31,7 +31,7 @@ export function registerDocumentationTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "check-adr-presence",
+    "inspectra_check_adr_presence",
     {
       title: "Check ADR Presence",
       description: "Check whether ADR documents are present under docs/adr or docs/adrs",
@@ -53,7 +53,7 @@ export function registerDocumentationTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "detect-doc-code-drift",
+    "inspectra_detect_doc_code_drift",
     {
       title: "Detect Doc-Code Drift",
       description: "Detect mismatches between package scripts and README usage instructions",
