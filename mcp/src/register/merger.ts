@@ -77,7 +77,13 @@ Args:
 Returns: An object with a single "score" field (integer, 0-100). A score of 100 means no issues found.
 
 Error handling:
-  - Returns isError: true if findingsJson fails Zod validation.`,
+  - Returns isError: true if findingsJson fails Zod validation.
+
+Examples:
+  1. Score a set of findings:
+     { "findingsJson": "[{\"id\":\"SEC-001\",\"severity\":\"high\",\"domain\":\"security\",\"rule\":\"hardcoded-secret\",\"confidence\":0.95,\"evidence\":[\"src/config.ts\"]}]" }
+  2. Score an empty findings list (returns 100):
+     { "findingsJson": "[]" }`,
       inputSchema: {
         findingsJson: z.string().describe("JSON string � array of finding objects"),
       },

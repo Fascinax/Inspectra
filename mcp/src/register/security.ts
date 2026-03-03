@@ -77,7 +77,13 @@ Returns: Array of Finding objects (domain: "security", prefix: SEC-). Each findi
 Error handling:
   - Throws if projectDir does not exist or is not a directory.
   - Returns empty findings if no package-lock.json is found.
-  - Gracefully handles npm audit failures (e.g., npm not installed).`,
+  - Gracefully handles npm audit failures (e.g., npm not installed).
+
+Examples:
+  1. Audit a Node.js project:
+     { "projectDir": "/app/my-project" }
+  2. Get results as Markdown:
+     { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
@@ -114,7 +120,13 @@ Returns: Array of Finding objects (domain: "security", prefix: SEC-). Each findi
 
 Error handling:
   - Returns empty findings if Semgrep is not installed.
-  - Times out after 30 seconds to avoid hanging on large codebases.`,
+  - Times out after 30 seconds to avoid hanging on large codebases.
+
+Examples:
+  1. Run Semgrep on a project:
+     { "projectDir": "/app/my-project" }
+  2. Paginate results (first 10):
+     { "projectDir": "/app/my-project", "limit": 10, "offset": 0 }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
@@ -151,7 +163,13 @@ Returns: Array of Finding objects (domain: "security", prefix: SEC-). Findings c
 
 Error handling:
   - Returns empty findings if no pom.xml is found.
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Analyze a Maven project:
+     { "projectDir": "/app/java-backend" }
+  2. Check a Spring Boot project with Markdown output:
+     { "projectDir": "/app/spring-app", "responseFormat": "markdown" }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,

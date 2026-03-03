@@ -76,7 +76,13 @@ Args:
 Returns: Array of Finding objects (domain: "conventions", prefix: CNV-). Each finding reports the file path, line count, and which threshold was exceeded.
 
 Error handling:
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Check with default thresholds:
+     { "projectDir": "/app/my-project" }
+  2. Check with custom profile thresholds:
+     { "projectDir": "/app/my-project", "profile": "java-backend" }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
@@ -115,7 +121,13 @@ Args:
 Returns: Array of Finding objects (domain: "conventions", prefix: CNV-). Each finding includes the marker type (TODO/FIXME/HACK/XXX), file path, line number, and comment text.
 
 Error handling:
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Scan for TODO/FIXME markers:
+     { "projectDir": "/app/my-project" }
+  2. Get TODO markers in Markdown format:
+     { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
@@ -153,7 +165,13 @@ Returns: Array of Finding objects (domain: "conventions", prefix: CNV-). Each fi
 
 Error handling:
   - Returns empty findings if no lint output files are found.
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Parse lint reports from a project:
+     { "projectDir": "/app/my-project" }
+  2. Get lint results paginated:
+     { "projectDir": "/app/my-project", "limit": 10, "offset": 0 }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
@@ -189,7 +207,13 @@ Args:
 Returns: Array of Finding objects (domain: "conventions", prefix: CNV-). Each finding identifies the two files with duplicated code, the similarity percentage, and a representative snippet.
 
 Error handling:
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Detect duplicated code blocks:
+     { "projectDir": "/app/my-project" }
+  2. Get DRY violations as Markdown:
+     { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,

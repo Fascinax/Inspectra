@@ -75,7 +75,13 @@ Returns: Array of Finding objects (domain: "architecture", prefix: ARC-). Each f
 
 Error handling:
   - Returns empty findings if no package.json is found.
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Analyze dependencies:
+     { "projectDir": "/app/my-project" }
+  2. Get Markdown dependency report:
+     { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
@@ -111,7 +117,13 @@ Args:
 Returns: Array of Finding objects (domain: "architecture", prefix: ARC-). Each finding includes the full cycle path (A -> B -> C -> A) and affected file paths.
 
 Error handling:
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Detect circular imports:
+     { "projectDir": "/app/my-project" }
+  2. Get first 3 cycles:
+     { "projectDir": "/app/monorepo", "limit": 3 }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,

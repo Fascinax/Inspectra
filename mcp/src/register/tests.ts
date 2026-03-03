@@ -82,7 +82,13 @@ Returns: Array of Finding objects (domain: "tests", prefix: TST-). Each finding 
 
 Error handling:
   - Returns empty findings if no JUnit XML files are found.
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Parse test results after a Maven build:
+     { "projectDir": "/app/java-backend" }
+  2. Get failures as Markdown:
+     { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
@@ -118,7 +124,13 @@ Args:
 Returns: Array of Finding objects (domain: "tests", prefix: TST-). Each finding identifies the untested source file and recommends creating the missing test.
 
 Error handling:
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Detect missing tests:
+     { "projectDir": "/app/my-project" }
+  2. Paginate for large projects (first 20):
+     { "projectDir": "/app/big-monorepo", "limit": 20 }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
@@ -155,7 +167,13 @@ Returns: Array of Finding objects (domain: "tests", prefix: TST-). Each finding 
 
 Error handling:
   - Returns empty findings if no Playwright report is found.
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Parse Playwright report:
+     { "projectDir": "/app/e2e-tests" }
+  2. Get first 5 failures:
+     { "projectDir": "/app/e2e-tests", "limit": 5 }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
@@ -192,7 +210,13 @@ Returns: Array of Finding objects (domain: "tests", prefix: TST-). Each finding 
 
 Error handling:
   - Returns empty findings if no test reports with retry data are found.
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Detect flaky tests:
+     { "projectDir": "/app/my-project" }
+  2. Get Markdown report for CI review:
+     { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,

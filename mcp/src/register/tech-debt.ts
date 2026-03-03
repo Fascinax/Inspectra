@@ -23,7 +23,13 @@ Args:
 Returns: Array of Finding objects (domain: "tech-debt", prefix: DEBT-). Each finding identifies the complex file, its complexity score, and the dominant complexity driver.
 
 Error handling:
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Analyze code complexity:
+     { "projectDir": "/app/my-project" }
+  2. Get top 5 most complex files:
+     { "projectDir": "/app/my-project", "limit": 5 }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
@@ -60,7 +66,13 @@ Returns: Array of Finding objects (domain: "tech-debt", prefix: DEBT-). Each fin
 
 Error handling:
   - Returns empty findings if no dated TODO markers are found.
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Find aged TODO markers:
+     { "projectDir": "/app/my-project" }
+  2. Get aged TODOs in Markdown:
+     { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
@@ -97,7 +109,13 @@ Returns: Array of Finding objects (domain: "tech-debt", prefix: DEBT-). Each fin
 
 Error handling:
   - Returns empty findings if no manifest files are found.
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Check dependency staleness:
+     { "projectDir": "/app/my-project" }
+  2. Get staleness report paginated:
+     { "projectDir": "/app/monorepo", "limit": 20, "offset": 0 }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,

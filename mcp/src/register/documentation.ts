@@ -24,7 +24,13 @@ Returns: Array of Finding objects (domain: "documentation", prefix: DOC-). Each 
 
 Error handling:
   - Returns a single critical finding if no README file exists.
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Check README completeness:
+     { "projectDir": "/app/my-project" }
+  2. Get results as Markdown:
+     { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
@@ -60,7 +66,13 @@ Args:
 Returns: Array of Finding objects (domain: "documentation", prefix: DOC-). Reports a finding if no ADR directory or documents are found.
 
 Error handling:
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Check for ADR presence:
+     { "projectDir": "/app/my-project" }
+  2. Paginate ADR findings:
+     { "projectDir": "/app/my-project", "limit": 10, "offset": 0 }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
@@ -97,7 +109,13 @@ Returns: Array of Finding objects (domain: "documentation", prefix: DOC-). Each 
 
 Error handling:
   - Returns empty findings if no package.json or README is found.
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Detect doc-code drift:
+     { "projectDir": "/app/my-project" }
+  2. Get drift report as Markdown:
+     { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,

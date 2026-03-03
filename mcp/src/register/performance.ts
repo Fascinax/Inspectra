@@ -67,7 +67,13 @@ Returns: Array of Finding objects (domain: "performance", prefix: PRF-). Each fi
 
 Error handling:
   - Returns empty findings if no build timing data is found.
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Check build timings:
+     { "projectDir": "/app/my-project" }
+  2. Get first 5 slowest steps:
+     { "projectDir": "/app/my-project", "limit": 5 }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
@@ -103,7 +109,13 @@ Args:
 Returns: Array of Finding objects (domain: "performance", prefix: PRF-). Each finding identifies the file, line, anti-pattern type, and a suggested asynchronous alternative.
 
 Error handling:
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Scan for runtime anti-patterns:
+     { "projectDir": "/app/my-project" }
+  2. Get anti-patterns as Markdown:
+     { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
