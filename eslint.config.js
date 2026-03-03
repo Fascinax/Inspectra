@@ -32,7 +32,7 @@ export default [
       },
     },
     plugins: {
-      "@typescript-eslint": tsPlugin,
+      "@typescript-eslint": /** @type {any} */ (tsPlugin),
     },
     rules: {
       // Core ESLint
