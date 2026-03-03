@@ -9,7 +9,7 @@
 ## Récapitulatif : ce qui est FAIT
 
 | # | Correction | Commit | Statut |
-|---|-----------|--------|--------|
+| --- | ----------- | -------- | -------- |
 | 1 | Migration `server.tool()` → `server.registerTool()` avec `title` + `annotations` | `01e9f1d` | ✅ |
 | 2 | Renommage 28 outils en `snake_case` avec préfixe `inspectra_` | `9654768` | ✅ |
 | 3 | Descriptions multi-paragraphes (Args / Returns / Error handling) + `outputSchema` | `e17955d` | ✅ |
@@ -31,6 +31,7 @@
 **État actuel** : `jsonResponse()` retourne uniquement `{ content: [{ type: "text", text }] }`. Le champ `structuredContent` n'est jamais renseigné.
 
 **Action** :
+
 - Modifier `jsonResponse(data)` dans `response.ts` pour retourner aussi `structuredContent: data`
 - Cela donne aux clients MCP un accès programmatique direct aux données sans re-parser le JSON texte
 
@@ -45,6 +46,7 @@
 **État actuel** : Tous les outils retournent exclusivement du JSON. Le renderer Markdown existe mais n'est utilisé que par le CLI, pas par les outils MCP eux-mêmes.
 
 **Action** :
+
 - Ajouter un paramètre optionnel `response_format: z.enum(["json", "markdown"]).default("json")` aux outils qui retournent des findings
 - Dans le handler, formater le `text` content en Markdown si demandé (réutiliser les renderers existants)
 - Garder `structuredContent` en JSON dans tous les cas
@@ -60,6 +62,7 @@
 **État actuel** : `CHARACTER_LIMIT` est défini dans `response.ts`.
 
 **Action** :
+
 - Créer `mcp/src/constants.ts` avec `CHARACTER_LIMIT` et autres constantes partagées (ex. `SERVER_NAME`, `DEFAULT_PROFILE`)
 - Re-exporter depuis `response.ts` ou importer directement
 
@@ -74,6 +77,7 @@
 **État actuel** : La troncation coupe brutalement le JSON et ajoute `"... [truncated at CHARACTER_LIMIT]"`. Le JSON résultant est invalide et ne guide pas l'agent.
 
 **Action** :
+
 - Au lieu de couper le texte, réduire le tableau de findings (ex. garder les N premiers)
 - Retourner un JSON valide avec un champ `truncated: true` et `truncation_message`
 - Inclure `total_count` et `returned_count` pour que l'agent sache qu'il manque des données
@@ -91,6 +95,7 @@
 **État actuel** : Le package s'appelle `@inspectra/mcp-server`.
 
 **Action** :
+
 - Renommer en `inspectra-mcp-server` dans `mcp/package.json`
 - Mettre à jour les références (Docker, scripts, `inspectra: file:..`)
 
@@ -105,6 +110,7 @@
 **État actuel** : Aucune Resource MCP n'est enregistrée. Les agents n'ont accès qu'aux Tools.
 
 **Actions** :
+
 - `inspectra://policies/{profile}` — expose le contenu d'un profil en lecture
 - `inspectra://schemas/{name}` — expose les JSON Schemas en lecture
 - `inspectra://reports/latest` — expose le dernier rapport consolidé
@@ -120,6 +126,7 @@
 **État actuel** : Les prompts sont des fichiers `.prompt.md` dans `.github/prompts/`. Ils ne sont pas exposés via le protocole MCP.
 
 **Action** :
+
 - Utiliser `server.registerPrompt()` pour exposer les workflows d'audit (full, PR, targeted) comme des prompts MCP
 - Permet aux clients compatibles de proposer ces workflows dans leur UI
 
@@ -134,6 +141,7 @@
 **État actuel** : Les outils retournent TOUS les findings d'un coup. Pas de `limit` / `offset`.
 
 **Action** :
+
 - Ajouter `limit` (default: 50) et `offset` (default: 0) aux tools qui retournent des findings
 - Retourner `{ findings, total, count, has_more, next_offset }`
 - Gère le cas des projets avec des centaines de findings
@@ -149,6 +157,7 @@
 **État actuel** : Les descriptions contiennent Args/Returns/Error handling, mais pas d'exemples de valeurs ni de cas d'usage concrets.
 
 **Action** :
+
 - Ajouter une section `Examples:` aux descriptions des outils clés (scan_secrets, parse_coverage, merge_domain_reports, check_layering)
 - Format : `"Use when: 'Audit all TS files for secrets' -> params with filePathsCsv='/app/src/auth.ts,/app/src/config.ts'"`
 
@@ -165,6 +174,7 @@
 **État actuel** : `withErrorHandling` retourne `{ error: error.message }`. Le message brut de l'exception n'est pas toujours actionnable.
 
 **Action** :
+
 - Créer une hiérarchie d'erreurs métier (`InvalidPathError`, `ProfileNotFoundError`, `ParseError`)
 - Chaque erreur porte un `suggestion` (ex. *"Check that the path exists and is not a symlink"*)
 - `errorResponse()` inclut `{ error, suggestion, tool_name }`
@@ -180,6 +190,7 @@
 **État actuel** : Les inputs utilisent `z.string().describe(...)` mais pas de messages Zod personnalisés (`.min(1, "projectDir is required")`).
 
 **Action** :
+
 - Ajouter des messages Zod explicites sur les contraintes : `.min(1, "projectDir cannot be empty")`, `.regex(/.../,"Invalid path format")`
 
 **Effort** : S
@@ -193,6 +204,7 @@
 **État actuel** : Le serveur utilise `console.error` dans `index.ts` (correct), mais les tools n'ont aucun logging.
 
 **Action** :
+
 - Ajouter un logger léger (stderr-only) utilisable dans les handlers pour tracer les appels et les erreurs
 - Utile pour le debug sans polluer le flux MCP
 
@@ -207,6 +219,7 @@
 **État actuel** : 177 tests unitaires, mais aucun test d'intégration via le protocole MCP réel.
 
 **Action** :
+
 - Ajouter un script `scripts/test-mcp-inspector.sh` qui lance le serveur et vérifie les tool listings
 - Optionnel : tests automatisés avec `@modelcontextprotocol/inspector` en CI
 
@@ -221,6 +234,7 @@
 **État actuel** : Aucune évaluation formelle.
 
 **Action** :
+
 - Créer 10 questions d'évaluation réalistes testant des workflows multi-outils
 - Format XML conforme au guide d'évaluation MCP
 - Exemple : *"Given a project with 3 critical security findings and 80% coverage, what grade would Inspectra assign?"*
@@ -238,6 +252,7 @@
 **État actuel** : Uniquement stdio.
 
 **Action** :
+
 - Ajouter un mode HTTP avec `StreamableHTTPServerTransport` activable via variable d'env `TRANSPORT=http`
 - Utile pour un déploiement serveur (CI, plateforme SaaS)
 
@@ -252,6 +267,7 @@
 **État actuel** : Aucune notification.
 
 **Action** :
+
 - Émettre `notifications/tools/list_changed` si les profils changent à chaud
 - Peu d'intérêt pour le mode stdio actuel, mais pertinent si HTTP est ajouté
 
@@ -266,6 +282,7 @@
 **État actuel** : Non applicable en stdio. Deviendrait critique si le transport HTTP est ajouté.
 
 **Action** :
+
 - Préparer les middlewares Express (CORS, DNS rebinding, rate limit) pour le futur mode HTTP
 - `127.0.0.1` binding par défaut
 
@@ -276,7 +293,7 @@
 ## Matrice résumée
 
 | # | Action | Priorité | Effort | Impact Conformité |
-|---|--------|----------|--------|-------------------|
+| --- | -------- | ---------- | -------- | ------------------- |
 | 1.1 | `structuredContent` | P1 | XS | +0.5 |
 | 1.2 | Dual format JSON/Markdown | P1 | M | +0.5 |
 | 1.3 | Extraire `constants.ts` | P1 | XS | +0.1 |
@@ -301,7 +318,7 @@
 
 ## Ordre d'exécution recommandé
 
-```
+```markdown
 Sprint 1 (quick wins)     → 1.1, 1.3, 1.4           (~2h)  → score ~7.4
 Sprint 2 (dual format)    → 1.2, 2.5                 (~4h)  → score ~8.1
 Sprint 3 (MCP primitives) → 2.2, 2.3                 (~4h)  → score ~8.9
