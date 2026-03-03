@@ -52,6 +52,7 @@ Tools are registered in the `inspectra` MCP server. Agents should call them by p
 | `inspectra_check_todos` | Conventions | Find TODO/FIXME markers |
 | `inspectra_merge_domain_reports` | Orchestrator | Merge and score reports |
 | `inspectra_score_findings` | Orchestrator | Compute a domain score |
+| `inspectra_render_html` | Report Engine | Render HTML report (Obsidian dark theme) |
 | `inspectra_render_trend` | Report Engine | Compute score trend from multiple reports |
 | `inspectra_compare_reports` | Report Engine | Compare two reports and diff findings |
 

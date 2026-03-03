@@ -231,7 +231,7 @@ TARGET_PROJECT=/path/to/project PROFILE=generic FORMAT=markdown \
 | Script | Description |
 |--------|-------------|
 | `npm run build` | Compile the MCP server (TypeScript → `mcp/dist/`) |
-| `npm test` | Run 336 unit + integration tests (Vitest) |
+| `npm test` | Run 346 unit + integration tests (Vitest) |
 | `npm run test:watch` | Run tests in watch mode |
 | `npm run test:coverage` | Run tests with V8 coverage report |
 | `npm run lint` | TypeScript type-check + ESLint |

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { ConsolidatedReportSchema, type ConsolidatedReport } from "../types.js";
 import { buildTrendEntry, analyzeTrend, renderTrendMarkdown } from "../renderer/trend.js";
 import { compareReports, renderComparisonMarkdown } from "../renderer/compare.js";
+import { renderHtml } from "../renderer/html.js";
 import { makeFinding, makeDomainReport } from "./fixtures.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -241,5 +242,73 @@ describe("inspectra_compare_reports — integrated handler flow", () => {
     expect(result.unchanged.some((f) => f.id === "SEC-001")).toBe(true);
     expect(result.added).toHaveLength(0);
     expect(result.removed).toHaveLength(0);
+  });
+});
+
+// ─── inspectra_render_html — handler flow ─────────────────────────────────────
+
+describe("inspectra_render_html — integrated handler flow", () => {
+  it("validates and parses report JSON", () => {
+    const report = makeReport();
+    const parsed = ConsolidatedReportSchema.parse(report);
+    expect(parsed.overall_score).toBe(75);
+  });
+
+  it("rejects invalid reportJson with a parse error", () => {
+    expect(() => ConsolidatedReportSchema.parse({ not: "valid" })).toThrow();
+  });
+
+  it("returns a string starting with <!DOCTYPE html>", () => {
+    const html = renderHtml(makeReport());
+    expect(html.trimStart()).toMatch(/^<!DOCTYPE html>/);
+  });
+
+  it("embeds the overall score in the HTML", () => {
+    const html = renderHtml(makeReport({ overall_score: 75 }));
+    expect(html).toContain("75");
+  });
+
+  it("embeds the grade in the HTML", () => {
+    const html = renderHtml(makeReport({ grade: "B" }));
+    expect(html).toContain("B");
+  });
+
+  it("contains domain names from the report", () => {
+    const html = renderHtml(makeReport());
+    expect(html).toContain("security");
+    expect(html).toContain("tests");
+  });
+
+  it("is self-contained — no external stylesheet or script src", () => {
+    const html = renderHtml(makeReport());
+    expect(html).not.toMatch(/<link[^>]+href=["']http/);
+    expect(html).not.toMatch(/<script[^>]+src=["']http/);
+  });
+
+  it("includes finding ids when findings are present", () => {
+    const report = makeReport({
+      domain_reports: [makeDomainReport({ findings: [makeFinding({ id: "SEC-001" })] })],
+    });
+    const html = renderHtml(report);
+    expect(html).toContain("SEC-001");
+  });
+
+  it("produces valid HTML with <html>, <head> and <body> tags", () => {
+    const html = renderHtml(makeReport());
+    expect(html).toContain("<html");
+    expect(html).toContain("<head>");
+    expect(html).toContain("<body>");
+    expect(html).toContain("</body>");
+    expect(html).toContain("</html>");
+  });
+
+  it("escapes XSS characters in finding titles", () => {
+    const xssTitle = '<script>alert("xss")</script>';
+    const report = makeReport({
+      domain_reports: [makeDomainReport({ findings: [makeFinding({ id: "SEC-XSS", title: xssTitle })] })],
+    });
+    const html = renderHtml(report);
+    expect(html).not.toContain("<script>alert");
+    expect(html).toContain("&lt;script&gt;");
   });
 });

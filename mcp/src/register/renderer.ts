@@ -3,6 +3,7 @@ import { z } from "zod";
 import { ConsolidatedReportSchema } from "../types.js";
 import { buildTrendEntry, analyzeTrend, renderTrendMarkdown } from "../renderer/trend.js";
 import { compareReports, renderComparisonMarkdown } from "../renderer/compare.js";
+import { renderHtml } from "../renderer/html.js";
 import { jsonResponse, errorResponse, withErrorHandling } from "./response.js";
 import { ResponseFormatField } from "./schemas.js";
 import { ParseError } from "../errors.js";
@@ -13,8 +14,59 @@ import { ParseError } from "../errors.js";
  * @param server - The MCP server to register tools on.
  */
 export function registerRendererTools(server: McpServer): void {
+  registerRenderHtmlTool(server);
   registerRenderTrendTool(server);
   registerCompareReportsTool(server);
+}
+
+function registerRenderHtmlTool(server: McpServer): void {
+  server.registerTool(
+    "inspectra_render_html",
+    {
+      title: "Render HTML Report",
+      description: `Render a consolidated audit report as a self-contained HTML file with embedded CSS (Obsidian dark theme).
+
+Accepts a consolidated audit report JSON object and returns a fully self-contained HTML document — no external dependencies. Includes a score ring, per-domain cards, severity bar chart, and colour-coded finding cards.
+
+Args:
+  - reportJson (string): JSON string of a ConsolidatedReport object conforming to consolidated-report.schema.json.
+
+Returns: A single text/html string containing the complete HTML document, ready to save as a .html file or serve via HTTP.
+
+Error handling:
+  - Returns isError: true if reportJson fails Zod validation.
+
+Examples:
+  1. Render a consolidated audit as HTML:
+     { "reportJson": "{...consolidatedReport...}" }`,
+      inputSchema: {
+        reportJson: z.string().describe("JSON string of the ConsolidatedReport to render as HTML"),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    withErrorHandling(async ({ reportJson }) => {
+      let report;
+      try {
+        report = ConsolidatedReportSchema.parse(JSON.parse(reportJson));
+      } catch (err) {
+        return errorResponse(
+          new ParseError(
+            `Invalid reportJson: ${err instanceof Error ? err.message : String(err)}`,
+            "Ensure reportJson is a valid ConsolidatedReport JSON object conforming to consolidated-report.schema.json.",
+          ),
+          "inspectra_render_html",
+        );
+      }
+
+      const html = renderHtml(report);
+      return { content: [{ type: "text" as const, text: html }] };
+    }, "inspectra_render_html"),
+  );
 }
 
 function registerRenderTrendTool(server: McpServer): void {
