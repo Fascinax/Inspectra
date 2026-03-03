@@ -1,5 +1,6 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { CHARACTER_LIMIT, DEFAULT_PAGE_SIZE } from "../constants.js";
+import { InspectraError } from "../errors.js";
 import type { ConsolidatedReport, Finding } from "../types.js";
 import { renderFindingsAsMarkdown } from "../renderer/markdown.js";
 import { renderMarkdown } from "../renderer/markdown.js";
@@ -122,12 +123,32 @@ function buildTruncatedData(
 }
 
 /**
- * Returns a structured MCP error response.
+ * Returns a structured MCP error response with actionable guidance.
+ *
+ * When the error is an `InspectraError`, the response includes a `suggestion`
+ * field telling the LLM agent what to try next — following the MCP best-practice
+ * of "error messages should guide agents toward solutions".
+ *
+ * Shape: `{ error, suggestion?, tool_name?, code? }`
  */
-export function errorResponse(error: unknown): CallToolResult {
+export function errorResponse(error: unknown, toolName?: string): CallToolResult {
   const message = error instanceof Error ? error.message : String(error);
+
+  const payload: Record<string, string> = { error: message };
+
+  if (error instanceof InspectraError) {
+    payload.code = error.code;
+    payload.suggestion = error.suggestion;
+  } else {
+    payload.suggestion = "An unexpected error occurred. Check tool inputs and retry. If the issue persists, verify the project path and server configuration.";
+  }
+
+  if (toolName) {
+    payload.tool_name = toolName;
+  }
+
   return {
-    content: [{ type: "text", text: JSON.stringify({ error: message }) }],
+    content: [{ type: "text", text: JSON.stringify(payload) }],
     isError: true,
   };
 }
@@ -199,13 +220,16 @@ type AsyncHandler<T> = (params: T) => Promise<CallToolResult>;
 /**
  * Wraps a tool handler with try/catch, returning a structured error response
  * instead of throwing. This ensures the MCP client always receives a valid response.
+ *
+ * @param handler - The async tool handler to wrap.
+ * @param toolName - Optional MCP tool name included in error responses for traceability.
  */
-export function withErrorHandling<T>(handler: AsyncHandler<T>): AsyncHandler<T> {
+export function withErrorHandling<T>(handler: AsyncHandler<T>, toolName?: string): AsyncHandler<T> {
   return async (params: T): Promise<CallToolResult> => {
     try {
       return await handler(params);
     } catch (error) {
-      return errorResponse(error);
+      return errorResponse(error, toolName);
     }
   };
 }

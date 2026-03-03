@@ -64,7 +64,7 @@ Examples:
       const profileConfig = profile ? await loadProfile(policiesDir, profile) : undefined;
       const findings = await parseCoverage(safeDir, profileConfig);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_parse_coverage"),
   );
 
   server.registerTool(
@@ -107,7 +107,7 @@ Examples:
       const safeDir = await validateProjectDir(projectDir);
       const findings = await parseTestResults(safeDir);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_parse_test_results"),
   );
 
   server.registerTool(
@@ -149,7 +149,7 @@ Examples:
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectMissingTests(safeDir);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_detect_missing_tests"),
   );
 
   server.registerTool(
@@ -192,7 +192,7 @@ Examples:
       const safeDir = await validateProjectDir(projectDir);
       const findings = await parsePlaywrightReport(safeDir);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_parse_playwright_report"),
   );
 
   server.registerTool(
@@ -235,6 +235,6 @@ Examples:
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectFlakyTests(safeDir);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_detect_flaky_tests"),
   );
 }

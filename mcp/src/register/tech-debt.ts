@@ -48,7 +48,7 @@ Examples:
       const safeDir = await validateProjectDir(projectDir);
       const findings = await analyzeComplexity(safeDir);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_analyze_complexity"),
   );
 
   server.registerTool(
@@ -91,7 +91,7 @@ Examples:
       const safeDir = await validateProjectDir(projectDir);
       const findings = await ageTodos(safeDir);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_age_todos"),
   );
 
   server.registerTool(
@@ -134,6 +134,6 @@ Examples:
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkDependencyStaleness(safeDir);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_check_dependency_staleness"),
   );
 }

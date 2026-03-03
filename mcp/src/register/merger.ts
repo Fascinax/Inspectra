@@ -7,6 +7,7 @@ import { scoreDomain } from "../merger/score.js";
 import { loadAllPolicies, loadScoringRules } from "../policies/loader.js";
 import { DomainReportSchema, FindingSchema } from "../types.js";
 import { setLatestReport } from "./resources.js";
+import { ParseError } from "../errors.js";
 
 /**
  * Registers the merger and scoring MCP tools on the given server instance.
@@ -54,13 +55,19 @@ Examples:
       try {
         domainReports = z.array(DomainReportSchema).parse(JSON.parse(domainReportsJson));
       } catch (err) {
-        return errorResponse(new Error(`Invalid domainReportsJson: ${err instanceof Error ? err.message : String(err)}`));
+        return errorResponse(
+          new ParseError(
+            `Invalid domainReportsJson: ${err instanceof Error ? err.message : String(err)}`,
+            "Ensure domainReportsJson is a valid JSON array of domain report objects. Each report must have: domain, score, summary, findings[], and metadata. See schemas/domain-report.schema.json.",
+          ),
+          "inspectra_merge_domain_reports",
+        );
       }
       const policies = await loadAllPolicies(policiesDir, profile);
       const consolidated = mergeReports(domainReports, target, profile, policies);
       await setLatestReport(JSON.stringify(consolidated, null, 2));
       return reportResponse(consolidated, responseFormat);
-    }),
+    }, "inspectra_merge_domain_reports"),
   );
 
   server.registerTool(
@@ -100,11 +107,17 @@ Examples:
       try {
         findings = z.array(FindingSchema).parse(JSON.parse(findingsJson));
       } catch (err) {
-        return errorResponse(new Error(`Invalid findingsJson: ${err instanceof Error ? err.message : String(err)}`));
+        return errorResponse(
+          new ParseError(
+            `Invalid findingsJson: ${err instanceof Error ? err.message : String(err)}`,
+            "Ensure findingsJson is a valid JSON array of finding objects. Each finding must have: id, severity, domain, rule, confidence, and evidence[]. See schemas/finding.schema.json.",
+          ),
+          "inspectra_score_findings",
+        );
       }
       const scoring = await loadScoringRules(policiesDir);
       const score = scoreDomain(findings, scoring);
       return jsonResponse({ score });
-    }),
+    }, "inspectra_score_findings"),
   );
 }

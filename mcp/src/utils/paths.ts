@@ -1,5 +1,6 @@
 import { resolve, isAbsolute } from "node:path";
 import { stat } from "node:fs/promises";
+import { InvalidPathError } from "../errors.js";
 
 /** Characters and sequences that signal path traversal or shell injection. */
 const DANGEROUS_PATH_PATTERN = /\0|[;&|`$<>!]/;
@@ -13,28 +14,40 @@ const DANGEROUS_PATH_PATTERN = /\0|[;&|`$<>!]/;
  *
  * @param rawPath - The raw path string received from MCP tool input.
  * @returns The resolved, normalized absolute path.
- * @throws `Error` with a descriptive message if the path is unsafe or invalid.
+ * @throws `InvalidPathError` with an actionable suggestion if the path is unsafe or invalid.
  */
 export async function validateProjectDir(rawPath: string): Promise<string> {
   const normalized = resolve(rawPath);
 
   if (!isAbsolute(normalized)) {
-    throw new Error(`Invalid path: must be absolute, got "${rawPath}"`);
+    throw new InvalidPathError(
+      `Invalid path: must be absolute, got "${rawPath}"`,
+      "Provide a fully-qualified absolute path (e.g. /home/user/project or C:\\Users\\me\\project).",
+    );
   }
 
   if (DANGEROUS_PATH_PATTERN.test(rawPath)) {
-    throw new Error(`Invalid path: contains forbidden characters in "${rawPath}"`);
+    throw new InvalidPathError(
+      `Invalid path: contains forbidden characters in "${rawPath}"`,
+      "Remove shell metacharacters (;, &, |, `, $, <, >, !) from the path.",
+    );
   }
 
   let stats;
   try {
     stats = await stat(normalized);
   } catch {
-    throw new Error(`Path does not exist or is not accessible: "${normalized}"`);
+    throw new InvalidPathError(
+      `Path does not exist or is not accessible: "${normalized}"`,
+      "Verify the directory exists and the server process has read permissions. Avoid symlinks to non-existent targets.",
+    );
   }
 
   if (!stats.isDirectory()) {
-    throw new Error(`Path must be a directory, got a file: "${normalized}"`);
+    throw new InvalidPathError(
+      `Path must be a directory, got a file: "${normalized}"`,
+      "Provide the project root directory, not a file path. The tool scans the entire directory tree.",
+    );
   }
 
   return normalized;
@@ -59,22 +72,34 @@ export async function validateFilePathsCsv(csv: string): Promise<string[]> {
     const normalized = resolve(rawPath);
 
     if (!isAbsolute(normalized)) {
-      throw new Error(`Invalid file path: must be absolute, got "${rawPath}"`);
+      throw new InvalidPathError(
+        `Invalid file path: must be absolute, got "${rawPath}"`,
+        "Provide fully-qualified absolute file paths separated by commas.",
+      );
     }
 
     if (DANGEROUS_PATH_PATTERN.test(rawPath)) {
-      throw new Error(`Invalid file path: contains forbidden characters in "${rawPath}"`);
+      throw new InvalidPathError(
+        `Invalid file path: contains forbidden characters in "${rawPath}"`,
+        "Remove shell metacharacters (;, &, |, `, $, <, >, !) from each file path.",
+      );
     }
 
     let stats;
     try {
       stats = await stat(normalized);
     } catch {
-      throw new Error(`File path does not exist: "${normalized}"`);
+      throw new InvalidPathError(
+        `File path does not exist: "${normalized}"`,
+        "Verify the file exists and the server process has read permissions.",
+      );
     }
 
     if (!stats.isFile()) {
-      throw new Error(`Path must be a file, got a directory: "${normalized}"`);
+      throw new InvalidPathError(
+        `Path must be a file, got a directory: "${normalized}"`,
+        "Provide a file path, not a directory. Use projectDir-based tools to scan directories.",
+      );
     }
 
     validated.push(normalized);

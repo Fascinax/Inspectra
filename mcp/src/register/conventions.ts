@@ -58,7 +58,7 @@ Examples:
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkNamingConventions(safeDir);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_check_naming"),
   );
 
   server.registerTool(
@@ -103,7 +103,7 @@ Examples:
       const profileConfig = profile ? await loadProfile(policiesDir, profile) : undefined;
       const findings = await checkFileLengths(safeDir, profileConfig);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_check_file_lengths"),
   );
 
   server.registerTool(
@@ -147,7 +147,7 @@ Examples:
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkTodoFixmes(safeDir);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_check_todos"),
   );
 
   server.registerTool(
@@ -190,7 +190,7 @@ Examples:
       const safeDir = await validateProjectDir(projectDir);
       const findings = await parseLintOutput(safeDir);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_parse_lint_output"),
   );
 
   server.registerTool(
@@ -232,6 +232,6 @@ Examples:
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectDryViolations(safeDir);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_detect_dry_violations"),
   );
 }

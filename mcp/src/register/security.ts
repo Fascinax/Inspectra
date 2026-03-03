@@ -58,7 +58,7 @@ Examples:
       const profileConfig = profile ? await loadProfile(policiesDir, profile) : undefined;
       const findings = await scanSecrets(filePaths, profileConfig?.security?.additional_patterns);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_scan_secrets"),
   );
 
   server.registerTool(
@@ -102,7 +102,7 @@ Examples:
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkDependencyVulnerabilities(safeDir);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_check_deps_vulns"),
   );
 
   server.registerTool(
@@ -145,7 +145,7 @@ Examples:
       const safeDir = await validateProjectDir(projectDir);
       const findings = await runSemgrep(safeDir);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_run_semgrep"),
   );
 
   server.registerTool(
@@ -188,6 +188,6 @@ Examples:
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkMavenDependencies(safeDir);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_check_maven_deps"),
   );
 }

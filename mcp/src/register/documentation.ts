@@ -49,7 +49,7 @@ Examples:
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkReadmeCompleteness(safeDir);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_check_readme_completeness"),
   );
 
   server.registerTool(
@@ -91,7 +91,7 @@ Examples:
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkAdrPresence(safeDir);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_check_adr_presence"),
   );
 
   server.registerTool(
@@ -134,6 +134,6 @@ Examples:
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectDocCodeDrift(safeDir);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_detect_doc_code_drift"),
   );
 }

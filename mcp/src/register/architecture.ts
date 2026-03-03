@@ -57,7 +57,7 @@ Examples:
       const profileConfig = profile ? await loadProfile(policiesDir, profile) : undefined;
       const findings = await checkLayering(safeDir, profileConfig?.architecture?.allowed_dependencies);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_check_layering"),
   );
 
   server.registerTool(
@@ -100,7 +100,7 @@ Examples:
       const safeDir = await validateProjectDir(projectDir);
       const findings = await analyzeModuleDependencies(safeDir);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_analyze_dependencies"),
   );
 
   server.registerTool(
@@ -142,6 +142,6 @@ Examples:
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectCircularDependencies(safeDir);
       return findingsResponse(findings, responseFormat, { limit, offset });
-    }),
+    }, "inspectra_detect_circular_deps"),
   );
 }
