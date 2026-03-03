@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { jsonResponse, withErrorHandling } from "./response.js";
-import { FindingsOutputSchema } from "./schemas.js";
+import { findingsResponse, withErrorHandling } from "./response.js";
+import { FindingsOutputSchema, ResponseFormatField } from "./schemas.js";
 import { analyzeBundleSize, checkBuildTimings, detectRuntimeMetrics } from "../tools/performance.js";
 import { validateProjectDir } from "../utils/paths.js";
 
@@ -27,6 +27,7 @@ Error handling:
   - Throws if projectDir does not exist or is not a directory.`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
+        responseFormat: ResponseFormatField,
       },
       outputSchema: FindingsOutputSchema,
       annotations: {
@@ -36,10 +37,10 @@ Error handling:
         openWorldHint: false,
       },
     },
-    withErrorHandling(async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir, responseFormat }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await analyzeBundleSize(safeDir);
-      return jsonResponse(findings);
+      return findingsResponse(findings, responseFormat);
     }),
   );
 
@@ -61,6 +62,7 @@ Error handling:
   - Throws if projectDir does not exist or is not a directory.`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
+        responseFormat: ResponseFormatField,
       },
       outputSchema: FindingsOutputSchema,
       annotations: {
@@ -70,10 +72,10 @@ Error handling:
         openWorldHint: false,
       },
     },
-    withErrorHandling(async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir, responseFormat }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkBuildTimings(safeDir);
-      return jsonResponse(findings);
+      return findingsResponse(findings, responseFormat);
     }),
   );
 
@@ -83,7 +85,7 @@ Error handling:
       title: "Detect Runtime Metrics",
       description: `Detect static runtime performance hotspots by scanning source code for known anti-patterns.
 
-Identifies synchronous I/O calls (fs.readFileSync, writeFileSync), blocking event-loop patterns, and missing async/await in hot paths. Pure static analysis — no runtime instrumentation required.
+Identifies synchronous I/O calls (fs.readFileSync, writeFileSync), blocking event-loop patterns, and missing async/await in hot paths. Pure static analysis ï¿½ no runtime instrumentation required.
 
 Args:
   - projectDir (string): Absolute path to the project root.
@@ -94,6 +96,7 @@ Error handling:
   - Throws if projectDir does not exist or is not a directory.`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
+        responseFormat: ResponseFormatField,
       },
       outputSchema: FindingsOutputSchema,
       annotations: {
@@ -103,10 +106,10 @@ Error handling:
         openWorldHint: false,
       },
     },
-    withErrorHandling(async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir, responseFormat }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectRuntimeMetrics(safeDir);
-      return jsonResponse(findings);
+      return findingsResponse(findings, responseFormat);
     }),
   );
 }

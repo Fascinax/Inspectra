@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { jsonResponse, errorResponse, withErrorHandling } from "./response.js";
-import { FindingsOutputSchema, ScoreOutputSchema } from "./schemas.js";
+import { jsonResponse, reportResponse, errorResponse, withErrorHandling } from "./response.js";
+import { FindingsOutputSchema, ScoreOutputSchema, ResponseFormatField } from "./schemas.js";
 import { mergeReports } from "../merger/merge-findings.js";
 import { scoreDomain } from "../merger/score.js";
 import { loadAllPolicies, loadScoringRules } from "../policies/loader.js";
@@ -32,10 +32,9 @@ Returns: A consolidated report object containing all domain scores, the overall 
 Error handling:
   - Returns isError: true if domainReportsJson fails Zod validation.`,
       inputSchema: {
-        domainReportsJson: z.string().describe("JSON string — array of domain report objects"),
+        domainReportsJson: z.string().describe("JSON string ï¿½ array of domain report objects"),
         target: z.string().describe("Repository or path being audited"),
-        profile: z.string().describe("Policy profile used (e.g., java-angular-playwright)"),
-      },
+        profile: z.string().describe("Policy profile used (e.g., java-angular-playwright)"),        responseFormat: ResponseFormatField,      },
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -43,7 +42,7 @@ Error handling:
         openWorldHint: false,
       },
     },
-    withErrorHandling(async ({ domainReportsJson, target, profile }) => {
+    withErrorHandling(async ({ domainReportsJson, target, profile, responseFormat }) => {
       let domainReports;
       try {
         domainReports = z.array(DomainReportSchema).parse(JSON.parse(domainReportsJson));
@@ -52,7 +51,7 @@ Error handling:
       }
       const policies = await loadAllPolicies(policiesDir, profile);
       const consolidated = mergeReports(domainReports, target, profile, policies);
-      return jsonResponse(consolidated);
+      return reportResponse(consolidated, responseFormat);
     }),
   );
 
@@ -72,7 +71,7 @@ Returns: An object with a single "score" field (integer, 0-100). A score of 100 
 Error handling:
   - Returns isError: true if findingsJson fails Zod validation.`,
       inputSchema: {
-        findingsJson: z.string().describe("JSON string — array of finding objects"),
+        findingsJson: z.string().describe("JSON string ï¿½ array of finding objects"),
       },
       outputSchema: ScoreOutputSchema,
       annotations: {

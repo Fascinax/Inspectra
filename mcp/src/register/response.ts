@@ -1,5 +1,10 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { CHARACTER_LIMIT } from "../constants.js";
+import type { ConsolidatedReport, Finding } from "../types.js";
+import { renderFindingsAsMarkdown } from "../renderer/markdown.js";
+import { renderMarkdown } from "../renderer/markdown.js";
+
+export type ResponseFormat = "json" | "markdown";
 
 /**
  * Wraps serializable data into the MCP tool content response format.
@@ -125,6 +130,40 @@ export function errorResponse(error: unknown): CallToolResult {
     content: [{ type: "text", text: JSON.stringify({ error: message }) }],
     isError: true,
   };
+}
+
+/**
+ * Returns findings in the requested format.
+ * Text content adapts to the format; structuredContent is always JSON.
+ */
+export function findingsResponse(
+  findings: Finding[],
+  format: ResponseFormat = "json",
+): CallToolResult {
+  if (format === "markdown") {
+    return {
+      content: [{ type: "text", text: renderFindingsAsMarkdown(findings) }],
+      structuredContent: findings as unknown as Record<string, unknown>,
+    };
+  }
+  return jsonResponse(findings);
+}
+
+/**
+ * Returns a consolidated report in the requested format.
+ * Text content adapts to the format; structuredContent is always JSON.
+ */
+export function reportResponse(
+  report: ConsolidatedReport,
+  format: ResponseFormat = "json",
+): CallToolResult {
+  if (format === "markdown") {
+    return {
+      content: [{ type: "text", text: renderMarkdown(report) }],
+      structuredContent: report as unknown as Record<string, unknown>,
+    };
+  }
+  return jsonResponse(report);
 }
 
 type AsyncHandler<T> = (params: T) => Promise<CallToolResult>;

@@ -8,6 +8,9 @@ const SEVERITY_ICONS: Record<string, string> = {
   info: "⚪",
 };
 
+/**
+ * Renders a full consolidated audit report as Markdown.
+ */
 export function renderMarkdown(report: ConsolidatedReport): string {
   const lines: string[] = [];
 
@@ -164,6 +167,43 @@ function renderMetadata(report: ConsolidatedReport): string {
     lines.push(`_Duration: ${(metadata.duration_ms / 1000).toFixed(1)}s_`);
   }
   lines.push("");
+
+  return lines.join("\n");
+}
+
+/**
+ * Renders a standalone list of findings as Markdown, suitable for tool responses.
+ * Unlike renderMarkdown, this does not require a full ConsolidatedReport.
+ */
+export function renderFindingsAsMarkdown(findings: Finding[]): string {
+  if (findings.length === 0) {
+    return "No findings detected.";
+  }
+
+  const lines: string[] = [];
+  lines.push(`**${findings.length} finding(s)**`);
+  lines.push("");
+
+  const grouped = groupBySeverity(findings);
+  for (const [severity, group] of grouped) {
+    const icon = SEVERITY_ICONS[severity] ?? "⚪";
+    lines.push(`### ${icon} ${capitalize(severity)} (${group.length})`);
+    lines.push("");
+
+    for (const f of group) {
+      const location = f.evidence?.[0]
+        ? `\`${f.evidence[0].file}${f.evidence[0].line ? `:${f.evidence[0].line}` : ""}\``
+        : "_no location_";
+      lines.push(`- **${f.id}** ${f.title} — ${location}`);
+      if (f.description) {
+        lines.push(`  - ${f.description}`);
+      }
+      if (f.recommendation) {
+        lines.push(`  - **Fix:** ${f.recommendation}`);
+      }
+    }
+    lines.push("");
+  }
 
   return lines.join("\n");
 }

@@ -1,6 +1,12 @@
 import { z } from "zod";
 import { SEVERITY_LEVELS, DOMAINS, EFFORT_LEVELS } from "../types.js";
 
+/** Reusable input field for selecting the tool response format. */
+export const ResponseFormatField = z
+  .enum(["json", "markdown"])
+  .default("json")
+  .describe("Output format: json for structured data, markdown for human-readable text");
+
 /**
  * Shared Zod output schema for tool responses that return an array of findings.
  * Used as `outputSchema` in `registerTool` to give agents structured type information.

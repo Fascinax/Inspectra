@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { jsonResponse } from "../register/response.js";
-import { makeFinding } from "./fixtures.js";
+import { jsonResponse, findingsResponse, reportResponse } from "../register/response.js";
+import { makeFinding, makeDomainReport } from "./fixtures.js";
 import { CHARACTER_LIMIT } from "../constants.js";
+import type { ConsolidatedReport } from "../types.js";
 
 describe("jsonResponse", () => {
   it("returns structuredContent alongside text content", () => {
@@ -75,5 +76,84 @@ describe("jsonResponse", () => {
 
     expect(parsed.error).toBe("Response too large to serialize");
     expect(parsed.character_limit).toBe(CHARACTER_LIMIT);
+  });
+});
+
+describe("findingsResponse", () => {
+  it("defaults to JSON format", () => {
+    const findings = [makeFinding()];
+    const result = findingsResponse(findings);
+
+    const text = (result.content[0] as { type: "text"; text: string }).text;
+    expect(() => JSON.parse(text)).not.toThrow();
+    expect(result.structuredContent).toEqual(findings);
+  });
+
+  it("returns markdown text when format is markdown", () => {
+    const findings = [makeFinding(), makeFinding({ id: "SEC-002", severity: "critical" })];
+    const result = findingsResponse(findings, "markdown");
+
+    const text = (result.content[0] as { type: "text"; text: string }).text;
+    expect(text).toContain("**2 finding(s)**");
+    expect(text).toContain("SEC-001");
+    expect(text).toContain("SEC-002");
+    expect(text).toContain("Critical");
+    expect(text).not.toContain("[{");
+  });
+
+  it("keeps structuredContent as JSON even in markdown mode", () => {
+    const findings = [makeFinding()];
+    const result = findingsResponse(findings, "markdown");
+
+    expect(result.structuredContent).toEqual(findings);
+  });
+
+  it("returns no-findings message for empty array in markdown mode", () => {
+    const result = findingsResponse([], "markdown");
+    const text = (result.content[0] as { type: "text"; text: string }).text;
+    expect(text).toBe("No findings detected.");
+  });
+});
+
+describe("reportResponse", () => {
+  it("returns JSON by default", () => {
+    const report: ConsolidatedReport = {
+      overall_score: 85,
+      grade: "B",
+      summary: "Good overall quality.",
+      domain_reports: [makeDomainReport()],
+      top_findings: [makeFinding()],
+      metadata: {
+        timestamp: "2026-02-27T10:00:00.000Z",
+        target: "test-repo",
+        profile: "generic",
+      },
+    };
+
+    const result = reportResponse(report);
+    const text = (result.content[0] as { type: "text"; text: string }).text;
+    expect(() => JSON.parse(text)).not.toThrow();
+  });
+
+  it("returns full markdown report when format is markdown", () => {
+    const report: ConsolidatedReport = {
+      overall_score: 85,
+      grade: "B",
+      summary: "Good overall quality.",
+      domain_reports: [makeDomainReport()],
+      top_findings: [makeFinding()],
+      metadata: {
+        timestamp: "2026-02-27T10:00:00.000Z",
+        target: "test-repo",
+        profile: "generic",
+      },
+    };
+
+    const result = reportResponse(report, "markdown");
+    const text = (result.content[0] as { type: "text"; text: string }).text;
+    expect(text).toContain("# Inspectra Audit Report");
+    expect(text).toContain("Executive Summary");
+    expect(text).toContain("85/100");
+    expect(result.structuredContent).toEqual(report);
   });
 });

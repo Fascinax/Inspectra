@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { jsonResponse, withErrorHandling } from "./response.js";
-import { FindingsOutputSchema } from "./schemas.js";
+import { findingsResponse, withErrorHandling } from "./response.js";
+import { FindingsOutputSchema, ResponseFormatField } from "./schemas.js";
 import {
   parseCoverage,
   parseTestResults,
@@ -39,6 +39,7 @@ Error handling:
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
+        responseFormat: ResponseFormatField,
       },
       outputSchema: FindingsOutputSchema,
       annotations: {
@@ -48,11 +49,11 @@ Error handling:
         openWorldHint: false,
       },
     },
-    withErrorHandling(async ({ projectDir, profile }) => {
+    withErrorHandling(async ({ projectDir, profile, responseFormat }) => {
       const safeDir = await validateProjectDir(projectDir);
       const profileConfig = profile ? await loadProfile(policiesDir, profile) : undefined;
       const findings = await parseCoverage(safeDir, profileConfig);
-      return jsonResponse(findings);
+      return findingsResponse(findings, responseFormat);
     }),
   );
 
@@ -74,6 +75,7 @@ Error handling:
   - Throws if projectDir does not exist or is not a directory.`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
+        responseFormat: ResponseFormatField,
       },
       outputSchema: FindingsOutputSchema,
       annotations: {
@@ -83,10 +85,10 @@ Error handling:
         openWorldHint: false,
       },
     },
-    withErrorHandling(async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir, responseFormat }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await parseTestResults(safeDir);
-      return jsonResponse(findings);
+      return findingsResponse(findings, responseFormat);
     }),
   );
 
@@ -107,6 +109,7 @@ Error handling:
   - Throws if projectDir does not exist or is not a directory.`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
+        responseFormat: ResponseFormatField,
       },
       outputSchema: FindingsOutputSchema,
       annotations: {
@@ -116,10 +119,10 @@ Error handling:
         openWorldHint: false,
       },
     },
-    withErrorHandling(async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir, responseFormat }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectMissingTests(safeDir);
-      return jsonResponse(findings);
+      return findingsResponse(findings, responseFormat);
     }),
   );
 
@@ -141,6 +144,7 @@ Error handling:
   - Throws if projectDir does not exist or is not a directory.`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
+        responseFormat: ResponseFormatField,
       },
       outputSchema: FindingsOutputSchema,
       annotations: {
@@ -150,10 +154,10 @@ Error handling:
         openWorldHint: false,
       },
     },
-    withErrorHandling(async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir, responseFormat }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await parsePlaywrightReport(safeDir);
-      return jsonResponse(findings);
+      return findingsResponse(findings, responseFormat);
     }),
   );
 
@@ -175,6 +179,7 @@ Error handling:
   - Throws if projectDir does not exist or is not a directory.`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
+        responseFormat: ResponseFormatField,
       },
       outputSchema: FindingsOutputSchema,
       annotations: {
@@ -184,10 +189,10 @@ Error handling:
         openWorldHint: false,
       },
     },
-    withErrorHandling(async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir, responseFormat }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectFlakyTests(safeDir);
-      return jsonResponse(findings);
+      return findingsResponse(findings, responseFormat);
     }),
   );
 }
