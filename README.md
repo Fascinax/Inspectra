@@ -149,6 +149,7 @@ npx inspectra-audit . --format=sarif --output=results.sarif
 
 | Format | Flag | Use Case |
 |--------|------|----------|
+| HTML | `--format=html` | Visual dashboard report with charts |
 | Markdown | `--format=markdown` | Human-readable reports (default) |
 | JSON | `--format=json` | Machine-readable, CI pipelines |
 | SARIF | `--format=sarif` | GitHub Code Scanning, IDE integration |
@@ -212,7 +213,7 @@ TARGET_PROJECT=/path/to/project PROFILE=generic FORMAT=markdown \
 | Script | Description |
 |--------|-------------|
 | `npm run build` | Compile the MCP server (TypeScript → `mcp/dist/`) |
-| `npm test` | Run 171 unit + integration tests (Vitest) |
+| `npm test` | Run 284 unit + integration tests (Vitest) |
 | `npm run test:watch` | Run tests in watch mode |
 | `npm run test:coverage` | Run tests with V8 coverage report |
 | `npm run lint` | TypeScript type-check + ESLint |

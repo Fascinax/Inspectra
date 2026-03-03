@@ -41,13 +41,14 @@ import { mergeReports } from "../merger/merge-findings.js";
 import { renderMarkdown } from "../renderer/markdown.js";
 import { renderJson } from "../renderer/json.js";
 import { renderSarif } from "../renderer/sarif.js";
+import { renderHtml } from "../renderer/html.js";
 import { loadAllPolicies, type ProfileConfig, type ScoringConfig } from "../policies/loader.js";
 import type { DomainReport, Finding } from "../types.js";
 
 type CliOptions = {
   target: string;
   profile: string;
-  format: "markdown" | "json" | "sarif";
+  format: "markdown" | "json" | "sarif" | "html";
   output: string | null;
 };
 
@@ -61,7 +62,7 @@ function parseArgs(argv: string[]): CliOptions {
 
   const target = resolve(args.find((a) => !a.startsWith("--")) ?? ".");
   const profile = extractFlag(args, "--profile") ?? "generic";
-  const format = (extractFlag(args, "--format") ?? "markdown") as "markdown" | "json" | "sarif";
+  const format = (extractFlag(args, "--format") ?? "markdown") as "markdown" | "json" | "sarif" | "html";
   const output = extractFlag(args, "--output") ?? null;
 
   return { target, profile, format, output };
@@ -81,7 +82,7 @@ Usage:
 
 Options:
   --profile=<name>    Policy profile (default: generic)
-  --format=<type>     Output format: markdown | json | sarif (default: markdown)
+  --format=<type>     Output format: markdown | json | sarif | html (default: markdown)
   --output=<path>     Write report to file (default: stdout)
   --help              Show this help
 
@@ -403,7 +404,9 @@ async function main(): Promise<void> {
       ? renderJson(consolidated)
       : opts.format === "sarif"
         ? renderSarif(consolidated)
-        : renderMarkdown(consolidated);
+        : opts.format === "html"
+          ? renderHtml(consolidated)
+          : renderMarkdown(consolidated);
 
   if (opts.output) {
     await writeFile(opts.output, rendered, "utf-8");

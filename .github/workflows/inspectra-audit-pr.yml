@@ -1,0 +1,287 @@
+name: Inspectra Full Audit on PR
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+concurrency:
+  group: inspectra-audit-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: Run Inspectra audit
+    runs-on: ubuntu-latest
+    outputs:
+      score: ${{ steps.audit.outputs.score }}
+      grade: ${{ steps.audit.outputs.grade }}
+      critical_count: ${{ steps.audit.outputs.critical_count }}
+      merge_allowed: ${{ steps.decision.outputs.merge_allowed }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build MCP server
+        run: npm run build
+
+      - name: Run unit tests
+        run: npm test
+
+      # ── Run audit on the PR branch ──────────────────────────────────────
+      - name: Run audit (current branch)
+        id: audit
+        run: |
+          node mcp/dist/cli/audit.js . \
+            --profile=generic \
+            --format=json \
+            --output=audit-current.json 2>audit-stderr.log || true
+
+          # Extract key metrics from the JSON report
+          SCORE=$(jq -r '.overall_score' audit-current.json 2>/dev/null || echo "0")
+          GRADE=$(jq -r '.grade' audit-current.json 2>/dev/null || echo "F")
+          CRITICAL=$(jq '[.domain_reports[].findings[] | select(.severity == "critical")] | length' audit-current.json 2>/dev/null || echo "0")
+          TOTAL=$(jq '.statistics.total_findings // 0' audit-current.json 2>/dev/null || echo "0")
+
+          echo "score=$SCORE" >> "$GITHUB_OUTPUT"
+          echo "grade=$GRADE" >> "$GITHUB_OUTPUT"
+          echo "critical_count=$CRITICAL" >> "$GITHUB_OUTPUT"
+          echo "total_findings=$TOTAL" >> "$GITHUB_OUTPUT"
+
+      # ── Try to fetch baseline from main branch ─────────────────────────
+      - name: Fetch baseline report from main
+        id: baseline
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: inspectra-audit-pr.yml
+          branch: main
+          name: inspectra-baseline
+          path: baseline/
+          if_no_artifact_found: warn
+
+      - name: Check baseline availability
+        id: has_baseline
+        run: |
+          if [ -f baseline/audit-baseline.json ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo '{}' > baseline/audit-baseline.json
+          fi
+
+      # ── Generate delta report and PR comment ───────────────────────────
+      - name: Generate PR comment
+        id: comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const current = JSON.parse(fs.readFileSync('audit-current.json', 'utf8'));
+            const hasBaseline = '${{ steps.has_baseline.outputs.available }}' === 'true';
+            let baseline = null;
+
+            if (hasBaseline) {
+              try {
+                baseline = JSON.parse(fs.readFileSync('baseline/audit-baseline.json', 'utf8'));
+              } catch { baseline = null; }
+            }
+
+            // ── Score delta computation ──
+            const currentScore = current.overall_score ?? 0;
+            const baselineScore = baseline?.overall_score ?? currentScore;
+            const delta = currentScore - baselineScore;
+            const arrow = delta > 0 ? '▲' : delta < 0 ? '▼' : '—';
+            const sign = delta > 0 ? '+' : '';
+
+            // ── Domain deltas ──
+            const domainRows = (current.domain_reports || []).map(dr => {
+              const bl = (baseline?.domain_reports || []).find(b => b.domain === dr.domain);
+              const blScore = bl?.score ?? 100;
+              const dd = dr.score - blScore;
+              const dArrow = dd > 0 ? '▲' : dd < 0 ? '▼' : '—';
+              const dSign = dd > 0 ? '+' : '';
+              const trend = dd > 0 ? '🟢' : dd < 0 ? '🔴' : '⚪';
+              const name = dr.domain.charAt(0).toUpperCase() + dr.domain.slice(1);
+              return `| ${name} | ${dr.score}/100 | ${dArrow} ${dSign}${dd} | ${trend} |`;
+            });
+
+            // ── Finding diffs ──
+            const currentIds = new Set((current.domain_reports || []).flatMap(r => r.findings.map(f => f.id)));
+            const baselineIds = new Set((baseline?.domain_reports || []).flatMap(r => r.findings.map(f => f.id)));
+            const allCurrent = (current.domain_reports || []).flatMap(r => r.findings);
+            const allBaseline = (baseline?.domain_reports || []).flatMap(r => r.findings);
+            const newFindings = allCurrent.filter(f => !baselineIds.has(f.id));
+            const fixedFindings = allBaseline.filter(f => !currentIds.has(f.id));
+
+            const sevIcons = { critical: '🔴', high: '🟠', medium: '🟡', low: '🔵', info: '⚪' };
+
+            const newLines = newFindings.slice(0, 15).map(f => {
+              const icon = sevIcons[f.severity] || '⚪';
+              const loc = f.evidence?.[0]?.file ? ` — \`${f.evidence[0].file}\`` : '';
+              return `- ${icon} **${f.id}** ${f.title}${loc}`;
+            });
+            if (newFindings.length > 15) newLines.push(`- _...and ${newFindings.length - 15} more_`);
+
+            const fixedLines = fixedFindings.slice(0, 10).map(f => `- ~~${f.id} ${f.title}~~`);
+
+            // ── Merge decision ──
+            const criticals = allCurrent.filter(f => f.severity === 'critical').length;
+            const mergeAllowed = criticals === 0;
+            const mergeIcon = mergeAllowed ? '✅' : '❌';
+            const mergeReason = mergeAllowed
+              ? 'No critical findings — merge allowed'
+              : `${criticals} critical finding(s) must be resolved before merge`;
+
+            // ── Assemble comment ──
+            const baselineNote = hasBaseline ? '' : '\n> ℹ️ No baseline found for main branch. Showing absolute scores.\n';
+            const body = [
+              '## 🔍 Inspectra Audit Report',
+              baselineNote,
+              '| Metric | Value |',
+              '|--------|-------|',
+              `| **Score** | **${currentScore}/100** (Grade **${current.grade}**) |`,
+              `| **Delta vs main** | ${arrow} ${sign}${delta} (was ${baselineScore}, Grade ${baseline?.grade ?? current.grade}) |`,
+              `| **New findings** | ${newFindings.length} |`,
+              `| **Fixed findings** | ${fixedFindings.length} |`,
+              '',
+              '### Domain Breakdown',
+              '',
+              '| Domain | Score | Delta | Trend |',
+              '|--------|-------|-------|-------|',
+              ...domainRows,
+              '',
+              newFindings.length > 0
+                ? [`### ⚠️ New Findings (${newFindings.length})`, '', ...newLines, ''].join('\n')
+                : '### ✅ No New Findings\n',
+              fixedFindings.length > 0
+                ? [`### 🎉 Fixed (${fixedFindings.length})`, '', ...fixedLines, ''].join('\n')
+                : '',
+              `### ${mergeIcon} Merge Decision`,
+              '',
+              `**${mergeReason}**`,
+              '',
+              '---',
+              '_Generated by [Inspectra](https://github.com/Fascinax/Inspectra) — multi-agent code audit_',
+            ].join('\n');
+
+            core.setOutput('body', body);
+            core.setOutput('merge_allowed', mergeAllowed);
+
+      # ── Post sticky PR comment ─────────────────────────────────────────
+      - name: Post audit comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: inspectra-audit
+          message: ${{ steps.comment.outputs.body }}
+
+      # ── Inline review annotations (new findings only) ──────────────────
+      - name: Post inline annotations
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const current = JSON.parse(fs.readFileSync('audit-current.json', 'utf8'));
+            const hasBaseline = '${{ steps.has_baseline.outputs.available }}' === 'true';
+            let baselineIds = new Set();
+
+            if (hasBaseline) {
+              try {
+                const baseline = JSON.parse(fs.readFileSync('baseline/audit-baseline.json', 'utf8'));
+                baselineIds = new Set((baseline.domain_reports || []).flatMap(r => r.findings.map(f => f.id)));
+              } catch {}
+            }
+
+            const newFindings = (current.domain_reports || [])
+              .flatMap(r => r.findings)
+              .filter(f => !baselineIds.has(f.id))
+              .filter(f => f.evidence?.[0]?.file && f.evidence[0].line);
+
+            const sevIcons = { critical: '🔴', high: '🟠', medium: '🟡', low: '🔵', info: '⚪' };
+
+            // Post up to 20 annotations to avoid API rate limits
+            const annotations = newFindings.slice(0, 20);
+
+            if (annotations.length === 0) {
+              console.log('No new findings with file locations — skipping inline annotations.');
+              return;
+            }
+
+            // Use the Checks API for annotations
+            const { data: check } = await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'Inspectra Findings',
+              head_sha: context.payload.pull_request.head.sha,
+              status: 'completed',
+              conclusion: annotations.some(f => f.severity === 'critical') ? 'failure' : 'neutral',
+              output: {
+                title: `Inspectra: ${annotations.length} new finding(s)`,
+                summary: `Found ${annotations.length} new issue(s) introduced in this PR.`,
+                annotations: annotations.map(f => ({
+                  path: f.evidence[0].file,
+                  start_line: f.evidence[0].line,
+                  end_line: f.evidence[0].line,
+                  annotation_level: f.severity === 'critical' || f.severity === 'high' ? 'failure' : f.severity === 'medium' ? 'warning' : 'notice',
+                  title: `${sevIcons[f.severity] || '⚪'} ${f.id} — ${f.title}`,
+                  message: [
+                    f.description || '',
+                    f.recommendation ? `Fix: ${f.recommendation}` : '',
+                  ].filter(Boolean).join('\n'),
+                })),
+              },
+            });
+
+            console.log(`Created check run ${check.id} with ${annotations.length} annotations.`);
+
+      # ── Merge blocking status check ────────────────────────────────────
+      - name: Merge decision
+        id: decision
+        run: |
+          CRITICAL=${{ steps.audit.outputs.critical_count }}
+          if [ "$CRITICAL" -gt 0 ]; then
+            echo "merge_allowed=false" >> "$GITHUB_OUTPUT"
+            echo "::error::Inspectra found $CRITICAL critical finding(s). Merge blocked."
+            exit 1
+          fi
+          echo "merge_allowed=true" >> "$GITHUB_OUTPUT"
+
+      # ── Save current report as baseline for future PRs ─────────────────
+      - name: Upload baseline artifact
+        if: github.event.pull_request.base.ref == 'main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: inspectra-baseline
+          path: audit-current.json
+          retention-days: 30
+
+      # ── Also upload full reports for download ──────────────────────────
+      - name: Generate Markdown and SARIF reports
+        if: always()
+        run: |
+          node mcp/dist/cli/audit.js . --profile=generic --format=markdown --output=audit-report.md 2>/dev/null || true
+          node mcp/dist/cli/audit.js . --profile=generic --format=sarif   --output=audit-report.sarif 2>/dev/null || true
+
+      - name: Upload audit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: inspectra-audit-pr-${{ github.event.pull_request.number }}
+          path: |
+            audit-current.json
+            audit-report.md
+            audit-report.sarif
+          retention-days: 14

@@ -1,6 +1,6 @@
 # Roadmap
 
-## Current State (v0.3.0)
+## Current State (v0.5.0)
 
 Inspectra is a functional multi-agent code audit system with:
 - 8 Copilot Custom Agents (orchestrator + 7 domain agents)
@@ -8,8 +8,9 @@ Inspectra is a functional multi-agent code audit system with:
 - CLI orchestrator for local audits without Copilot
 - JSON Schema contracts for all outputs
 - Scoring engine with weighted domains and grade system
-- Markdown and JSON report renderers
-- SARIF output for CI integration
+- Markdown, JSON, HTML, and SARIF report renderers
+- PR integration with delta scoring and merge blocking
+- Trend tracking and audit comparison mode
 - 4 stack-specific profiles
 
 ## v0.2.0 - Tool Depth COMPLETE
@@ -32,24 +33,24 @@ Goal: Expand audit coverage to 6+ domains.
 - [x] Documentation agent: README completeness, ADR presence, doc-code drift
 - [x] Tech debt agent: complexity metrics, age of TODOs, dependency staleness
 
-## v0.4.0 - PR Integration
+## v0.4.0 - PR Integration COMPLETE
 
 Goal: Full PR workflow with automated comments.
 
-- [ ] GitHub Action that runs the CLI on PR diffs
-- [ ] PR comment with delta scoring (score change vs. main branch)
-- [ ] Inline review comments on specific findings
-- [ ] Status check: block merge if critical findings exist
+- [x] GitHub Action that runs the CLI on PR diffs
+- [x] PR comment with delta scoring (score change vs. main branch)
+- [x] Inline review comments on specific findings
+- [x] Status check: block merge if critical findings exist
 
-## v0.5.0 - Report Engine
+## v0.5.0 - Report Engine COMPLETE
 
 Goal: Rich, customizable report output.
 
+- [x] Trend tracking (score over time)
+- [x] HTML report renderer with charts (Obsidian dark theme)
+- [x] Comparison mode: audit A vs. audit B
 - [ ] Handlebars templates for report sections
-- [ ] Trend tracking (score over time)
-- [ ] HTML report renderer with charts
 - [ ] PDF export option
-- [ ] Comparison mode: audit A vs. audit B
 
 ## v1.0.0 - Stable Release
 
