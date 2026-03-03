@@ -68,35 +68,41 @@ async function fileExists(filePath: string): Promise<boolean> {
  * well-known signal files in the project root.
  *
  * Detection matrix:
- * - `pom.xml` or `build.gradle` → Java
- * - `angular.json`              → Angular
- * - `playwright.config.*`       → Playwright
+ * - `pom.xml` or `build.gradle`  → Java
+ * - `angular.json`               → Angular
+ * - `playwright.config.*`        → Playwright
+ * - `tsconfig.json` (no Java/Angular) → TypeScript/Node
  *
  * Mapping (most specific first):
- * - Java + Angular + Playwright → `java-angular-playwright`
- * - Java                        → `java-backend`
- * - Angular                     → `angular-frontend`
- * - otherwise                   → `generic`
+ * - Java + Angular + Playwright  → `java-angular-playwright`
+ * - Java                         → `java-backend`
+ * - Angular                      → `angular-frontend`
+ * - TypeScript (no Java/Angular) → `typescript-node`
+ * - otherwise                    → `generic`
  *
  * @param projectDir - Absolute path to the project root.
  * @returns The matched profile name.
  */
 export async function detectProfile(projectDir: string): Promise<string> {
-  const [hasPom, hasGradle, hasAngular, hasPlaywrightTs, hasPlaywrightJs, hasPlaywrightMjs] = await Promise.all([
-    fileExists(join(projectDir, "pom.xml")),
-    fileExists(join(projectDir, "build.gradle")),
-    fileExists(join(projectDir, "angular.json")),
-    fileExists(join(projectDir, "playwright.config.ts")),
-    fileExists(join(projectDir, "playwright.config.js")),
-    fileExists(join(projectDir, "playwright.config.mjs")),
-  ]);
+  const [hasPom, hasGradle, hasAngular, hasPlaywrightTs, hasPlaywrightJs, hasPlaywrightMjs, hasTsConfig] =
+    await Promise.all([
+      fileExists(join(projectDir, "pom.xml")),
+      fileExists(join(projectDir, "build.gradle")),
+      fileExists(join(projectDir, "angular.json")),
+      fileExists(join(projectDir, "playwright.config.ts")),
+      fileExists(join(projectDir, "playwright.config.js")),
+      fileExists(join(projectDir, "playwright.config.mjs")),
+      fileExists(join(projectDir, "tsconfig.json")),
+    ]);
 
   const isJava = hasPom || hasGradle;
   const isAngular = hasAngular;
   const isPlaywright = hasPlaywrightTs || hasPlaywrightJs || hasPlaywrightMjs;
+  const isTypeScriptNode = hasTsConfig && !isJava && !isAngular;
 
   if (isJava && isAngular && isPlaywright) return "java-angular-playwright";
   if (isJava) return "java-backend";
   if (isAngular) return "angular-frontend";
+  if (isTypeScriptNode) return "typescript-node";
   return "generic";
 }

@@ -180,6 +180,27 @@ describe("detectMissingTests", () => {
     expect(findings.length).toBe(0);
   });
 
+  it("recognises __tests__/module-name.test.ts as coverage for module/name.ts", async () => {
+    const cliDir = join(tempDir, "src", "cli");
+    const testsDir = join(tempDir, "src", "__tests__");
+    mkdirSync(cliDir, { recursive: true });
+    mkdirSync(testsDir, { recursive: true });
+    writeFileSync(join(cliDir, "audit.ts"), "export function run() {}\n");
+    // __tests__/cli-audit.test.ts covers cli/audit.ts via the hyphen prefix convention
+    writeFileSync(join(testsDir, "cli-audit.test.ts"), "test('audit', () => {});\n");
+
+    const findings = await detectMissingTests(tempDir);
+    expect(findings.length).toBe(0);
+  });
+
+  it("skips config files (eslint.config.js, vitest.config.ts, etc.)", async () => {
+    writeFileSync(join(tempDir, "eslint.config.js"), "export default [];\n");
+    writeFileSync(join(tempDir, "vitest.config.ts"), "export default {};\n");
+
+    const findings = await detectMissingTests(tempDir);
+    expect(findings.length).toBe(0);
+  });
+
   it("skips index.ts and types files", async () => {
     const srcDir = join(tempDir, "src");
     mkdirSync(srcDir, { recursive: true });

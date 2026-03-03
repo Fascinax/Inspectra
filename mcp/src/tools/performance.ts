@@ -168,7 +168,11 @@ export async function detectRuntimeMetrics(projectDir: string): Promise<Finding[
     },
   ];
 
+  // Sync I/O is acceptable in test helpers and fixture builders — exclude them
+  const TEST_OR_FIXTURE_PATH = /[/\\](?:__tests__|fixtures)[/\\]|\.(?:test|spec)\.[tj]s$/;
+
   for (const filePath of files) {
+    if (TEST_OR_FIXTURE_PATH.test(filePath)) continue;
     try {
       const content = await readFile(filePath, "utf-8");
       const lines = content.split("\n");

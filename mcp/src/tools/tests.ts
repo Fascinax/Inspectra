@@ -134,11 +134,25 @@ export async function detectMissingTests(projectDir: string): Promise<Finding[]>
     }
   }
 
+  // Config/tooling files don't require unit tests
+  const CONFIG_FILE_PATTERN = /\.(?:config|setup)\.(?:ts|js|mjs|cjs)$/;
+  // Test infrastructure paths — fixture files, helpers inside __tests__/ etc.
+  const TEST_INFRA_PATH = /[/\\](?:__tests__|fixtures)[/\\]/;
+
   for (const src of sourceFiles) {
     const baseName = src.split(/[/\\]/).pop() ?? "";
     if (baseName === "index.ts" || baseName === "index.js" || baseName.startsWith("types")) continue;
+    if (CONFIG_FILE_PATTERN.test(baseName)) continue;
+    // Use the relative path so that fixture-project scans are not affected
+    // while still skipping test infrastructure files in the real codebase.
+    if (TEST_INFRA_PATH.test(relative(projectDir, src))) continue;
 
-    if (!testStems.has(baseName)) {
+    // Match both exact basename (security.ts ↔ security.test.ts) and
+    // hyphen-prefixed patterns (__tests__/cli-audit.test.ts ↔ cli/audit.ts)
+    const hasCoverage =
+      testStems.has(baseName) || [...testStems].some((stem) => stem.endsWith(`-${baseName}`));
+
+    if (!hasCoverage) {
       findings.push({
         id: nextId(),
         severity: "medium",

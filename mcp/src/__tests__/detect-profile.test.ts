@@ -77,6 +77,23 @@ describe("detectProfile", () => {
     expect(await detectProfile(dir)).toBe("generic");
   });
 
+  it("returns typescript-node when tsconfig.json is present (no Java/Angular)", async () => {
+    writeFileSync(join(dir, "tsconfig.json"), "{}");
+    expect(await detectProfile(dir)).toBe("typescript-node");
+  });
+
+  it("does not return typescript-node when tsconfig.json is present alongside angular.json", async () => {
+    writeFileSync(join(dir, "tsconfig.json"), "{}");
+    writeFileSync(join(dir, "angular.json"), "{}");
+    expect(await detectProfile(dir)).toBe("angular-frontend");
+  });
+
+  it("does not return typescript-node when tsconfig.json is present alongside pom.xml", async () => {
+    writeFileSync(join(dir, "tsconfig.json"), "{}");
+    writeFileSync(join(dir, "pom.xml"), "<project/>");
+    expect(await detectProfile(dir)).toBe("java-backend");
+  });
+
   it("prefers java-angular-playwright over java-backend when Angular also present", async () => {
     writeFileSync(join(dir, "pom.xml"), "<project/>");
     writeFileSync(join(dir, "angular.json"), "{}");

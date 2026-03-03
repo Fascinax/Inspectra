@@ -1,0 +1,61 @@
+# Inspectra — Profile: TypeScript / Node.js
+# Tailored for TypeScript-first Node.js projects: CLI tools, MCP servers,
+# serverless functions, libraries, and backend services without a JVM stack.
+
+profile: typescript-node
+description: "Profile for TypeScript/Node.js projects — tools, services, and libraries."
+
+stack:
+  backend:
+    language: typescript
+    runtime: node
+
+# Coverage thresholds — realistic for utility/tooling projects
+coverage:
+  lines:
+    minimum: 60
+    target: 80
+  branches:
+    minimum: 50
+    target: 70
+  functions:
+    minimum: 60
+    target: 80
+
+# TypeScript files with complex generics and JSDoc tend to be longer
+file_lengths:
+  warning: 500
+  error: 1000
+
+# Naming conventions
+naming:
+  general:
+    classes: PascalCase
+    functions: camelCase
+    constants: SCREAMING_SNAKE_CASE
+    files: kebab-case
+
+# Architecture layers for a typical Node.js service
+architecture:
+  layers:
+    - cli
+    - register
+    - tools
+    - policies
+    - utils
+  allowed_dependencies:
+    cli: [register, policies, utils]
+    register: [tools, policies, utils]
+    tools: [policies, utils]
+    policies: [utils]
+    utils: []
+
+# Security — flag Node.js-specific patterns
+security:
+  additional_patterns:
+    - rule: "no-eval"
+      pattern: "\\beval\\s*\\("
+      severity: critical
+    - rule: "no-child-process-unsanitized"
+      pattern: "exec\\(.*req\\.|spawn\\(.*req\\."
+      severity: high
