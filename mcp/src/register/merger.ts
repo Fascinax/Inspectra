@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { jsonResponse } from "./response.js";
+import { jsonResponse, errorResponse, withErrorHandling } from "./response.js";
 import { FindingsOutputSchema, ScoreOutputSchema } from "./schemas.js";
 import { mergeReports } from "../merger/merge-findings.js";
 import { scoreDomain } from "../merger/score.js";
@@ -43,21 +43,17 @@ Error handling:
         openWorldHint: false,
       },
     },
-    async ({ domainReportsJson, target, profile }) => {
+    withErrorHandling(async ({ domainReportsJson, target, profile }) => {
       let domainReports;
       try {
         domainReports = z.array(DomainReportSchema).parse(JSON.parse(domainReportsJson));
       } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        return {
-          content: [{ type: "text", text: JSON.stringify({ error: `Invalid domainReportsJson: ${msg}` }) }],
-          isError: true,
-        };
+        return errorResponse(new Error(`Invalid domainReportsJson: ${err instanceof Error ? err.message : String(err)}`));
       }
       const policies = await loadAllPolicies(policiesDir, profile);
       const consolidated = mergeReports(domainReports, target, profile, policies);
       return jsonResponse(consolidated);
-    },
+    }),
   );
 
   server.registerTool(
@@ -86,20 +82,16 @@ Error handling:
         openWorldHint: false,
       },
     },
-    async ({ findingsJson }) => {
+    withErrorHandling(async ({ findingsJson }) => {
       let findings;
       try {
         findings = z.array(FindingSchema).parse(JSON.parse(findingsJson));
       } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        return {
-          content: [{ type: "text", text: JSON.stringify({ error: `Invalid findingsJson: ${msg}` }) }],
-          isError: true,
-        };
+        return errorResponse(new Error(`Invalid findingsJson: ${err instanceof Error ? err.message : String(err)}`));
       }
       const scoring = await loadScoringRules(policiesDir);
       const score = scoreDomain(findings, scoring);
       return jsonResponse({ score });
-    },
+    }),
   );
 }

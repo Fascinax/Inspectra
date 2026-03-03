@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { jsonResponse } from "./response.js";
+import { jsonResponse, withErrorHandling } from "./response.js";
 import { FindingsOutputSchema } from "./schemas.js";
 import {
   parseCoverage,
@@ -48,12 +48,12 @@ Error handling:
         openWorldHint: false,
       },
     },
-    async ({ projectDir, profile }) => {
+    withErrorHandling(async ({ projectDir, profile }) => {
       const safeDir = await validateProjectDir(projectDir);
       const profileConfig = profile ? await loadProfile(policiesDir, profile) : undefined;
       const findings = await parseCoverage(safeDir, profileConfig);
       return jsonResponse(findings);
-    },
+    }),
   );
 
   server.registerTool(
@@ -83,11 +83,11 @@ Error handling:
         openWorldHint: false,
       },
     },
-    async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await parseTestResults(safeDir);
       return jsonResponse(findings);
-    },
+    }),
   );
 
   server.registerTool(
@@ -116,11 +116,11 @@ Error handling:
         openWorldHint: false,
       },
     },
-    async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectMissingTests(safeDir);
       return jsonResponse(findings);
-    },
+    }),
   );
 
   server.registerTool(
@@ -150,11 +150,11 @@ Error handling:
         openWorldHint: false,
       },
     },
-    async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await parsePlaywrightReport(safeDir);
       return jsonResponse(findings);
-    },
+    }),
   );
 
   server.registerTool(
@@ -184,10 +184,10 @@ Error handling:
         openWorldHint: false,
       },
     },
-    async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectFlakyTests(safeDir);
       return jsonResponse(findings);
-    },
+    }),
   );
 }

@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { jsonResponse } from "./response.js";
+import { jsonResponse, withErrorHandling } from "./response.js";
 import { FindingsOutputSchema } from "./schemas.js";
 import { checkLayering, analyzeModuleDependencies, detectCircularDependencies } from "../tools/architecture.js";
 import { loadProfile } from "../policies/loader.js";
@@ -41,12 +41,12 @@ Error handling:
         openWorldHint: false,
       },
     },
-    async ({ projectDir, profile }) => {
+    withErrorHandling(async ({ projectDir, profile }) => {
       const safeDir = await validateProjectDir(projectDir);
       const profileConfig = profile ? await loadProfile(policiesDir, profile) : undefined;
       const findings = await checkLayering(safeDir, profileConfig?.architecture?.allowed_dependencies);
       return jsonResponse(findings);
-    },
+    }),
   );
 
   server.registerTool(
@@ -76,11 +76,11 @@ Error handling:
         openWorldHint: false,
       },
     },
-    async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await analyzeModuleDependencies(safeDir);
       return jsonResponse(findings);
-    },
+    }),
   );
 
   server.registerTool(
@@ -109,10 +109,10 @@ Error handling:
         openWorldHint: false,
       },
     },
-    async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectCircularDependencies(safeDir);
       return jsonResponse(findings);
-    },
+    }),
   );
 }

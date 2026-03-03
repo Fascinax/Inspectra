@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { jsonResponse } from "./response.js";
+import { jsonResponse, withErrorHandling } from "./response.js";
 import { FindingsOutputSchema } from "./schemas.js";
 import { checkReadmeCompleteness, checkAdrPresence, detectDocCodeDrift } from "../tools/documentation.js";
 import { validateProjectDir } from "../utils/paths.js";
@@ -36,11 +36,11 @@ Error handling:
         openWorldHint: false,
       },
     },
-    async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkReadmeCompleteness(safeDir);
       return jsonResponse(findings);
-    },
+    }),
   );
 
   server.registerTool(
@@ -69,11 +69,11 @@ Error handling:
         openWorldHint: false,
       },
     },
-    async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkAdrPresence(safeDir);
       return jsonResponse(findings);
-    },
+    }),
   );
 
   server.registerTool(
@@ -103,10 +103,10 @@ Error handling:
         openWorldHint: false,
       },
     },
-    async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectDocCodeDrift(safeDir);
       return jsonResponse(findings);
-    },
+    }),
   );
 }

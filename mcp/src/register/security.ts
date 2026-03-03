@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { jsonResponse } from "./response.js";
+import { jsonResponse, withErrorHandling } from "./response.js";
 import { FindingsOutputSchema } from "./schemas.js";
 import { scanSecrets, checkDependencyVulnerabilities, runSemgrep, checkMavenDependencies } from "../tools/security.js";
 import { loadProfile } from "../policies/loader.js";
@@ -42,12 +42,12 @@ Error handling:
         openWorldHint: false,
       },
     },
-    async ({ filePathsCsv, profile }) => {
+    withErrorHandling(async ({ filePathsCsv, profile }) => {
       const filePaths = await validateFilePathsCsv(filePathsCsv);
       const profileConfig = profile ? await loadProfile(policiesDir, profile) : undefined;
       const findings = await scanSecrets(filePaths, profileConfig?.security?.additional_patterns);
       return jsonResponse(findings);
-    },
+    }),
   );
 
   server.registerTool(
@@ -78,11 +78,11 @@ Error handling:
         openWorldHint: true,
       },
     },
-    async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkDependencyVulnerabilities(safeDir);
       return jsonResponse(findings);
-    },
+    }),
   );
 
   server.registerTool(
@@ -112,11 +112,11 @@ Error handling:
         openWorldHint: true,
       },
     },
-    async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await runSemgrep(safeDir);
       return jsonResponse(findings);
-    },
+    }),
   );
 
   server.registerTool(
@@ -146,10 +146,10 @@ Error handling:
         openWorldHint: false,
       },
     },
-    async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkMavenDependencies(safeDir);
       return jsonResponse(findings);
-    },
+    }),
   );
 }

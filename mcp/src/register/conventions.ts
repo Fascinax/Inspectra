@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { jsonResponse } from "./response.js";
+import { jsonResponse, withErrorHandling } from "./response.js";
 import { FindingsOutputSchema } from "./schemas.js";
 import {
   checkNamingConventions,
@@ -45,11 +45,11 @@ Error handling:
         openWorldHint: false,
       },
     },
-    async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkNamingConventions(safeDir);
       return jsonResponse(findings);
-    },
+    }),
   );
 
   server.registerTool(
@@ -80,12 +80,12 @@ Error handling:
         openWorldHint: false,
       },
     },
-    async ({ projectDir, profile }) => {
+    withErrorHandling(async ({ projectDir, profile }) => {
       const safeDir = await validateProjectDir(projectDir);
       const profileConfig = profile ? await loadProfile(policiesDir, profile) : undefined;
       const findings = await checkFileLengths(safeDir, profileConfig);
       return jsonResponse(findings);
-    },
+    }),
   );
 
   server.registerTool(
@@ -116,11 +116,11 @@ Error handling:
         openWorldHint: false,
       },
     },
-    async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await checkTodoFixmes(safeDir);
       return jsonResponse(findings);
-    },
+    }),
   );
 
   server.registerTool(
@@ -150,11 +150,11 @@ Error handling:
         openWorldHint: true,
       },
     },
-    async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await parseLintOutput(safeDir);
       return jsonResponse(findings);
-    },
+    }),
   );
 
   server.registerTool(
@@ -183,10 +183,10 @@ Error handling:
         openWorldHint: false,
       },
     },
-    async ({ projectDir }) => {
+    withErrorHandling(async ({ projectDir }) => {
       const safeDir = await validateProjectDir(projectDir);
       const findings = await detectDryViolations(safeDir);
       return jsonResponse(findings);
-    },
+    }),
   );
 }
