@@ -1,4 +1,5 @@
-import { SEVERITY_RANK, type ConsolidatedReport, type Finding, type DomainReport } from "../types.js";
+import { type ConsolidatedReport, type Finding, type DomainReport } from "../types.js";
+import { diffReportFindings } from "../utils/findings.js";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -40,7 +41,7 @@ export type InlineAnnotation = {
 
 export function computePrDelta(current: ConsolidatedReport, baseline: ConsolidatedReport): PrDelta {
   const domainDeltas = computeDomainDeltas(current.domain_reports, baseline.domain_reports);
-  const { newFindings, fixedFindings } = diffFindings(current, baseline);
+  const { added: newFindings, removed: fixedFindings } = diffReportFindings(current, baseline);
   const mergeDecision = decideMerge(newFindings, current);
 
   return {
@@ -68,34 +69,6 @@ function computeDomainDeltas(
     const trend = delta > 0 ? "improved" : delta < 0 ? "degraded" : "unchanged";
     return { domain: report.domain, current: report.score, baseline: baselineScore, delta, trend };
   });
-}
-
-function diffFindings(
-  current: ConsolidatedReport,
-  baseline: ConsolidatedReport,
-): { newFindings: Finding[]; fixedFindings: Finding[] } {
-  const currentIds = collectFindingIds(current);
-  const baselineIds = collectFindingIds(baseline);
-  const allCurrentFindings = collectAllFindings(current);
-  const allBaselineFindings = collectAllFindings(baseline);
-
-  const newFindings = allCurrentFindings
-    .filter((f) => !baselineIds.has(f.id))
-    .sort((a, b) => SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity]);
-
-  const fixedFindings = allBaselineFindings
-    .filter((f) => !currentIds.has(f.id))
-    .sort((a, b) => SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity]);
-
-  return { newFindings, fixedFindings };
-}
-
-function collectFindingIds(report: ConsolidatedReport): Set<string> {
-  return new Set(report.domain_reports.flatMap((r) => r.findings.map((f) => f.id)));
-}
-
-function collectAllFindings(report: ConsolidatedReport): Finding[] {
-  return report.domain_reports.flatMap((r) => r.findings);
 }
 
 // ─── Merge Decision ──────────────────────────────────────────────────────────

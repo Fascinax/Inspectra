@@ -16,7 +16,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { buildTrendEntry, analyzeTrend, renderTrendMarkdown } from "../renderer/trend.js";
-import type { ConsolidatedReport } from "../types.js";
+import { ConsolidatedReportSchema, type ConsolidatedReport } from "../types.js";
 
 export type TrendCliOptions = {
   reportPaths: string[];
@@ -44,7 +44,7 @@ export function extractTrendFlag(args: string[], flag: string): string | undefin
 
 export async function loadConsolidatedReport(filePath: string): Promise<ConsolidatedReport> {
   const raw = await readFile(filePath, "utf-8");
-  return JSON.parse(raw) as ConsolidatedReport;
+  return ConsolidatedReportSchema.parse(JSON.parse(raw));
 }
 
 function printUsage(): void {

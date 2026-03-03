@@ -1,4 +1,5 @@
 import type { ConsolidatedReport, Finding } from "../types.js";
+import { capitalize } from "../utils/strings.js";
 
 const SEVERITY_ICONS: Record<string, string> = {
   critical: "🔴",
@@ -211,10 +212,6 @@ export function renderFindingsAsMarkdown(findings: Finding[]): string {
 function renderScoreBar(score: number): string {
   const filled = Math.round(score / 10);
   return "█".repeat(filled) + "░".repeat(10 - filled);
-}
-
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 function groupBySeverity(findings: Finding[]): [string, Finding[]][] {

@@ -1,4 +1,5 @@
 import type { ConsolidatedReport, Grade } from "../types.js";
+import { capitalize } from "../utils/strings.js";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -124,6 +125,3 @@ function renderMiniBar(score: number): string {
   return "█".repeat(filled) + "░".repeat(10 - filled);
 }
 
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}

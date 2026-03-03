@@ -1,4 +1,5 @@
 import type { ConsolidatedReport, Finding } from "../types.js";
+import { capitalize } from "../utils/strings.js";
 
 // ─── HTML Report Renderer ────────────────────────────────────────────────────
 // Produces a self-contained HTML file with embedded CSS and inline SVG charts.
@@ -536,10 +537,6 @@ function scoreToColor(score: number): string {
   if (score >= 60) return "#eab308";
   if (score >= 40) return "#f97316";
   return "#ef4444";
-}
-
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 function escapeHtml(text: string): string {

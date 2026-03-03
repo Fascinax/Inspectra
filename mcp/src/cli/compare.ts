@@ -16,7 +16,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { compareReports, renderComparisonMarkdown } from "../renderer/compare.js";
-import type { ConsolidatedReport } from "../types.js";
+import { ConsolidatedReportSchema, type ConsolidatedReport } from "../types.js";
 
 export type CompareCliOptions = {
   baselinePath: string;
@@ -51,7 +51,7 @@ export function extractCompareFlag(args: string[], flag: string): string | undef
 
 export async function loadReportFromFile(filePath: string): Promise<ConsolidatedReport> {
   const raw = await readFile(filePath, "utf-8");
-  return JSON.parse(raw) as ConsolidatedReport;
+  return ConsolidatedReportSchema.parse(JSON.parse(raw));
 }
 
 function printUsage(): void {
