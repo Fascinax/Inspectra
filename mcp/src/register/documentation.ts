@@ -1,7 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { z } from "zod";
 import { findingsResponse, withErrorHandling } from "./response.js";
-import { FindingsOutputSchema, ResponseFormatField, LimitField, OffsetField } from "./schemas.js";
+import { FindingsOutputSchema, ResponseFormatField, LimitField, OffsetField, ProjectDirField } from "./schemas.js";
 import { checkReadmeCompleteness, checkAdrPresence, detectDocCodeDrift } from "../tools/documentation.js";
 import { validateProjectDir } from "../utils/paths.js";
 
@@ -32,7 +31,7 @@ Examples:
   2. Get results as Markdown:
      { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
       inputSchema: {
-        projectDir: z.string().describe("Absolute path to the project root"),
+        projectDir: ProjectDirField,
         responseFormat: ResponseFormatField,
         limit: LimitField,
         offset: OffsetField,
@@ -74,7 +73,7 @@ Examples:
   2. Paginate ADR findings:
      { "projectDir": "/app/my-project", "limit": 10, "offset": 0 }`,
       inputSchema: {
-        projectDir: z.string().describe("Absolute path to the project root"),
+        projectDir: ProjectDirField,
         responseFormat: ResponseFormatField,
         limit: LimitField,
         offset: OffsetField,
@@ -117,7 +116,7 @@ Examples:
   2. Get drift report as Markdown:
      { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
       inputSchema: {
-        projectDir: z.string().describe("Absolute path to the project root"),
+        projectDir: ProjectDirField,
         responseFormat: ResponseFormatField,
         limit: LimitField,
         offset: OffsetField,

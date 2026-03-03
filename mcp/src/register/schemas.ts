@@ -18,9 +18,9 @@ export const ResponseFormatField = z
  * Default: DEFAULT_PAGE_SIZE (env INSPECTRA_DEFAULT_PAGE_SIZE, fallback 50).
  */
 export const LimitField = z
-  .number()
-  .int()
-  .positive()
+  .number({ invalid_type_error: "limit must be a number" })
+  .int({ message: "limit must be an integer" })
+  .positive({ message: "limit must be greater than 0" })
   .default(DEFAULT_PAGE_SIZE)
   .describe(`Maximum number of findings to return (default: ${DEFAULT_PAGE_SIZE}). This is response-level pagination — all findings are computed, then sliced.`);
 
@@ -29,11 +29,30 @@ export const LimitField = z
  * Use together with limit to iterate through pages.
  */
 export const OffsetField = z
-  .number()
-  .int()
-  .nonnegative()
+  .number({ invalid_type_error: "offset must be a number" })
+  .int({ message: "offset must be an integer" })
+  .nonnegative({ message: "offset must be 0 or greater" })
   .default(0)
   .describe("Number of findings to skip for pagination (default: 0)");
+
+/**
+ * Reusable Zod field for projectDir inputs with validation message.
+ * Ensures the value is a non-empty string. Actual path validation
+ * (absolute, exists, is-directory) is done by validateProjectDir in the handler.
+ */
+export const ProjectDirField = z
+  .string({ required_error: "projectDir is required" })
+  .min(1, "projectDir cannot be empty — provide an absolute path to the project root")
+  .describe("Absolute path to the project root");
+
+/**
+ * Reusable Zod field for optional profile name input.
+ */
+export const ProfileField = z
+  .string()
+  .min(1, "profile cannot be empty when provided")
+  .optional()
+  .describe("Policy profile name (e.g., java-angular-playwright, generic)");
 
 /**
  * Shared Zod output schema for tool responses that return an array of findings.

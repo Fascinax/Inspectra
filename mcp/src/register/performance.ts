@@ -1,7 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { z } from "zod";
 import { findingsResponse, withErrorHandling } from "./response.js";
-import { FindingsOutputSchema, ResponseFormatField, LimitField, OffsetField } from "./schemas.js";
+import { FindingsOutputSchema, ResponseFormatField, LimitField, OffsetField, ProjectDirField } from "./schemas.js";
 import { analyzeBundleSize, checkBuildTimings, detectRuntimeMetrics } from "../tools/performance.js";
 import { validateProjectDir } from "../utils/paths.js";
 
@@ -32,7 +31,7 @@ Examples:
   2. Get Markdown report:
      { "projectDir": "/app/my-react-app", "responseFormat": "markdown" }`,
       inputSchema: {
-        projectDir: z.string().describe("Absolute path to the project root"),
+        projectDir: ProjectDirField,
         responseFormat: ResponseFormatField,
         limit: LimitField,
         offset: OffsetField,
@@ -75,7 +74,7 @@ Examples:
   2. Get first 5 slowest steps:
      { "projectDir": "/app/my-project", "limit": 5 }`,
       inputSchema: {
-        projectDir: z.string().describe("Absolute path to the project root"),
+        projectDir: ProjectDirField,
         responseFormat: ResponseFormatField,
         limit: LimitField,
         offset: OffsetField,
@@ -117,7 +116,7 @@ Examples:
   2. Get anti-patterns as Markdown:
      { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
       inputSchema: {
-        projectDir: z.string().describe("Absolute path to the project root"),
+        projectDir: ProjectDirField,
         responseFormat: ResponseFormatField,
         limit: LimitField,
         offset: OffsetField,

@@ -1,7 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { z } from "zod";
 import { findingsResponse, withErrorHandling } from "./response.js";
-import { FindingsOutputSchema, ResponseFormatField, LimitField, OffsetField } from "./schemas.js";
+import { FindingsOutputSchema, ResponseFormatField, LimitField, OffsetField, ProjectDirField, ProfileField } from "./schemas.js";
 import {
   parseCoverage,
   parseTestResults,
@@ -45,8 +44,8 @@ Examples:
   3. Get results as Markdown:
      { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
       inputSchema: {
-        projectDir: z.string().describe("Absolute path to the project root"),
-        profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
+        projectDir: ProjectDirField,
+        profile: ProfileField,
         responseFormat: ResponseFormatField,
         limit: LimitField,
         offset: OffsetField,
@@ -90,7 +89,7 @@ Examples:
   2. Get failures as Markdown:
      { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
       inputSchema: {
-        projectDir: z.string().describe("Absolute path to the project root"),
+        projectDir: ProjectDirField,
         responseFormat: ResponseFormatField,
         limit: LimitField,
         offset: OffsetField,
@@ -132,7 +131,7 @@ Examples:
   2. Paginate for large projects (first 20):
      { "projectDir": "/app/big-monorepo", "limit": 20 }`,
       inputSchema: {
-        projectDir: z.string().describe("Absolute path to the project root"),
+        projectDir: ProjectDirField,
         responseFormat: ResponseFormatField,
         limit: LimitField,
         offset: OffsetField,
@@ -175,7 +174,7 @@ Examples:
   2. Get first 5 failures:
      { "projectDir": "/app/e2e-tests", "limit": 5 }`,
       inputSchema: {
-        projectDir: z.string().describe("Absolute path to the project root"),
+        projectDir: ProjectDirField,
         responseFormat: ResponseFormatField,
         limit: LimitField,
         offset: OffsetField,
@@ -218,7 +217,7 @@ Examples:
   2. Get Markdown report for CI review:
      { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
       inputSchema: {
-        projectDir: z.string().describe("Absolute path to the project root"),
+        projectDir: ProjectDirField,
         responseFormat: ResponseFormatField,
         limit: LimitField,
         offset: OffsetField,

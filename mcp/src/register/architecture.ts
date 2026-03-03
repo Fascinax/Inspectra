@@ -1,7 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { z } from "zod";
 import { findingsResponse, withErrorHandling } from "./response.js";
-import { FindingsOutputSchema, ResponseFormatField, LimitField, OffsetField } from "./schemas.js";
+import { FindingsOutputSchema, ResponseFormatField, LimitField, OffsetField, ProjectDirField, ProfileField } from "./schemas.js";
 import { checkLayering, analyzeModuleDependencies, detectCircularDependencies } from "../tools/architecture.js";
 import { loadProfile } from "../policies/loader.js";
 import { validateProjectDir } from "../utils/paths.js";
@@ -38,8 +37,8 @@ Examples:
   3. Get first 5 violations only:
      { "projectDir": "/app/my-project", "limit": 5 }`,
       inputSchema: {
-        projectDir: z.string().describe("Absolute path to the project root"),
-        profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
+        projectDir: ProjectDirField,
+        profile: ProfileField,
         responseFormat: ResponseFormatField,
         limit: LimitField,
         offset: OffsetField,
@@ -83,7 +82,7 @@ Examples:
   2. Get Markdown dependency report:
      { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
       inputSchema: {
-        projectDir: z.string().describe("Absolute path to the project root"),
+        projectDir: ProjectDirField,
         responseFormat: ResponseFormatField,
         limit: LimitField,
         offset: OffsetField,
@@ -125,7 +124,7 @@ Examples:
   2. Get first 3 cycles:
      { "projectDir": "/app/monorepo", "limit": 3 }`,
       inputSchema: {
-        projectDir: z.string().describe("Absolute path to the project root"),
+        projectDir: ProjectDirField,
         responseFormat: ResponseFormatField,
         limit: LimitField,
         offset: OffsetField,

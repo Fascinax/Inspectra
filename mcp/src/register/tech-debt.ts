@@ -1,7 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { z } from "zod";
 import { findingsResponse, withErrorHandling } from "./response.js";
-import { FindingsOutputSchema, ResponseFormatField, LimitField, OffsetField } from "./schemas.js";
+import { FindingsOutputSchema, ResponseFormatField, LimitField, OffsetField, ProjectDirField } from "./schemas.js";
 import { analyzeComplexity, ageTodos, checkDependencyStaleness } from "../tools/tech-debt.js";
 import { validateProjectDir } from "../utils/paths.js";
 
@@ -31,7 +30,7 @@ Examples:
   2. Get top 5 most complex files:
      { "projectDir": "/app/my-project", "limit": 5 }`,
       inputSchema: {
-        projectDir: z.string().describe("Absolute path to the project root"),
+        projectDir: ProjectDirField,
         responseFormat: ResponseFormatField,
         limit: LimitField,
         offset: OffsetField,
@@ -74,7 +73,7 @@ Examples:
   2. Get aged TODOs in Markdown:
      { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
       inputSchema: {
-        projectDir: z.string().describe("Absolute path to the project root"),
+        projectDir: ProjectDirField,
         responseFormat: ResponseFormatField,
         limit: LimitField,
         offset: OffsetField,
@@ -117,7 +116,7 @@ Examples:
   2. Get staleness report paginated:
      { "projectDir": "/app/monorepo", "limit": 20, "offset": 0 }`,
       inputSchema: {
-        projectDir: z.string().describe("Absolute path to the project root"),
+        projectDir: ProjectDirField,
         responseFormat: ResponseFormatField,
         limit: LimitField,
         offset: OffsetField,

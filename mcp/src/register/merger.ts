@@ -92,7 +92,7 @@ Examples:
   2. Score an empty findings list (returns 100):
      { "findingsJson": "[]" }`,
       inputSchema: {
-        findingsJson: z.string().describe("JSON string � array of finding objects"),
+        findingsJson: z.string({ required_error: "findingsJson is required" }).min(1, "findingsJson cannot be empty — provide a JSON array of finding objects").describe("JSON string — array of finding objects"),
       },
       outputSchema: ScoreOutputSchema,
       annotations: {

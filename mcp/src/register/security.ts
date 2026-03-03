@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { findingsResponse, withErrorHandling } from "./response.js";
-import { FindingsOutputSchema, ResponseFormatField, LimitField, OffsetField } from "./schemas.js";
+import { FindingsOutputSchema, ResponseFormatField, LimitField, OffsetField, ProjectDirField, ProfileField } from "./schemas.js";
 import { scanSecrets, checkDependencyVulnerabilities, runSemgrep, checkMavenDependencies } from "../tools/security.js";
 import { loadProfile } from "../policies/loader.js";
 import { validateProjectDir, validateFilePathsCsv } from "../utils/paths.js";
@@ -39,8 +39,8 @@ Examples:
   3. Paginate results (first 10):
      { "filePathsCsv": "/app/src/config.ts", "limit": 10, "offset": 0 }`,
       inputSchema: {
-        filePathsCsv: z.string().describe("Comma-separated absolute paths to files to scan"),
-        profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),
+        filePathsCsv: z.string({ required_error: "filePathsCsv is required" }).min(1, "filePathsCsv cannot be empty — provide comma-separated absolute file paths").describe("Comma-separated absolute paths to files to scan"),
+        profile: ProfileField,
         responseFormat: ResponseFormatField,
         limit: LimitField,
         offset: OffsetField,
@@ -85,7 +85,7 @@ Examples:
   2. Get results as Markdown:
      { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
       inputSchema: {
-        projectDir: z.string().describe("Absolute path to the project root"),
+        projectDir: ProjectDirField,
         responseFormat: ResponseFormatField,
         limit: LimitField,
         offset: OffsetField,
@@ -128,7 +128,7 @@ Examples:
   2. Paginate results (first 10):
      { "projectDir": "/app/my-project", "limit": 10, "offset": 0 }`,
       inputSchema: {
-        projectDir: z.string().describe("Absolute path to the project root"),
+        projectDir: ProjectDirField,
         responseFormat: ResponseFormatField,
         limit: LimitField,
         offset: OffsetField,
@@ -171,7 +171,7 @@ Examples:
   2. Check a Spring Boot project with Markdown output:
      { "projectDir": "/app/spring-app", "responseFormat": "markdown" }`,
       inputSchema: {
-        projectDir: z.string().describe("Absolute path to the project root"),
+        projectDir: ProjectDirField,
         responseFormat: ResponseFormatField,
         limit: LimitField,
         offset: OffsetField,
