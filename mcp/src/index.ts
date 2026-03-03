@@ -13,13 +13,14 @@ import { registerPerformanceTools } from "./register/performance.js";
 import { registerDocumentationTools } from "./register/documentation.js";
 import { registerTechDebtTools } from "./register/tech-debt.js";
 import { registerMergerTools } from "./register/merger.js";
+import { SERVER_NAME } from "./constants.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const POLICIES_DIR = resolve(__dirname, "..", "..", "policies");
 const { version: SERVER_VERSION } = createRequire(import.meta.url)("../package.json") as { version: string };
 
 const server = new McpServer({
-  name: "inspectra",
+  name: SERVER_NAME,
   version: SERVER_VERSION,
 });
 

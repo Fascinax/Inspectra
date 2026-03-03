@@ -1,7 +1,5 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-
-/** Maximum character count for a single tool response text payload. */
-export const CHARACTER_LIMIT = 100_000;
+import { CHARACTER_LIMIT } from "../constants.js";
 
 /**
  * Wraps serializable data into the MCP tool content response format.
