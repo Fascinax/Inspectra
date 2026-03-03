@@ -1,0 +1,79 @@
+<!--
+  Inspectra MCP Server — Evaluation Questions
+  ============================================
+  10 questions exercising multi-tool workflows against the static fixture
+  project at mcp/src/__tests__/fixtures/sample-project.
+
+  Design principles (from mcp-builder Phase 4):
+  - READ-ONLY and NON-DESTRUCTIVE: all tools are audit scans, no mutations.
+  - INDEPENDENT: each question is self-contained, no ordering dependency.
+  - COMPLEX: each requires 2-5 tool calls with intermediate reasoning.
+  - STABLE: answers are derived from static fixture code, never change.
+  - VERIFIABLE: each answer is a single value, direct string comparison.
+
+  Target project path: use the absolute path to the sample-project fixture
+  when calling tools (e.g., projectDir = "<workspace>/mcp/src/__tests__/fixtures/sample-project").
+-->
+<evaluation>
+
+  <!-- Q1: Security → Secret scan (2 tools: scan_secrets + score_findings) -->
+  <qa_pair>
+    <question>Scan the sample-project fixture for hardcoded secrets using inspectra_scan_secrets. How many distinct secret findings does the tool return? Answer with a number.</question>
+    <answer>1</answer>
+  </qa_pair>
+
+  <!-- Q2: Conventions → TODO/FIXME markers (1 tool + counting) -->
+  <qa_pair>
+    <question>Run inspectra_check_todos on the sample-project fixture. The tool reports both TODO and FIXME markers across all source files. What is the total number of TODO + FIXME findings returned? Answer with a number.</question>
+    <answer>4</answer>
+  </qa_pair>
+
+  <!-- Q3: Conventions → File length (2 tools: check_file_lengths + reasoning) -->
+  <qa_pair>
+    <question>Run inspectra_check_file_lengths on the sample-project fixture with a strict profile (warning threshold: 50, error threshold: 200). Which source file triggers the file-length finding? Answer with just the filename including extension, no directory path.</question>
+    <answer>math-utils.ts</answer>
+  </qa_pair>
+
+  <!-- Q4: Tests → Missing coverage (2 tools: detect_missing_tests + counting) -->
+  <qa_pair>
+    <question>Use inspectra_detect_missing_tests on the sample-project fixture to find source files with no corresponding test file. The fixture has src/controllers/user.controller.ts, src/services/auth.service.ts, and src/utils/math-utils.ts (which has math-utils.test.ts). How many source files are reported as missing tests? Answer with a number.</question>
+    <answer>2</answer>
+  </qa_pair>
+
+  <!-- Q5: Security → Secret content (1 tool: scan_secrets + reading evidence) -->
+  <qa_pair>
+    <question>Scan the sample-project fixture for hardcoded secrets with inspectra_scan_secrets. The auth.service.ts file contains an intentionally hardcoded API key. What is the secret token value that starts with "sk-"? Copy the exact token string.</question>
+    <answer>sk-prod-abc123secrettoken456</answer>
+  </qa_pair>
+
+  <!-- Q6: Architecture → Dependency count (1 tool: analyze_dependencies + reading) -->
+  <qa_pair>
+    <question>Run inspectra_analyze_dependencies on the sample-project fixture. How many direct production dependencies (not devDependencies) are declared in its package.json? Answer with a number.</question>
+    <answer>3</answer>
+  </qa_pair>
+
+  <!-- Q7: Conventions → FIXME vs TODO breakdown (1 tool: check_todos + filtering snippets) -->
+  <qa_pair>
+    <question>Run inspectra_check_todos on the sample-project fixture and examine the evidence snippets in each finding. All findings have rule "unresolved-todo", but the snippet text contains either "TODO" or "FIXME". How many findings have "FIXME" in their snippet? Answer with a number.</question>
+    <answer>2</answer>
+  </qa_pair>
+
+  <!-- Q8: Multi-domain → Cross-domain merge (4+ tools: scan_secrets + check_todos + score_findings x2 + merge_domain_reports) -->
+  <qa_pair>
+    <question>Perform a two-domain audit of the sample-project fixture: (1) run inspectra_scan_secrets to get security findings, (2) run inspectra_check_todos to get conventions findings, (3) use inspectra_score_findings to score each domain separately, (4) use inspectra_merge_domain_reports to merge both domain reports. In the consolidated report, how many total findings appear across both domains combined? Answer with a number.</question>
+    <answer>5</answer>
+  </qa_pair>
+
+  <!-- Q9: Conventions → Naming check (1 tool: check_naming + analysis) -->
+  <qa_pair>
+    <question>Run inspectra_check_naming on the sample-project fixture with default settings. The fixture files use kebab-case naming with domain suffixes (user.controller.ts, auth.service.ts, math-utils.ts). Does the naming check produce zero findings (meaning all files comply)? Answer True or False.</question>
+    <answer>True</answer>
+  </qa_pair>
+
+  <!-- Q10: Multi-domain → Full audit score (5+ tools: scan_secrets + check_todos + check_file_lengths + detect_missing_tests + score_findings x3 + merge) -->
+  <qa_pair>
+    <question>Perform a three-domain audit of the sample-project fixture: security (scan_secrets on auth.service.ts), conventions (check_todos + check_file_lengths with warning:50 error:200), and tests (detect_missing_tests). Score each domain with inspectra_score_findings, then merge all three domain reports with inspectra_merge_domain_reports. The scoring system uses grades: A (90+), B (75+), C (60+), D (40+), F (below 40). What letter grade does the overall consolidated report receive? Answer A, B, C, D, or F.</question>
+    <answer>B</answer>
+  </qa_pair>
+
+</evaluation>
