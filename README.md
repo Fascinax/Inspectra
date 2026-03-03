@@ -145,6 +145,24 @@ npx inspectra-audit /path/to/project --profile=java-angular-playwright --format=
 npx inspectra-audit . --format=sarif --output=results.sarif
 ```
 
+### Trend Analysis
+
+Track score evolution across multiple audit runs:
+
+```bash
+node mcp/dist/cli/trend.js audit-jan.json audit-feb.json audit-mar.json
+node mcp/dist/cli/trend.js reports/*.json --output=trend.md
+```
+
+### Report Comparison
+
+Compare two audits side-by-side (e.g. main vs PR branch):
+
+```bash
+node mcp/dist/cli/compare.js main.json pr.json --label-a=main --label-b=feature/auth
+node mcp/dist/cli/compare.js baseline.json current.json --output=diff.md
+```
+
 ### Output Formats
 
 | Format | Flag | Use Case |
@@ -213,7 +231,7 @@ TARGET_PROJECT=/path/to/project PROFILE=generic FORMAT=markdown \
 | Script | Description |
 |--------|-------------|
 | `npm run build` | Compile the MCP server (TypeScript → `mcp/dist/`) |
-| `npm test` | Run 284 unit + integration tests (Vitest) |
+| `npm test` | Run 336 unit + integration tests (Vitest) |
 | `npm run test:watch` | Run tests in watch mode |
 | `npm run test:coverage` | Run tests with V8 coverage report |
 | `npm run lint` | TypeScript type-check + ESLint |

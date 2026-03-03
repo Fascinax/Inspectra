@@ -13,6 +13,7 @@ import { registerPerformanceTools } from "./register/performance.js";
 import { registerDocumentationTools } from "./register/documentation.js";
 import { registerTechDebtTools } from "./register/tech-debt.js";
 import { registerMergerTools } from "./register/merger.js";
+import { registerRendererTools } from "./register/renderer.js";
 import { registerResources } from "./register/resources.js";
 import { registerPrompts } from "./register/prompts.js";
 import { SERVER_NAME } from "./constants.js";
@@ -39,6 +40,7 @@ registerPerformanceTools(server);
 registerDocumentationTools(server);
 registerTechDebtTools(server);
 registerMergerTools(server, POLICIES_DIR);
+registerRendererTools(server);
 
 // ─── Register resources ──────────────────────────────────────────────────────
 
