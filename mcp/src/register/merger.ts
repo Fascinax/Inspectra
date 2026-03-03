@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { jsonResponse, reportResponse, errorResponse, withErrorHandling } from "./response.js";
-import { FindingsOutputSchema, ScoreOutputSchema, ResponseFormatField } from "./schemas.js";
+import { ScoreOutputSchema, ResponseFormatField } from "./schemas.js";
 import { mergeReports } from "../merger/merge-findings.js";
 import { scoreDomain } from "../merger/score.js";
 import { loadAllPolicies, loadScoringRules } from "../policies/loader.js";

@@ -3,8 +3,7 @@ import { CHARACTER_LIMIT, DEFAULT_PAGE_SIZE } from "../constants.js";
 import { InspectraError } from "../errors.js";
 import { logger } from "../logger.js";
 import type { ConsolidatedReport, Finding } from "../types.js";
-import { renderFindingsAsMarkdown } from "../renderer/markdown.js";
-import { renderMarkdown } from "../renderer/markdown.js";
+import { renderFindingsAsMarkdown, renderMarkdown } from "../renderer/markdown.js";
 
 export type ResponseFormat = "json" | "markdown";
 
