@@ -14,11 +14,13 @@ import { registerDocumentationTools } from "./register/documentation.js";
 import { registerTechDebtTools } from "./register/tech-debt.js";
 import { registerMergerTools } from "./register/merger.js";
 import { registerResources } from "./register/resources.js";
+import { registerPrompts } from "./register/prompts.js";
 import { SERVER_NAME } from "./constants.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const POLICIES_DIR = resolve(__dirname, "..", "..", "policies");
 const SCHEMAS_DIR = resolve(__dirname, "..", "..", "schemas");
+const PROMPTS_DIR = resolve(__dirname, "..", "..", ".github", "prompts");
 const { version: SERVER_VERSION } = createRequire(import.meta.url)("../package.json") as { version: string };
 
 const server = new McpServer({
@@ -40,6 +42,10 @@ registerMergerTools(server, POLICIES_DIR);
 // ─── Register resources ──────────────────────────────────────────────────────
 
 registerResources(server, POLICIES_DIR, SCHEMAS_DIR);
+
+// ─── Register prompts ────────────────────────────────────────────────────────
+
+registerPrompts(server, PROMPTS_DIR);
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
 
