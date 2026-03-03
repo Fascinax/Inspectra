@@ -24,7 +24,13 @@ Returns: Array of Finding objects (domain: "performance", prefix: PRF-). Each fi
 
 Error handling:
   - Returns empty findings if no build artifacts are found.
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Analyze bundle size for a React app:
+     { "projectDir": "/app/my-react-app" }
+  2. Get Markdown report:
+     { "projectDir": "/app/my-react-app", "responseFormat": "markdown" }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,

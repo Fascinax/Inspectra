@@ -29,7 +29,15 @@ Returns: Array of Finding objects (domain: "security", prefix: SEC-). Each findi
 
 Error handling:
   - Throws if any file path is invalid, non-existent, or a directory.
-  - Throws if paths contain shell metacharacters.`,
+  - Throws if paths contain shell metacharacters.
+
+Examples:
+  1. Scan two files for secrets:
+     { "filePathsCsv": "/app/src/config.ts,/app/src/auth.ts" }
+  2. Scan with a Java-specific profile for extra patterns:
+     { "filePathsCsv": "/app/src/Main.java", "profile": "java-backend" }
+  3. Paginate results (first 10):
+     { "filePathsCsv": "/app/src/config.ts", "limit": 10, "offset": 0 }`,
       inputSchema: {
         filePathsCsv: z.string().describe("Comma-separated absolute paths to files to scan"),
         profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),

@@ -28,7 +28,15 @@ Args:
 Returns: Array of Finding objects (domain: "architecture", prefix: ARC-). Each finding identifies the importing file, the imported module, and the violated layer rule.
 
 Error handling:
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Check layering for a TypeScript project:
+     { "projectDir": "/app/my-project" }
+  2. Check with custom allowed dependencies:
+     { "projectDir": "/app/my-project", "profile": "java-angular-playwright" }
+  3. Get first 5 violations only:
+     { "projectDir": "/app/my-project", "limit": 5 }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),

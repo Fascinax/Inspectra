@@ -31,7 +31,13 @@ Args:
 Returns: A consolidated report object containing all domain scores, the overall weighted score, grade (A-F), and the merged findings array.
 
 Error handling:
-  - Returns isError: true if domainReportsJson fails Zod validation.`,
+  - Returns isError: true if domainReportsJson fails Zod validation.
+
+Examples:
+  1. Merge two domain reports:
+     { "domainReportsJson": "[{...security report...}, {...tests report...}]", "target": "my-org/my-repo", "profile": "generic" }
+  2. Merge with a specific profile for weighted scoring:
+     { "domainReportsJson": "[...]", "target": "my-org/backend", "profile": "java-backend" }`,
       inputSchema: {
         domainReportsJson: z.string().describe("JSON string � array of domain report objects"),
         target: z.string().describe("Repository or path being audited"),

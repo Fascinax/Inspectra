@@ -35,7 +35,15 @@ Returns: Array of Finding objects (domain: "tests", prefix: TST-). Findings incl
 
 Error handling:
   - Returns empty findings if no coverage report is found.
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Parse coverage for a Node.js project:
+     { "projectDir": "/app/my-project" }
+  2. Parse with custom thresholds from a profile:
+     { "projectDir": "/app/my-project", "profile": "java-angular-playwright" }
+  3. Get results as Markdown:
+     { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         profile: z.string().optional().describe("Policy profile name (e.g., java-angular-playwright)"),

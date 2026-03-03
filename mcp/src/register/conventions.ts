@@ -33,7 +33,13 @@ Args:
 Returns: Array of Finding objects (domain: "conventions", prefix: CNV-). Each finding identifies the file with the naming violation, the current name, and the expected pattern.
 
 Error handling:
-  - Throws if projectDir does not exist or is not a directory.`,
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Check naming conventions:
+     { "projectDir": "/app/my-project" }
+  2. Get results as Markdown for review:
+     { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
       inputSchema: {
         projectDir: z.string().describe("Absolute path to the project root"),
         responseFormat: ResponseFormatField,
