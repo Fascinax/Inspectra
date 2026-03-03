@@ -3,6 +3,7 @@ import { CHARACTER_LIMIT } from "../constants.js";
 
 /**
  * Wraps serializable data into the MCP tool content response format.
+ * Returns both human-readable text content and machine-readable structuredContent.
  * Automatically truncates the JSON payload if it exceeds CHARACTER_LIMIT.
  */
 export function jsonResponse(data: unknown): CallToolResult {
@@ -10,7 +11,10 @@ export function jsonResponse(data: unknown): CallToolResult {
   if (text.length > CHARACTER_LIMIT) {
     text = text.slice(0, CHARACTER_LIMIT) + "\n... [truncated at CHARACTER_LIMIT]";
   }
-  return { content: [{ type: "text", text }] };
+  return {
+    content: [{ type: "text", text }],
+    structuredContent: data as Record<string, unknown>,
+  };
 }
 
 /**
