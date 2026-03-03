@@ -42,12 +42,12 @@ import { renderMarkdown } from "../renderer/markdown.js";
 import { renderJson } from "../renderer/json.js";
 import { renderSarif } from "../renderer/sarif.js";
 import { renderHtml } from "../renderer/html.js";
-import { loadAllPolicies, type ProfileConfig, type ScoringConfig } from "../policies/loader.js";
+import { loadAllPolicies, type ProfileConfig, type ScoringConfig, detectProfile } from "../policies/loader.js";
 import type { DomainReport, Finding } from "../types.js";
 
 type CliOptions = {
   target: string;
-  profile: string;
+  profile: string | null;
   format: "markdown" | "json" | "sarif" | "html";
   output: string | null;
 };
@@ -61,7 +61,7 @@ function parseArgs(argv: string[]): CliOptions {
   }
 
   const target = resolve(args.find((a) => !a.startsWith("--")) ?? ".");
-  const profile = extractFlag(args, "--profile") ?? "generic";
+  const profile = extractFlag(args, "--profile") ?? null;
   const format = (extractFlag(args, "--format") ?? "markdown") as "markdown" | "json" | "sarif" | "html";
   const output = extractFlag(args, "--output") ?? null;
 
@@ -360,11 +360,14 @@ async function main(): Promise<void> {
 
   const totalStart = Date.now();
 
+  const detectedProfile = opts.profile ?? (await detectProfile(opts.target));
+  const autoDetected = opts.profile === null;
+
   console.error(`\n╔══════════════════════════════════════╗`);
   console.error(`║       INSPECTRA — Local Audit        ║`);
   console.error(`╚══════════════════════════════════════╝`);
   console.error(`  Target:  ${opts.target}`);
-  console.error(`  Profile: ${opts.profile}`);
+  console.error(`  Profile: ${detectedProfile}${autoDetected ? " (auto-detected)" : ""}`);
   console.error(`  Format:  ${opts.format}`);
   console.error(``);
 
@@ -374,8 +377,8 @@ async function main(): Promise<void> {
 
   console.error("Loading policies...");
   const policiesDir = resolvePoliciesDir();
-  const policies = await loadAllPolicies(policiesDir, opts.profile);
-  console.error(`  Loaded profile: ${policies.profile?.profile ?? opts.profile}\n`);
+  const policies = await loadAllPolicies(policiesDir, detectedProfile);
+  console.error(`  Loaded profile: ${policies.profile?.profile ?? detectedProfile}\n`);
 
   console.error("Running audits...\n");
 
@@ -393,7 +396,7 @@ async function main(): Promise<void> {
   const consolidated = mergeReports(
     [securityReport, testsReport, archReport, convReport, perfReport, docsReport, debtReport],
     opts.target,
-    opts.profile,
+    detectedProfile,
     policies,
   );
 

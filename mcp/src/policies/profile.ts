@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import { access } from "node:fs/promises";
 import type { ProfileConfig } from "../types.js";
 import { loadYaml } from "./utils.js";
 
@@ -49,4 +50,53 @@ export async function loadProfile(policiesDir: string, profileName: string): Pro
     architecture: data.architecture as ProfileConfig["architecture"] | undefined,
     security: data.security as ProfileConfig["security"] | undefined,
   };
+}
+
+// ─── Auto-detection ──────────────────────────────────────────────────────────
+
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Heuristically selects the best matching profile for a project by inspecting
+ * well-known signal files in the project root.
+ *
+ * Detection matrix:
+ * - `pom.xml` or `build.gradle` → Java
+ * - `angular.json`              → Angular
+ * - `playwright.config.*`       → Playwright
+ *
+ * Mapping (most specific first):
+ * - Java + Angular + Playwright → `java-angular-playwright`
+ * - Java                        → `java-backend`
+ * - Angular                     → `angular-frontend`
+ * - otherwise                   → `generic`
+ *
+ * @param projectDir - Absolute path to the project root.
+ * @returns The matched profile name.
+ */
+export async function detectProfile(projectDir: string): Promise<string> {
+  const [hasPom, hasGradle, hasAngular, hasPlaywrightTs, hasPlaywrightJs, hasPlaywrightMjs] = await Promise.all([
+    fileExists(join(projectDir, "pom.xml")),
+    fileExists(join(projectDir, "build.gradle")),
+    fileExists(join(projectDir, "angular.json")),
+    fileExists(join(projectDir, "playwright.config.ts")),
+    fileExists(join(projectDir, "playwright.config.js")),
+    fileExists(join(projectDir, "playwright.config.mjs")),
+  ]);
+
+  const isJava = hasPom || hasGradle;
+  const isAngular = hasAngular;
+  const isPlaywright = hasPlaywrightTs || hasPlaywrightJs || hasPlaywrightMjs;
+
+  if (isJava && isAngular && isPlaywright) return "java-angular-playwright";
+  if (isJava) return "java-backend";
+  if (isAngular) return "angular-frontend";
+  return "generic";
 }

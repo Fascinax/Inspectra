@@ -13,7 +13,7 @@ import {
   type ConfidenceConfig,
 } from "./confidence.js";
 import { loadDeduplicationRules, type DeduplicationAlias, type DeduplicationConfig } from "./deduplication.js";
-import { loadProfile } from "./profile.js";
+import { loadProfile, detectProfile } from "./profile.js";
 import { loadSeverityMatrix, type SeverityMatrixLevel, type SeverityMatrixConfig } from "./severity-matrix.js";
 
 // ─── Re-exports ───────────────────────────────────────────────────────────────
@@ -23,7 +23,7 @@ export { DEFAULT_CONFIDENCE, loadConfidenceRules };
 export type { ConfidenceAdjustment, ConfidenceConfig };
 export { loadDeduplicationRules };
 export type { DeduplicationAlias, DeduplicationConfig };
-export { loadProfile };
+export { loadProfile, detectProfile };
 export { loadSeverityMatrix };
 export type { SeverityMatrixLevel, SeverityMatrixConfig };
 
