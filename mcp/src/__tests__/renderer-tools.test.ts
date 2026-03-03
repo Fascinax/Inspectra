@@ -311,4 +311,50 @@ describe("inspectra_render_html — integrated handler flow", () => {
     expect(html).not.toContain("<script>alert");
     expect(html).toContain("&lt;script&gt;");
   });
+
+  // ─── Response envelope (resource type) ───────────────────────────────────
+
+  it("summary text contains score, grade, and findings count", () => {
+    const report = makeReport({ overall_score: 75, grade: "B" });
+    const html = renderHtml(report);
+    const totalFindings = report.domain_reports.reduce((sum, r) => sum + r.findings.length, 0);
+    const summary = `HTML report rendered — Score: ${report.overall_score}/100 (Grade ${report.grade}), ${totalFindings} finding(s), ${(html.length / 1024).toFixed(1)} KB`;
+    expect(summary).toContain("75/100");
+    expect(summary).toContain("Grade B");
+    expect(summary).toContain("finding(s)");
+  });
+
+  it("resource response has two content items — text then resource", () => {
+    const report = makeReport();
+    const html = renderHtml(report);
+    const totalFindings = report.domain_reports.reduce((sum, r) => sum + r.findings.length, 0);
+    const summary = `HTML report rendered — Score: ${report.overall_score}/100 (Grade ${report.grade}), ${totalFindings} finding(s), ${(html.length / 1024).toFixed(1)} KB`;
+    const content = [
+      { type: "text" as const, text: summary },
+      { type: "resource" as const, resource: { uri: "inspectra://html-report", mimeType: "text/html", text: html } },
+    ];
+    expect(content).toHaveLength(2);
+    expect(content[0].type).toBe("text");
+    expect(content[1].type).toBe("resource");
+  });
+
+  it("embedded resource has correct mimeType and uri", () => {
+    const report = makeReport();
+    const html = renderHtml(report);
+    const resource = { uri: "inspectra://html-report", mimeType: "text/html", text: html };
+    expect(resource.mimeType).toBe("text/html");
+    expect(resource.uri).toBe("inspectra://html-report");
+    expect(resource.text).toBe(html);
+  });
+
+  it("outputPath metadata text contains Written to path", () => {
+    const outputPath = "/reports/audit.html";
+    const report = makeReport({ overall_score: 60, grade: "C" });
+    const html = renderHtml(report);
+    const totalFindings = report.domain_reports.reduce((sum, r) => sum + r.findings.length, 0);
+    const summary = `HTML report rendered — Score: ${report.overall_score}/100 (Grade ${report.grade}), ${totalFindings} finding(s), ${(html.length / 1024).toFixed(1)} KB`;
+    const metadataText = `${summary}\nWritten to: ${outputPath}`;
+    expect(metadataText).toContain("Written to: /reports/audit.html");
+    expect(metadataText).not.toContain("<!DOCTYPE");
+  });
 });

@@ -1,5 +1,6 @@
 import { type ConsolidatedReport, type Finding, type DomainReport } from "../types.js";
 import { diffReportFindings } from "../utils/findings.js";
+import { capitalize } from "../utils/strings.js";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -251,7 +252,3 @@ function formatAnnotationBody(finding: Finding): string {
 }
 
 // ─── Utilities ───────────────────────────────────────────────────────────────
-
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}

@@ -1,4 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { writeFile } from "node:fs/promises";
 import { z } from "zod";
 import { ConsolidatedReportSchema } from "../types.js";
 import { buildTrendEntry, analyzeTrend, renderTrendMarkdown } from "../renderer/trend.js";
@@ -26,30 +27,39 @@ function registerRenderHtmlTool(server: McpServer): void {
       title: "Render HTML Report",
       description: `Render a consolidated audit report as a self-contained HTML file with embedded CSS (Obsidian dark theme).
 
-Accepts a consolidated audit report JSON object and returns a fully self-contained HTML document — no external dependencies. Includes a score ring, per-domain cards, severity bar chart, and colour-coded finding cards.
+Accepts a consolidated audit report JSON object. When outputPath is provided the HTML is written to disk and only a compact metadata summary is returned (score, grade, findings count, file path) — this is the preferred usage to avoid large payloads in the LLM context.
+
+When outputPath is omitted the HTML document is returned as an embedded resource (type: resource, mimeType: text/html) alongside a short text summary. The full HTML is available to the MCP client but is not injected into the conversation context.
 
 Args:
   - reportJson (string): JSON string of a ConsolidatedReport object conforming to consolidated-report.schema.json.
+  - outputPath (string, optional): Absolute or relative path to write the .html file. When provided, only metadata is returned.
 
-Returns: A single text/html string containing the complete HTML document, ready to save as a .html file or serve via HTTP.
+Returns: compact summary text (always) + embedded resource when outputPath is omitted.
 
 Error handling:
-  - Returns isError: true if reportJson fails Zod validation.
+  - Returns isError: true if reportJson fails Zod validation or the file cannot be written.
 
 Examples:
-  1. Render a consolidated audit as HTML:
+  1. Write to disk (recommended):
+     { "reportJson": "{...consolidatedReport...}", "outputPath": "/reports/audit.html" }
+  2. In-memory (resource response):
      { "reportJson": "{...consolidatedReport...}" }`,
       inputSchema: {
         reportJson: z.string().describe("JSON string of the ConsolidatedReport to render as HTML"),
+        outputPath: z
+          .string()
+          .optional()
+          .describe("File path to write the HTML report. When provided only metadata is returned."),
       },
       annotations: {
-        readOnlyHint: true,
+        readOnlyHint: false,
         destructiveHint: false,
         idempotentHint: true,
         openWorldHint: false,
       },
     },
-    withErrorHandling(async ({ reportJson }) => {
+    withErrorHandling(async ({ reportJson, outputPath }) => {
       let report;
       try {
         report = ConsolidatedReportSchema.parse(JSON.parse(reportJson));
@@ -64,7 +74,39 @@ Examples:
       }
 
       const html = renderHtml(report);
-      return { content: [{ type: "text" as const, text: html }] };
+      const totalFindings = report.domain_reports.reduce((sum, r) => sum + r.findings.length, 0);
+      const summary = `HTML report rendered — Score: ${report.overall_score}/100 (Grade ${report.grade}), ${totalFindings} finding(s), ${(html.length / 1024).toFixed(1)} KB`;
+
+      if (outputPath) {
+        try {
+          await writeFile(outputPath, html, "utf-8");
+        } catch (err) {
+          return errorResponse(
+            new ParseError(
+              `Failed to write HTML report to "${outputPath}": ${err instanceof Error ? err.message : String(err)}`,
+              "Ensure the output path is writable and the parent directory exists.",
+            ),
+            "inspectra_render_html",
+          );
+        }
+        return {
+          content: [{ type: "text" as const, text: `${summary}\nWritten to: ${outputPath}` }],
+        };
+      }
+
+      return {
+        content: [
+          { type: "text" as const, text: summary },
+          {
+            type: "resource" as const,
+            resource: {
+              uri: "inspectra://html-report",
+              mimeType: "text/html",
+              text: html,
+            },
+          },
+        ],
+      };
     }, "inspectra_render_html"),
   );
 }
