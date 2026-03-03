@@ -58,7 +58,7 @@ Examples:
       }
       const policies = await loadAllPolicies(policiesDir, profile);
       const consolidated = mergeReports(domainReports, target, profile, policies);
-      setLatestReport(JSON.stringify(consolidated, null, 2));
+      await setLatestReport(JSON.stringify(consolidated, null, 2));
       return reportResponse(consolidated, responseFormat);
     }),
   );

@@ -1,5 +1,5 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { CHARACTER_LIMIT } from "../constants.js";
+import { CHARACTER_LIMIT, DEFAULT_PAGE_SIZE } from "../constants.js";
 import type { ConsolidatedReport, Finding } from "../types.js";
 import { renderFindingsAsMarkdown } from "../renderer/markdown.js";
 import { renderMarkdown } from "../renderer/markdown.js";
@@ -138,7 +138,12 @@ export interface PaginationParams {
 }
 
 /**
- * Returns findings in the requested format with pagination support.
+ * Returns findings in the requested format with **response-level** pagination.
+ *
+ * All findings are computed by the tool before this function is called.
+ * Pagination only slices the serialised output to reduce payload size for
+ * LLMs with limited context windows. It does NOT reduce scan work.
+ *
  * Text content adapts to the format; structuredContent is always JSON.
  */
 export function findingsResponse(
@@ -146,7 +151,7 @@ export function findingsResponse(
   format: ResponseFormat = "json",
   pagination: PaginationParams = {},
 ): CallToolResult {
-  const { limit = 50, offset = 0 } = pagination;
+  const { limit = DEFAULT_PAGE_SIZE, offset = 0 } = pagination;
   const total = findings.length;
   const page = findings.slice(offset, offset + limit);
   const hasMore = offset + limit < total;

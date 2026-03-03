@@ -1,44 +1,74 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { readFile, readdir } from "node:fs/promises";
+import { readFile, readdir, writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 
-const AVAILABLE_PROFILES = ["generic", "java-backend", "java-angular-playwright", "angular-frontend"];
-const AVAILABLE_SCHEMAS = ["finding", "domain-report", "consolidated-report", "scoring"];
-
-let latestReport: string | null = null;
+const REPORT_DIR = join(tmpdir(), "inspectra");
+const REPORT_PATH = join(REPORT_DIR, "latest-report.json");
 
 /**
- * Stores the latest consolidated report JSON so it can be served via the
- * `inspectra://reports/latest` resource.
+ * Scans a directory for files matching a suffix and returns basenames without that suffix.
  */
-export function setLatestReport(reportJson: string): void {
-  latestReport = reportJson;
+async function listAvailableEntries(dir: string, suffix: string): Promise<string[]> {
+  try {
+    const entries = await readdir(dir);
+    return entries
+      .filter((f) => f.endsWith(suffix))
+      .map((f) => f.slice(0, -suffix.length));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Persists the latest consolidated report to a temp file so it survives
+ * within the same machine session.
+ *
+ * Storage: `os.tmpdir()/inspectra/latest-report.json`
+ * Limitation: not shared across machines or containers.
+ */
+export async function setLatestReport(reportJson: string): Promise<void> {
+  await mkdir(REPORT_DIR, { recursive: true });
+  await writeFile(REPORT_PATH, reportJson, "utf-8");
+}
+
+async function getLatestReport(): Promise<string | null> {
+  try {
+    return await readFile(REPORT_PATH, "utf-8");
+  } catch {
+    return null;
+  }
 }
 
 /**
  * Registers all MCP resources on the given server instance.
  *
  * Resources provide read-only access to Inspectra's configuration and output:
- * - `inspectra://policies/{profile}` — policy profile YAML content
- * - `inspectra://schemas/{name}` — JSON Schema definitions
- * - `inspectra://reports/latest` — most recent consolidated audit report
+ * - `urn:inspectra:policies:{profile}` — policy profile YAML content
+ * - `urn:inspectra:schemas:{name}` — JSON Schema definitions
+ * - `urn:inspectra:reports:latest` — most recent consolidated audit report
  */
 export function registerResources(server: McpServer, policiesDir: string, schemasDir: string): void {
+  const profilesDir = join(policiesDir, "profiles");
+
   // ─── Policies (dynamic template) ────────────────────────────────────────────
   server.registerResource(
     "policy-profile",
-    new ResourceTemplate("inspectra://policies/{profile}", {
-      list: async () => ({
-        resources: AVAILABLE_PROFILES.map((p) => ({
-          uri: `inspectra://policies/${p}`,
-          name: `${p} profile`,
-          description: `Policy profile configuration for ${p} stack`,
-          mimeType: "text/yaml",
-        })),
-      }),
+    new ResourceTemplate("urn:inspectra:policies:{profile}", {
+      list: async () => {
+        const profiles = await listAvailableEntries(profilesDir, ".yml");
+        return {
+          resources: profiles.map((p) => ({
+            uri: `urn:inspectra:policies:${p}`,
+            name: `${p} profile`,
+            description: `Policy profile configuration for ${p} stack`,
+            mimeType: "text/yaml",
+          })),
+        };
+      },
       complete: {
-        profile: async () => AVAILABLE_PROFILES,
+        profile: async () => listAvailableEntries(profilesDir, ".yml"),
       },
     }),
     {
@@ -46,7 +76,7 @@ export function registerResources(server: McpServer, policiesDir: string, schema
       mimeType: "text/yaml",
     },
     async (uri, { profile }) => {
-      const filePath = join(policiesDir, "profiles", `${profile}.yml`);
+      const filePath = join(profilesDir, `${profile}.yml`);
       try {
         const content = await readFile(filePath, "utf-8");
         return { contents: [{ uri: uri.href, mimeType: "text/yaml", text: content }] };
@@ -59,17 +89,20 @@ export function registerResources(server: McpServer, policiesDir: string, schema
   // ─── Schemas (dynamic template) ─────────────────────────────────────────────
   server.registerResource(
     "json-schema",
-    new ResourceTemplate("inspectra://schemas/{name}", {
-      list: async () => ({
-        resources: AVAILABLE_SCHEMAS.map((s) => ({
-          uri: `inspectra://schemas/${s}`,
-          name: `${s} schema`,
-          description: `JSON Schema for ${s}`,
-          mimeType: "application/schema+json",
-        })),
-      }),
+    new ResourceTemplate("urn:inspectra:schemas:{name}", {
+      list: async () => {
+        const schemas = await listAvailableEntries(schemasDir, ".schema.json");
+        return {
+          resources: schemas.map((s) => ({
+            uri: `urn:inspectra:schemas:${s}`,
+            name: `${s} schema`,
+            description: `JSON Schema for ${s}`,
+            mimeType: "application/schema+json",
+          })),
+        };
+      },
       complete: {
-        name: async () => AVAILABLE_SCHEMAS,
+        name: async () => listAvailableEntries(schemasDir, ".schema.json"),
       },
     }),
     {
@@ -90,13 +123,14 @@ export function registerResources(server: McpServer, policiesDir: string, schema
   // ─── Latest Report (static URI) ─────────────────────────────────────────────
   server.registerResource(
     "latest-report",
-    "inspectra://reports/latest",
+    "urn:inspectra:reports:latest",
     {
-      description: "The most recent consolidated audit report. Updated after each full audit run.",
+      description: "The most recent consolidated audit report. Persisted in os.tmpdir()/inspectra/. Updated after each full audit run.",
       mimeType: "application/json",
     },
     async (uri) => {
-      if (!latestReport) {
+      const report = await getLatestReport();
+      if (!report) {
         return {
           contents: [{
             uri: uri.href,
@@ -105,7 +139,7 @@ export function registerResources(server: McpServer, policiesDir: string, schema
           }],
         };
       }
-      return { contents: [{ uri: uri.href, mimeType: "application/json", text: latestReport }] };
+      return { contents: [{ uri: uri.href, mimeType: "application/json", text: report }] };
     },
   );
 }

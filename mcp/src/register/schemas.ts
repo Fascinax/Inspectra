@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { SEVERITY_LEVELS, DOMAINS, EFFORT_LEVELS } from "../types.js";
+import { DEFAULT_PAGE_SIZE } from "../constants.js";
 
 /** Reusable input field for selecting the tool response format. */
 export const ResponseFormatField = z
@@ -7,15 +8,26 @@ export const ResponseFormatField = z
   .default("json")
   .describe("Output format: json for structured data, markdown for human-readable text");
 
-/** Maximum number of findings to return (pagination). */
+/**
+ * Maximum number of findings to return per page.
+ *
+ * This is **response-level pagination**: all findings are computed by the tool
+ * first, then sliced before serialisation. It reduces response payload size for
+ * LLMs with limited context windows but does NOT skip any scanning work.
+ *
+ * Default: DEFAULT_PAGE_SIZE (env INSPECTRA_DEFAULT_PAGE_SIZE, fallback 50).
+ */
 export const LimitField = z
   .number()
   .int()
   .positive()
-  .default(50)
-  .describe("Maximum number of findings to return (default: 50)");
+  .default(DEFAULT_PAGE_SIZE)
+  .describe(`Maximum number of findings to return (default: ${DEFAULT_PAGE_SIZE}). This is response-level pagination — all findings are computed, then sliced.`);
 
-/** Number of findings to skip (pagination offset). */
+/**
+ * Number of findings to skip (pagination offset).
+ * Use together with limit to iterate through pages.
+ */
 export const OffsetField = z
   .number()
   .int()
