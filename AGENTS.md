@@ -27,7 +27,7 @@ User prompt -> Orchestrator -> domain agents -> merge -> report
 
 ## Orchestrator
 
-- Full audit (`/audit-full`): invokes all 7 domain agents.
+- Full audit (`/audit`): invokes all 7 domain agents.
 - PR audit (`/audit-pr`): invokes only agents relevant to changed files.
 - Targeted audit: invokes only the requested domain.
 

@@ -28,7 +28,7 @@ export function registerPrompts(server: McpServer, promptsDir: string): void {
       },
     },
     async ({ projectDir, profile }) => {
-      const template = await readFile(join(promptsDir, "audit-full.prompt.md"), "utf-8");
+      const template = await readFile(join(promptsDir, "audit.prompt.md"), "utf-8");
       const instructions = buildFullAuditInstructions(template, projectDir, profile ?? "generic");
       return {
         messages: [

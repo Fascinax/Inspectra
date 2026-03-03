@@ -44,7 +44,7 @@ This creates in the target project:
 
 Open the target project in VS Code and use Copilot Chat:
 - Select the `audit-orchestrator` agent
-- Type `/audit-full` for a full audit or `/audit-pr` for a PR-scoped audit
+- Type `/audit` for a full audit or `/audit-pr` for a PR-scoped audit
 
 Alternatively, use the CLI directly:
 
@@ -66,7 +66,7 @@ inspectra/
 │  │  ├─ audit-architecture.agent.md
 │  │  └─ audit-conventions.agent.md
 │  ├─ prompts/          # Reusable prompt files
-│  │  ├─ audit-full.prompt.md
+│  │  ├─ audit.prompt.md
 │  │  └─ audit-pr.prompt.md
 │  ├─ workflows/        # GitHub Actions CI/CD
 │  │  ├─ validate-config.yml   # Build, test & validate on push/PR
