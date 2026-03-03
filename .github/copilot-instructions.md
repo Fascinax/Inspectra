@@ -55,6 +55,8 @@ Tools are registered in the `inspectra` MCP server. Agents should call them by p
 | `inspectra_render_html` | Report Engine | Render HTML report (Obsidian dark theme) |
 | `inspectra_render_trend` | Report Engine | Compute score trend from multiple reports |
 | `inspectra_compare_reports` | Report Engine | Compare two reports and diff findings |
+| `inspectra_log_activity` | Governance | Record agent activity to JSONL log |
+| `inspectra_read_activity_log` | Governance | Read agent activity log entries |
 
 ### Technology Stack
 
@@ -62,3 +64,84 @@ Tools are registered in the `inspectra` MCP server. Agents should call them by p
 - JSON Schema (2020-12) for output validation
 - Markdown + JSON for reports
 - Zod for runtime type validation
+
+---
+
+## Agent Governance (Stripe Minions Principles)
+
+These rules apply to ALL agents and ALL contributors working with agents.
+Ref: https://stripe.dev/blog/minions-stripes-one-shot-end-to-end-coding-agents
+
+### Rule #1 — Never Fix Bad Output
+
+When an agent produces incorrect, incomplete, or malformed output:
+
+1. **Diagnose** — Identify the root cause (bad input? wrong tool? schema mismatch?)
+2. **Reset** — Discard the bad output entirely
+3. **Fix** — Correct the root cause (prompt, tool input, data)
+4. **Re-run** — Execute the agent again from scratch
+
+Do NOT patch, massage, or manually edit bad agent output. That hides the real problem.
+
+### Hard Blocks
+
+Agents MUST NEVER:
+- Run `git push`, `git push --force`, or any remote-mutating git operation
+- Delete files outside the target project scope
+- Modify `.github/agents/`, `schemas/`, or `policies/` directories without explicit human approval
+- Install new dependencies (`npm install`, `pip install`) without human confirmation
+- Execute arbitrary shell commands that modify system state
+- Produce partial reports when MCP tools are unavailable (fail fast, fail loud)
+
+### Agent Scope
+
+Each domain agent has a strict scope:
+
+| Agent | IN scope | OUT of scope |
+|-------|----------|-------------|
+| audit-security | Source code, config files, dependency manifests | Test fixtures, example files, docs |
+| audit-tests | Test files, coverage reports, test configs | Application source logic |
+| audit-architecture | Import graphs, module structure, dependency trees | Individual code quality |
+| audit-conventions | All source files for naming/style | Architectural decisions |
+| audit-performance | Build configs, bundle outputs, runtime code | Functional correctness |
+| audit-documentation | README, docs/, ADRs, inline API docs | Code logic |
+| audit-tech-debt | All source files for complexity, staleness metrics | Feature correctness |
+
+If an agent encounters something outside its scope, it MUST ignore it — not report it.
+
+### Task Decomposition
+
+- A focused agent is a correct agent
+- One agent, one domain, one report
+- Agents should NOT be given "epics" — break down into single-purpose tasks
+- The orchestrator is the ONLY entity that composes multiple agent results
+
+### The Pit of Success
+
+- High-quality input tokens produce high-quality output
+- Always provide structured, schema-validated data to agents
+- Never pass raw/unvalidated user input to domain agents — the orchestrator normalizes first
+- Code quality in the repo directly affects audit quality (clean code is easier to audit)
+
+### Traceability
+
+Every agent action must be traceable:
+- All domain reports include `metadata.agent`, `metadata.timestamp`, `metadata.tools_used`
+- Every finding has `evidence` with file paths and line numbers
+- The orchestrator records which agents were invoked and their individual results
+- Git commits from agent-assisted work must include the agent name in the commit message trailer
+
+### Standardization
+
+- All agents follow the same prompt structure: Mission → What You Audit → Workflow → Output Format → Severity Guide → MCP Prerequisite → Rules
+- All agents return JSON matching `schemas/domain-report.schema.json`
+- All finding IDs follow `DOMAIN_PREFIX-XXX` pattern
+- Tool names are always prefixed with `inspectra_`
+- Agents should not surprise you — predictable structure, predictable output
+
+### Per-Agent Isolation
+
+- Each agent operates independently with no shared mutable state
+- Agents do NOT communicate with each other directly — only through the orchestrator
+- An isolated agent is a safe agent — no side effects outside its report output
+- If running agents in parallel, each should work on an isolated view of the codebase

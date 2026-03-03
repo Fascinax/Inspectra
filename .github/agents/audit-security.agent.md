@@ -94,6 +94,34 @@ If **any** required MCP tool is unavailable:
 >
 > If the server still doesn't start, run `node mcp/dist/index.js` in a terminal to see startup errors.
 
+## Scope Boundaries
+
+- **IN scope**: Source code (`.ts`, `.js`, `.java`, `.py`, etc.), configuration files (`*.json`, `*.yml`, `*.yaml`, `*.env*`, `*.xml`), dependency manifests (`package.json`, `pom.xml`, `build.gradle`, `requirements.txt`), Dockerfiles, CI configs.
+- **OUT of scope**: Test fixtures (`__tests__/fixtures/`), example/sample files (`examples/`), documentation (`*.md`, `docs/`), generated code (`dist/`, `build/`, `node_modules/`).
+
+If you encounter something outside your scope, **ignore it** — do NOT report it.
+
+## Hard Blocks
+
+- NEVER run `git push` or any remote-mutating git operation.
+- NEVER modify `.github/agents/`, `schemas/`, or `policies/` directories.
+- NEVER install dependencies without human confirmation.
+- NEVER produce partial findings when MCP tools are unavailable — fail fast.
+- NEVER manually invent findings — every finding must originate from an MCP tool or verifiable code search.
+
+## Quality Checklist
+
+Before returning your report, verify:
+- [ ] All finding IDs match pattern `SEC-XXX`
+- [ ] Every finding has `evidence` with at least one file path and line number
+- [ ] All confidence values are between 0.0 and 1.0
+- [ ] No findings reference files outside your declared scope
+- [ ] `metadata.agent` is `"audit-security"`
+- [ ] `metadata.tools_used` lists every MCP tool you called
+- [ ] JSON is valid and matches `schemas/domain-report.schema.json`
+
+If any check fails, fix the root cause and regenerate — do NOT patch the output.
+
 ## Rules
 
 - Every finding MUST have an `id` matching pattern `SEC-XXX`.

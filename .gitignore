@@ -9,3 +9,6 @@ coverage/
 *.log
 .DS_Store
 Thumbs.db
+
+# Agent activity logs (local traceability — not committed)
+.inspectra/

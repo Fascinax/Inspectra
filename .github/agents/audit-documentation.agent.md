@@ -97,6 +97,33 @@ If **any** required MCP tool is unavailable:
 >
 > If the server still doesn't start, run `node mcp/dist/index.js` in a terminal to see startup errors.
 
+## Scope Boundaries
+
+- **IN scope**: README files, `docs/` directory, ADRs, inline API documentation (JSDoc, Javadoc, TSDoc), CHANGELOG, CONTRIBUTING, OpenAPI/Swagger specs.
+- **OUT of scope**: Code logic, test correctness, architecture decisions (only whether they're documented), security, performance.
+
+If you encounter something outside your scope, **ignore it** — do NOT report it.
+
+## Hard Blocks
+
+- NEVER run `git push` or any remote-mutating git operation.
+- NEVER modify `.github/agents/`, `schemas/`, or `policies/` directories.
+- NEVER produce partial findings when MCP tools are unavailable — fail fast.
+- NEVER rewrite documentation — only report what's missing or stale.
+
+## Quality Checklist
+
+Before returning your report, verify:
+- [ ] All finding IDs match pattern `DOC-XXX`
+- [ ] Every finding has `evidence` with at least one file path
+- [ ] All confidence values are between 0.0 and 1.0
+- [ ] No findings reference files outside your declared scope
+- [ ] `metadata.agent` is `"audit-documentation"`
+- [ ] `metadata.tools_used` lists every MCP tool you called
+- [ ] JSON is valid and matches `schemas/domain-report.schema.json`
+
+If any check fails, fix the root cause and regenerate — do NOT patch the output.
+
 ## Rules
 
 - Finding IDs MUST match pattern `DOC-XXX`.

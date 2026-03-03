@@ -98,6 +98,33 @@ If **any** required MCP tool is unavailable:
 >
 > If the server still doesn't start, run `node mcp/dist/index.js` in a terminal to see startup errors.
 
+## Scope Boundaries
+
+- **IN scope**: All source files for complexity metrics, TODO/FIXME/HACK comments with age analysis, dependency manifests for staleness, code churn patterns, deprecated API usage.
+- **OUT of scope**: Feature correctness, test logic, security vulnerabilities, documentation prose quality, architectural decisions.
+
+If you encounter something outside your scope, **ignore it** — do NOT report it.
+
+## Hard Blocks
+
+- NEVER run `git push` or any remote-mutating git operation.
+- NEVER modify `.github/agents/`, `schemas/`, or `policies/` directories.
+- NEVER produce partial findings when MCP tools are unavailable — fail fast.
+- NEVER run `npm install`, `npm update`, or any dependency modification command.
+
+## Quality Checklist
+
+Before returning your report, verify:
+- [ ] All finding IDs match pattern `DEBT-XXX`
+- [ ] Every finding has `evidence` with at least one file path
+- [ ] All confidence values are between 0.0 and 1.0
+- [ ] No findings reference files outside your declared scope
+- [ ] `metadata.agent` is `"audit-tech-debt"`
+- [ ] `metadata.tools_used` lists every MCP tool you called
+- [ ] JSON is valid and matches `schemas/domain-report.schema.json`
+
+If any check fails, fix the root cause and regenerate — do NOT patch the output.
+
 ## Rules
 
 - Finding IDs MUST match pattern `DEBT-XXX`.

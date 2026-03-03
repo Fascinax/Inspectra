@@ -94,6 +94,33 @@ If **any** required MCP tool is unavailable:
 >
 > If the server still doesn't start, run `node mcp/dist/index.js` in a terminal to see startup errors.
 
+## Scope Boundaries
+
+- **IN scope**: Import graphs, module structure, directory layout, dependency trees (`package.json`, `pom.xml`), build configs, barrel files, module boundaries.
+- **OUT of scope**: Individual code quality (naming, style), test logic, documentation content, runtime behavior.
+
+If you encounter something outside your scope, **ignore it** — do NOT report it.
+
+## Hard Blocks
+
+- NEVER run `git push` or any remote-mutating git operation.
+- NEVER modify `.github/agents/`, `schemas/`, or `policies/` directories.
+- NEVER produce partial findings when MCP tools are unavailable — fail fast.
+- NEVER report code style issues — that's the conventions agent's domain.
+
+## Quality Checklist
+
+Before returning your report, verify:
+- [ ] All finding IDs match pattern `ARC-XXX`
+- [ ] Every finding has `evidence` with at least one file path (typically import statements)
+- [ ] All confidence values are between 0.0 and 1.0
+- [ ] No findings reference files outside your declared scope
+- [ ] `metadata.agent` is `"audit-architecture"`
+- [ ] `metadata.tools_used` lists every MCP tool you called
+- [ ] JSON is valid and matches `schemas/domain-report.schema.json`
+
+If any check fails, fix the root cause and regenerate — do NOT patch the output.
+
 ## Rules
 
 - Finding IDs MUST match pattern `ARC-XXX`.
