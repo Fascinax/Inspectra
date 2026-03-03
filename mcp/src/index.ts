@@ -13,10 +13,12 @@ import { registerPerformanceTools } from "./register/performance.js";
 import { registerDocumentationTools } from "./register/documentation.js";
 import { registerTechDebtTools } from "./register/tech-debt.js";
 import { registerMergerTools } from "./register/merger.js";
+import { registerResources } from "./register/resources.js";
 import { SERVER_NAME } from "./constants.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const POLICIES_DIR = resolve(__dirname, "..", "..", "policies");
+const SCHEMAS_DIR = resolve(__dirname, "..", "..", "schemas");
 const { version: SERVER_VERSION } = createRequire(import.meta.url)("../package.json") as { version: string };
 
 const server = new McpServer({
@@ -34,6 +36,10 @@ registerPerformanceTools(server);
 registerDocumentationTools(server);
 registerTechDebtTools(server);
 registerMergerTools(server, POLICIES_DIR);
+
+// ─── Register resources ──────────────────────────────────────────────────────
+
+registerResources(server, POLICIES_DIR, SCHEMAS_DIR);
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
 

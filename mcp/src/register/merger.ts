@@ -6,6 +6,7 @@ import { mergeReports } from "../merger/merge-findings.js";
 import { scoreDomain } from "../merger/score.js";
 import { loadAllPolicies, loadScoringRules } from "../policies/loader.js";
 import { DomainReportSchema, FindingSchema } from "../types.js";
+import { setLatestReport } from "./resources.js";
 
 /**
  * Registers the merger and scoring MCP tools on the given server instance.
@@ -51,6 +52,7 @@ Error handling:
       }
       const policies = await loadAllPolicies(policiesDir, profile);
       const consolidated = mergeReports(domainReports, target, profile, policies);
+      setLatestReport(JSON.stringify(consolidated, null, 2));
       return reportResponse(consolidated, responseFormat);
     }),
   );
