@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { DOMAINS } from "../types.js";
 
 /**
  * Registers MCP Prompts that provide pre-built audit workflows.
@@ -70,6 +71,40 @@ export function registerPrompts(server: McpServer, promptsDir: string): void {
       };
     },
   );
+
+  // ─── Domain Audit Prompt ────────────────────────────────────────────────────
+  server.registerPrompt(
+    "audit_domain",
+    {
+      title: "Single-Domain Audit",
+      description:
+        "Run a targeted audit on a single domain (security, tests, architecture, conventions, performance, documentation, or tech-debt). Faster than a full audit when you know which area to investigate.",
+      argsSchema: {
+        projectDir: z
+          .string()
+          .describe("Absolute path to the project directory to audit"),
+        domain: z
+          .enum(DOMAINS)
+          .describe("The audit domain to run (e.g., 'security', 'tests', 'architecture')"),
+        profile: z
+          .string()
+          .default("generic")
+          .describe("Policy profile to use for scoring weights (e.g., 'generic', 'java-backend')"),
+      },
+    },
+    async ({ projectDir, domain, profile }) => {
+      const template = await readFile(join(promptsDir, "audit-domain.prompt.md"), "utf-8");
+      const instructions = buildDomainAuditInstructions(template, projectDir, domain, profile ?? "generic");
+      return {
+        messages: [
+          {
+            role: "user",
+            content: { type: "text", text: instructions },
+          },
+        ],
+      };
+    },
+  );
 }
 
 function buildFullAuditInstructions(template: string, projectDir: string, profile: string): string {
@@ -95,5 +130,23 @@ function buildPrAuditInstructions(template: string, projectDir: string, changedF
     ...files.map((f) => `- \`${f}\``),
     "",
     "Execute the PR audit workflow above on these files now.",
+  ].join("\n");
+}
+
+function buildDomainAuditInstructions(
+  template: string,
+  projectDir: string,
+  domain: string,
+  profile: string,
+): string {
+  return [
+    template,
+    "",
+    "---",
+    `**Project directory**: \`${projectDir}\``,
+    `**Domain**: \`${domain}\``,
+    `**Profile**: \`${profile}\``,
+    "",
+    `Execute the ${domain} audit workflow above on this project now.`,
   ].join("\n");
 }
