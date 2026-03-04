@@ -42,7 +42,7 @@ export async function renderPdf(report: ConsolidatedReport): Promise<Buffer> {
 
 async function loadPuppeteer(): Promise<PuppeteerLike> {
   try {
-    // @ts-expect-error — puppeteer is an optional runtime dependency not declared in devDependencies
+
     const mod = (await import("puppeteer")) as { default: PuppeteerLike };
     return mod.default;
   } catch {
