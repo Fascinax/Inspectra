@@ -107,6 +107,7 @@ If you encounter something outside your scope, **ignore it** — do NOT report i
 - NEVER modify `.github/agents/`, `schemas/`, or `policies/` directories.
 - NEVER install dependencies without human confirmation.
 - NEVER produce partial findings when MCP tools are unavailable — fail fast.
+- NEVER use `runSubagent`, `search_subagent`, `read`, or any general-purpose tool as a substitute for a missing `inspectra_*` MCP tool — there is no valid fallback.
 - NEVER manually invent findings — every finding must originate from an MCP tool or verifiable code search.
 
 ## Quality Checklist

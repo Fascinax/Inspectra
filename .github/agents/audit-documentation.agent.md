@@ -109,6 +109,7 @@ If you encounter something outside your scope, **ignore it** — do NOT report i
 - NEVER run `git push` or any remote-mutating git operation.
 - NEVER modify `.github/agents/`, `schemas/`, or `policies/` directories.
 - NEVER produce partial findings when MCP tools are unavailable — fail fast.
+- NEVER use `runSubagent`, `search_subagent`, `read`, or any general-purpose tool as a substitute for a missing `inspectra_*` MCP tool — there is no valid fallback.
 - NEVER rewrite documentation — only report what's missing or stale.
 
 ## Quality Checklist
