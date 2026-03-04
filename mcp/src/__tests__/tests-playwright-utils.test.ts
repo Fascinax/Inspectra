@@ -2,8 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { walkSuites, loadPlaywrightReport } from "../tools/tests-playwright-utils.js";
-import type { PlaywrightSuite, SuiteVisitor } from "../tools/tests-playwright-utils.js";
+import { walkSuites, loadPlaywrightReport, type PlaywrightSuite, type SuiteVisitor } from "../tools/tests-playwright-utils.js";
 
 describe("walkSuites", () => {
   it("visits each test in flat suites", () => {

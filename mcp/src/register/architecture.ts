@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { findingsResponse, withErrorHandling } from "./response.js";
-import { PROFILED_INPUT_SCHEMA, STANDARD_INPUT_SCHEMA, FINDINGS_TOOL_META, ProfileField } from "./schemas.js";
+import { PROFILED_INPUT_SCHEMA, STANDARD_INPUT_SCHEMA, FINDINGS_TOOL_META } from "./schemas.js";
 import { checkLayering, analyzeModuleDependencies, detectCircularDependencies } from "../tools/architecture.js";
 import { loadProfile } from "../policies/loader.js";
 import { validateProjectDir } from "../utils/paths.js";

@@ -75,7 +75,7 @@ export async function detectCircularDependencies(projectDir: string): Promise<Fi
   for (const filePath of files) {
     try {
       const content = await readFile(filePath, "utf-8");
-      const rawImports = extractImports(content);
+      const rawImports = extractImports(content, extname(filePath));
       const dir = dirname(filePath);
 
       const deps: string[] = [];

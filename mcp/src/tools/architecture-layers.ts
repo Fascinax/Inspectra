@@ -3,6 +3,7 @@ import { relative } from "node:path";
 import type { Finding } from "../types.js";
 import { collectSourceFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
+import { extractModuleSpecifiers } from "../utils/ast.js";
 
 const LAYER_ORDER = ["presentation", "application", "domain", "infrastructure"] as const;
 
@@ -63,14 +64,8 @@ export async function checkLayering(
   return findings;
 }
 
-export function extractImports(content: string): string[] {
-  const importRegex = /(?:import|from)\s+['"]([^'"]+)['"]/g;
-  const matches: string[] = [];
-  let match: RegExpExecArray | null;
-  while ((match = importRegex.exec(content)) !== null) {
-    matches.push(match[1] ?? "");
-  }
-  return matches;
+export function extractImports(content: string, fileExt = ".ts"): string[] {
+  return extractModuleSpecifiers(content, fileExt);
 }
 
 function detectLayer(filePath: string): string | undefined {

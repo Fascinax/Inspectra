@@ -56,7 +56,7 @@ function computeStatistics(findings: ReadonlyArray<{ severity: string; domain: s
   const bySeverity: Record<string, number> & { critical: number; high: number; medium: number; low: number; info: number } = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
   const byDomain: Record<string, number> = {};
   for (const f of findings) {
-    bySeverity[f.severity]++;
+    bySeverity[f.severity] = (bySeverity[f.severity] ?? 0) + 1;
     byDomain[f.domain] = (byDomain[f.domain] ?? 0) + 1;
   }
   return { bySeverity, byDomain };

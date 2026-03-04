@@ -2,8 +2,7 @@ import { readFile, access } from "node:fs/promises";
 import { join, relative } from "node:path";
 import type { Finding } from "../types.js";
 import { createIdSequence } from "../utils/id.js";
-import { walkSuites, loadPlaywrightReport } from "./tests-playwright-utils.js";
-import type { PlaywrightTest } from "./tests-playwright-utils.js";
+import { walkSuites, loadPlaywrightReport, type PlaywrightTest } from "./tests-playwright-utils.js";
 
 const MAX_DESCRIPTION_LENGTH = 500;
 

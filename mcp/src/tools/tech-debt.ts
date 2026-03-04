@@ -3,6 +3,7 @@ import { extname, relative } from "node:path";
 import type { Finding } from "../types.js";
 import { collectAllFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
+import { computeCyclomaticComplexity } from "../utils/ast.js";
 
 /**
  * Estimate complexity using lightweight cyclomatic heuristics per file.
@@ -17,7 +18,7 @@ export async function analyzeComplexity(projectDir: string, threshold = 35): Pro
 
     try {
       const content = await readFile(filePath, "utf-8");
-      const complexity = estimateComplexity(content);
+      const complexity = computeCyclomaticComplexity(content, extname(filePath));
       if (complexity < threshold) continue;
 
       findings.push({
@@ -142,11 +143,4 @@ export async function checkDependencyStaleness(projectDir: string): Promise<Find
   }
 }
 
-function estimateComplexity(source: string): number {
-  const patterns = [/\bif\b/g, /\bfor\b/g, /\bwhile\b/g, /\bswitch\b/g, /\bcatch\b/g, /&&/g, /\|\|/g, /\?/g];
-  let score = 1;
-  for (const pattern of patterns) {
-    score += [...source.matchAll(pattern)].length;
-  }
-  return score;
-}
+
