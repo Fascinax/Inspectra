@@ -5,6 +5,7 @@ tools:
   - agent
   - read
   - search
+  - execute
   - inspectra_merge_domain_reports
   - inspectra_score_findings
 handoffs:
@@ -39,20 +40,75 @@ Before doing any work, verify that the required MCP tools are available by check
 - `inspectra_merge_domain_reports`
 - `inspectra_score_findings`
 
-If ANY of these tools are missing or unavailable:
+### If MCP tools are unavailable — attempt self-recovery
 
-1. **STOP immediately.** Do not proceed.
-2. Output this exact message to the user:
+Do NOT immediately abort. Instead, follow these steps **in order**:
 
-   > **Inspectra MCP server is not running.**
-   > The audit cannot proceed without the MCP tools.
-   > Please start the MCP server (`npm run dev` in the `mcp/` directory or `make dev`) and retry.
+**Step 1 — Locate the Inspectra installation directory.**
 
-3. **Do NOT attempt to work around this.** Specifically:
-   - Do NOT use `runSubagent`, `search_subagent`, `read`, `semantic_search`, or any other tool as a substitute for missing `inspectra_*` tools.
-   - Do NOT invoke domain agents without MCP being available — they will fail the same way.
-   - Do NOT produce any partial findings, scores, or reports.
-   - Do NOT rephrase the situation as "I'll try a different approach" — there is no other approach.
+The agent files may be installed in a different project than the Inspectra package itself. Do NOT assume the current working directory contains the Inspectra source.
+
+Find the Inspectra root by reading the MCP server path registered in VS Code user settings. Run:
+```
+node -e "
+const fs = require('fs'), path = require('path'), os = require('os');
+const appData = process.env.APPDATA || (process.platform === 'darwin'
+  ? path.join(os.homedir(), 'Library', 'Application Support')
+  : path.join(os.homedir(), '.config'));
+const cfg = path.join(appData, 'Code', 'User', 'settings.json');
+const s = JSON.parse(fs.readFileSync(cfg, 'utf8'));
+const p = s?.mcp?.servers?.inspectra?.args?.[0];
+console.log(p ? path.dirname(path.dirname(p)) : 'NOT_FOUND');
+"
+```
+This prints the absolute path to the Inspectra root (the directory containing `mcp/`). Store it as `<INSPECTRA_ROOT>`.
+
+If `NOT_FOUND` — skip to Step 4 immediately.
+
+**Step 2 — Rebuild the MCP server** from the located root:
+```
+cd <INSPECTRA_ROOT> && npm run build --workspace=mcp
+```
+Run this with the `execute` tool using the actual absolute path resolved in Step 1.
+
+**Step 3 — Re-probe MCP tools.** Attempt to call `inspectra_merge_domain_reports` again.
+
+- If it succeeds — **proceed normally** with the audit.
+- If it still fails — go to Step 4.
+
+**Step 4 — Abort with a clear diagnostic.** Output this message, filling in what you found:
+
+> **Inspectra MCP server could not be started automatically.**
+>
+> Inspectra root: `<INSPECTRA_ROOT or NOT_FOUND>`
+> Build result: `<result of npm run build, or "skipped — root not found">`
+>
+> **To fix this:**
+>
+> 1. Find where Inspectra is installed:
+>    ```
+>    where inspectra   # Windows
+>    which inspectra   # macOS / Linux
+>    ```
+> 2. `cd` into that package root and rebuild:
+>    ```
+>    cd <inspectra-root> && npm run build
+>    ```
+> 3. Reload the MCP configuration: Command Palette → **MCP: List Servers** → restart `inspectra`.
+>
+> If Inspectra was never set up in this environment, run:
+> ```
+> inspectra setup
+> ```
+> from the Inspectra package directory.
+>
+> Once the server shows ✅ in the MCP panel, re-run the audit.
+
+**Do NOT attempt to work around a failed MCP.** Specifically:
+- Do NOT use `runSubagent`, `search_subagent`, `read`, `semantic_search`, or any other tool as a substitute for missing `inspectra_*` tools.
+- Do NOT invoke domain agents without MCP being available — they will fail the same way.
+- Do NOT produce any partial findings, scores, or reports.
+- Do NOT rephrase the situation as "I'll try a different approach" — there is no other approach.
 
 MCP availability is a **hard prerequisite**. No MCP = no audit. Full stop.
 
