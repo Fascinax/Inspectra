@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { jsonResponse, withErrorHandling } from "./response.js";
-import { ProjectDirField } from "./schemas.js";
+import { ProjectDirField, READ_ONLY_ANNOTATIONS } from "./schemas.js";
 import { logActivity, readActivityLog } from "../tools/governance.js";
 import { validateProjectDir } from "../utils/paths.js";
 
@@ -88,12 +88,7 @@ Examples:
         agent: z.string().optional().describe("Filter by agent name"),
         limit: z.number().int().positive().default(50).describe("Maximum entries to return"),
       },
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: false,
-      },
+      annotations: READ_ONLY_ANNOTATIONS,
     },
     withErrorHandling(async ({ projectDir, agent, limit }) => {
       await validateProjectDir(projectDir);

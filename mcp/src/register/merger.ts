@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { jsonResponse, reportResponse, errorResponse, withErrorHandling } from "./response.js";
-import { ScoreOutputSchema, ResponseFormatField } from "./schemas.js";
+import { ScoreOutputSchema, ResponseFormatField, READ_ONLY_ANNOTATIONS } from "./schemas.js";
 import { mergeReports } from "../merger/merge-findings.js";
 import { scoreDomain } from "../merger/score.js";
 import { loadAllPolicies, loadScoringRules } from "../policies/loader.js";
@@ -43,12 +43,7 @@ Examples:
         domainReportsJson: z.string().describe("JSON string � array of domain report objects"),
         target: z.string().describe("Repository or path being audited"),
         profile: z.string().describe("Policy profile used (e.g., java-angular-playwright)"),        responseFormat: ResponseFormatField,      },
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: false,
-      },
+      annotations: READ_ONLY_ANNOTATIONS,
     },
     withErrorHandling(async ({ domainReportsJson, target, profile, responseFormat }) => {
       let domainReports;
@@ -95,12 +90,7 @@ Examples:
         findingsJson: z.string({ required_error: "findingsJson is required" }).min(1, "findingsJson cannot be empty — provide a JSON array of finding objects").describe("JSON string — array of finding objects"),
       },
       outputSchema: ScoreOutputSchema,
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: false,
-      },
+      annotations: READ_ONLY_ANNOTATIONS,
     },
     withErrorHandling(async ({ findingsJson }) => {
       let findings;

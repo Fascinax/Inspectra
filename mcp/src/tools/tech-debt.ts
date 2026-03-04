@@ -62,7 +62,8 @@ export async function ageTodos(projectDir: string): Promise<Finding[]> {
         const line = lines[i];
         if (!line) continue;
 
-        if (!/\b(TODO|FIXME|HACK)\b/i.test(line)) continue;
+        // Only flag dated TODO/FIXME that appear in actual comment lines, not in string literals
+        if (!/^\s*(?:\/\/|\/\*|\*|#).*\b(TODO|FIXME|HACK)\b/i.test(line)) continue;
         const dateMatch = line.match(/\b(\d{4}[-/]\d{2}[-/]\d{2})\b/);
         if (!dateMatch) continue;
 

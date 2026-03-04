@@ -115,7 +115,10 @@ async function runSecurityAudit(
 ): Promise<DomainReport> {
   const start = Date.now();
   console.error("  [security] Scanning secrets...");
-  const secretFindings = await scanSecrets(sourceFiles, profile?.security?.additional_patterns);
+  // Exclude test infrastructure files which intentionally contain fake secrets
+  const TEST_INFRA_PATH = /[/\\](?:__tests__|fixtures)[/\\]|\.(test|spec)\.[tj]s$/;
+  const securityFiles = sourceFiles.filter((f) => !TEST_INFRA_PATH.test(f));
+  const secretFindings = await scanSecrets(securityFiles, profile?.security?.additional_patterns);
 
   console.error("  [security] Checking dependency vulnerabilities...");
   const vulnFindings = await checkDependencyVulnerabilities(projectDir);

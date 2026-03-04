@@ -92,3 +92,25 @@ export const FindingsOutputSchema = {
 export const ScoreOutputSchema = {
   score: z.number().int().min(0).max(100).describe("Computed domain score (0-100)"),
 };
+
+/**
+ * Standard annotations for read-only, idempotent audit tools.
+ * Shared across all domain tools that do not modify any system state.
+ */
+export const READ_ONLY_ANNOTATIONS = {
+  readOnlyHint: true,
+  destructiveHint: false,
+  idempotentHint: true,
+  openWorldHint: false,
+} as const;
+
+/**
+ * Annotations for read-only tools that may traverse the broader filesystem
+ * beyond the project root (e.g. npm registry checks, Maven Central lookups).
+ */
+export const READ_ONLY_OPEN_WORLD_ANNOTATIONS = {
+  readOnlyHint: true,
+  destructiveHint: false,
+  idempotentHint: true,
+  openWorldHint: true,
+} as const;

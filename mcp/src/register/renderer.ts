@@ -6,7 +6,7 @@ import { buildTrendEntry, analyzeTrend, renderTrendMarkdown } from "../renderer/
 import { compareReports, renderComparisonMarkdown } from "../renderer/compare.js";
 import { renderHtml } from "../renderer/html.js";
 import { jsonResponse, errorResponse, withErrorHandling } from "./response.js";
-import { ResponseFormatField } from "./schemas.js";
+import { ResponseFormatField, READ_ONLY_ANNOTATIONS } from "./schemas.js";
 import { ParseError } from "../errors.js";
 
 /**
@@ -138,12 +138,7 @@ Examples:
         reportsJson: z.string().describe("JSON string — array of ConsolidatedReport objects, oldest-first"),
         responseFormat: ResponseFormatField,
       },
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: false,
-      },
+      annotations: READ_ONLY_ANNOTATIONS,
     },
     withErrorHandling(async ({ reportsJson, responseFormat }) => {
       let reports;
@@ -214,12 +209,7 @@ Examples:
         labelB: z.string().default("Current").describe("Display label for reportB (default: Current)"),
         responseFormat: ResponseFormatField,
       },
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: false,
-      },
+      annotations: READ_ONLY_ANNOTATIONS,
     },
     withErrorHandling(async ({ reportAJson, reportBJson, labelA, labelB, responseFormat }) => {
       let reportA;

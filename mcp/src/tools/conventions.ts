@@ -88,9 +88,12 @@ export async function checkFileLengths(projectDir: string, profile?: ProfileConf
   const errorThreshold = profile?.file_lengths?.error ?? DEFAULT_FILE_LENGTH_ERROR;
 
   const files = await collectAllFiles(projectDir);
+  // Test infrastructure files have natural length — only flag production source
+  const TEST_INFRA_PATH = /[/\\](?:__tests__|fixtures)[/\\]/;
 
   for (const filePath of files) {
     if (![".ts", ".js", ".java"].includes(extname(filePath))) continue;
+    if (TEST_INFRA_PATH.test(relative(projectDir, filePath))) continue;
 
     try {
       const content = await readFile(filePath, "utf-8");
@@ -130,9 +133,12 @@ export async function checkTodoFixmes(projectDir: string): Promise<Finding[]> {
   const nextId = createIdSequence("CNV", 100);
 
   const files = await collectAllFiles(projectDir);
+  // Test fixtures intentionally contain TODO strings as test data
+  const TEST_INFRA_PATH = /[/\\](?:__tests__|fixtures)[/\\]/;
 
   for (const filePath of files) {
     if (![".ts", ".js", ".java"].includes(extname(filePath))) continue;
+    if (TEST_INFRA_PATH.test(relative(projectDir, filePath))) continue;
 
     try {
       const content = await readFile(filePath, "utf-8");
@@ -320,7 +326,11 @@ export async function detectDryViolations(projectDir: string): Promise<Finding[]
   const nextId = createIdSequence("CNV", 200);
 
   const files = await collectAllFiles(projectDir);
-  const srcFiles = files.filter((f) => [".ts", ".js", ".java"].includes(extname(f)));
+  // Test infrastructure produces natural boilerplate — exclude from DRY detection
+  const TEST_INFRA_PATH = /[/\\](?:__tests__|fixtures)[/\\]/;
+  const srcFiles = files.filter(
+    (f) => [".ts", ".js", ".java"].includes(extname(f)) && !TEST_INFRA_PATH.test(relative(projectDir, f)),
+  );
 
   const BLOCK_SIZE = 6; // minimum consecutive non-trivial lines to flag
   const blockMap = new Map<string, Array<{ file: string; startLine: number }>>();
