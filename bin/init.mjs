@@ -65,9 +65,28 @@ function copyDir(srcDir, destDir, pattern) {
 
 function symlinkDir(srcDir, destDir, pattern, projectRoot) {
   if (!existsSync(srcDir)) return { count: 0, gitignoreEntries: [] };
+
+  const destParent = dirname(destDir);
+  mkdirSync(destParent, { recursive: true });
+  const gitignoreEntries = [];
+
+  // ── Strategy 1: directory junction (Windows, no Developer Mode required) ──
+  // Junctions work on any Windows without elevation. Target must be absolute.
+  if (!existsSync(destDir)) {
+    try {
+      symlinkSync(srcDir, destDir, "junction");
+      const files = listFiles(srcDir, pattern);
+      console.log(`  ↗ ${destDir}/ (junction → ${files.length} files)`);
+      gitignoreEntries.push("/" + relative(projectRoot, destDir).replace(/\\/g, "/") + "/");
+      return { count: files.length, gitignoreEntries };
+    } catch {
+      // Junction failed (e.g. cross-device) — fall through to per-file symlinks
+    }
+  }
+
+  // ── Strategy 2: per-file symlinks (requires Developer Mode on Windows) ──
   mkdirSync(destDir, { recursive: true });
   let count = 0;
-  const gitignoreEntries = [];
   for (const file of listFiles(srcDir, pattern)) {
     const srcFile = join(srcDir, file);
     const destFile = join(destDir, file);
@@ -83,9 +102,9 @@ function symlinkDir(srcDir, destDir, pattern, projectRoot) {
       console.log(`  ↗ ${destFile} → ${relTarget}`);
     } catch (err) {
       if (err.code === "EPERM") {
-        // Windows without Developer Mode: symlinks require elevation — fall back to copy
+        // ── Strategy 3: copy (last resort — gitignored via entry below) ──
         copyFileSync(srcFile, destFile);
-        console.log(`  ✓ ${destFile} (copied — symlink needs Developer Mode on Windows)`);
+        console.log(`  ✓ ${destFile} (copied — enable Windows Developer Mode for symlinks)`);
       } else {
         throw err;
       }
@@ -106,7 +125,7 @@ function ensureGitignoreEntries(projectRoot, entries) {
   const missing = entries.filter((e) => !content.includes(e));
   if (missing.length === 0) return;
 
-  const block = "\n# Inspectra agents (symlinked, not committed)\n" + missing.join("\n") + "\n";
+  const block = "\n# Inspectra agents (linked, not committed)\n" + missing.join("\n") + "\n";
   appendFileSync(gitignorePath, block, "utf-8");
   console.log(`  ✓ .gitignore updated (${missing.length} entries)`);
 }
@@ -227,7 +246,7 @@ function cmdInitSymlink(targetArg) {
   ensureGitignoreEntries(target, allGitignoreEntries);
 
   console.log(`\nDone — ${total} files linked/written.`);
-  console.log("Symlinked agents are gitignored — your repo stays clean.");
+  console.log("Agents are gitignored — your repo stays clean.");
   console.log("Open the project in VS Code: agents appear in Copilot dropdown.\n");
 }
 

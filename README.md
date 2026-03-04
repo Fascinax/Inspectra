@@ -61,7 +61,7 @@ This creates symlinked agents in the target project (gitignored automatically):
 - `.vscode/mcp.json` — MCP server auto-starts when the project opens
 - `policies/` + `schemas/` — scoring rules and contracts (copied)
 
-On Windows without Developer Mode, symlinks fall back to copies automatically.
+On Windows, directory junctions are used (no Developer Mode or elevation required). File symlinks are used on Unix.
 
 ### Option C — Per-project (committed copies)
 
