@@ -3,6 +3,7 @@
 ## Current State (v0.5.0)
 
 Inspectra is a functional multi-agent code audit system with:
+
 - 8 Copilot Custom Agents (orchestrator + 7 domain agents)
 - 28 MCP tools across 7 domains
 - JSON Schema contracts for all outputs
@@ -47,7 +48,7 @@ Goal: Rich, customizable report output.
 - [x] HTML report renderer with charts (Obsidian dark theme)
 - [x] Comparison mode: audit A vs. audit B
 - [x] Handlebars templates for report sections
-- [ ] PDF export option
+- [x] PDF export option
 
 ## v1.0.0 - Stable Release
 

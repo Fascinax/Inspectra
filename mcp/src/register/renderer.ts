@@ -5,6 +5,7 @@ import { ConsolidatedReportSchema } from "../types.js";
 import { buildTrendEntry, analyzeTrend, renderTrendMarkdown } from "../renderer/trend.js";
 import { compareReports, renderComparisonMarkdown } from "../renderer/compare.js";
 import { renderHtml } from "../renderer/html.js";
+import { renderPdf } from "../renderer/pdf.js";
 import { jsonResponse, errorResponse, withErrorHandling } from "./response.js";
 import { ResponseFormatField, READ_ONLY_ANNOTATIONS } from "./schemas.js";
 import { ParseError } from "../errors.js";
@@ -16,6 +17,7 @@ import { ParseError } from "../errors.js";
  */
 export function registerRendererTools(server: McpServer): void {
   registerRenderHtmlTool(server);
+  registerRenderPdfTool(server);
   registerRenderTrendTool(server);
   registerCompareReportsTool(server);
 }
@@ -108,6 +110,84 @@ Examples:
         ],
       };
     }, "inspectra_render_html"),
+  );
+}
+
+function registerRenderPdfTool(server: McpServer): void {
+  server.registerTool(
+    "inspectra_render_pdf",
+    {
+      title: "Export PDF Report",
+      description: `Export a consolidated audit report as a PDF file via headless Chromium (puppeteer).
+
+Converts the HTML report (Obsidian dark theme, embedded charts) to a print-ready PDF.
+Requires puppeteer: run \`npm install puppeteer --prefix mcp\` before using this tool.
+
+Args:
+  - reportJson (string): JSON string of a ConsolidatedReport object conforming to consolidated-report.schema.json.
+  - outputPath (string): Absolute or relative path to write the .pdf file. Required for PDF output.
+
+Returns: compact summary text with score, grade, file size, and output path.
+
+Error handling:
+  - Returns isError: true if reportJson fails Zod validation, puppeteer is not installed, or the file cannot be written.
+
+Examples:
+  { "reportJson": "{...consolidatedReport...}", "outputPath": "/reports/audit.pdf" }`,
+      inputSchema: {
+        reportJson: z.string().describe("JSON string of the ConsolidatedReport to export as PDF"),
+        outputPath: z.string().describe("File path to write the PDF report (e.g. /reports/audit.pdf)"),
+      },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    withErrorHandling(async ({ reportJson, outputPath }) => {
+      let report;
+      try {
+        report = ConsolidatedReportSchema.parse(JSON.parse(reportJson));
+      } catch (err) {
+        return errorResponse(
+          new ParseError(
+            `Invalid reportJson: ${err instanceof Error ? err.message : String(err)}`,
+            "Ensure reportJson is a valid ConsolidatedReport JSON object conforming to consolidated-report.schema.json.",
+          ),
+          "inspectra_render_pdf",
+        );
+      }
+
+      let pdfBuffer: Buffer;
+      try {
+        pdfBuffer = await renderPdf(report);
+      } catch (err) {
+        return errorResponse(
+          new ParseError(
+            `PDF rendering failed: ${err instanceof Error ? err.message : String(err)}`,
+            "Ensure puppeteer is installed (npm install puppeteer --prefix mcp) and Chromium can be launched.",
+          ),
+          "inspectra_render_pdf",
+        );
+      }
+
+      try {
+        await writeFile(outputPath, pdfBuffer);
+      } catch (err) {
+        return errorResponse(
+          new ParseError(
+            `Failed to write PDF report to "${outputPath}": ${err instanceof Error ? err.message : String(err)}`,
+            "Ensure the output path is writable and the parent directory exists.",
+          ),
+          "inspectra_render_pdf",
+        );
+      }
+
+      const sizeKb = (pdfBuffer.length / 1024).toFixed(1);
+      const summary = `PDF report exported — Score: ${report.overall_score}/100 (Grade ${report.grade}), ${sizeKb} KB\nWritten to: ${outputPath}`;
+      return { content: [{ type: "text" as const, text: summary }] };
+    }, "inspectra_render_pdf"),
   );
 }
 
