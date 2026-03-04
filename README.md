@@ -20,7 +20,7 @@ npm install
 npm run build
 ```
 
-For global CLI access:
+For global access:
 
 ```bash
 npm install -g .
@@ -69,12 +69,6 @@ Open the target project in VS Code and use Copilot Chat:
 - Select the `audit-orchestrator` agent
 - Type `/audit` for a full audit or `/audit-pr` for a PR-scoped audit
 
-Alternatively, use the CLI directly:
-
-```bash
-inspectra-audit /path/to/project --profile=generic --format=markdown
-```
-
 ---
 
 ## Project Structure
@@ -92,9 +86,7 @@ inspectra/
 │  │  ├─ audit.prompt.md
 │  │  └─ audit-pr.prompt.md
 │  ├─ workflows/        # GitHub Actions CI/CD
-│  │  ├─ validate-config.yml   # Build, test & validate on push/PR
-│  │  ├─ run-audit-on-pr.yml   # Audit scope comment on PRs
-│  │  └─ publish-report.yml    # Manual report generation
+│  │  └─ validate-config.yml   # Build, test & validate on push/PR
 │  └─ copilot-instructions.md
 │
 ├─ mcp/                 # MCP server (TypeScript)
@@ -130,7 +122,6 @@ inspectra/
 │
 ├─ scripts/             # Dev & CI utility scripts
 │  ├─ bootstrap.sh
-│  ├─ run-local-audit.sh
 │  ├─ validate-schemas.sh
 │  ├─ lint-agents.sh
 │  └─ smoke-test-mcp.sh
@@ -153,63 +144,12 @@ inspectra/
 
 ---
 
-## CLI Usage
-
-Run audits locally without Copilot using the built-in CLI:
-
-```bash
-# Audit the current directory
-npx inspectra-audit . --profile=generic --format=markdown
-
-# Audit a specific project with JSON output
-npx inspectra-audit /path/to/project --profile=java-angular-playwright --format=json --output=report.json
-
-# Generate SARIF for CI integration
-npx inspectra-audit . --format=sarif --output=results.sarif
-```
-
-### Trend Analysis
-
-Track score evolution across multiple audit runs:
-
-```bash
-node mcp/dist/cli/trend.js audit-jan.json audit-feb.json audit-mar.json
-node mcp/dist/cli/trend.js reports/*.json --output=trend.md
-```
-
-### Report Comparison
-
-Compare two audits side-by-side (e.g. main vs PR branch):
-
-```bash
-node mcp/dist/cli/compare.js main.json pr.json --label-a=main --label-b=feature/auth
-node mcp/dist/cli/compare.js baseline.json current.json --output=diff.md
-```
-
-### Output Formats
-
-| Format | Flag | Use Case |
-|--------|------|----------|
-| HTML | `--format=html` | Visual dashboard report with charts |
-| Markdown | `--format=markdown` | Human-readable reports (default) |
-| JSON | `--format=json` | Machine-readable, CI pipelines |
-| SARIF | `--format=sarif` | GitHub Code Scanning, IDE integration |
-
----
-
 ## Docker
 
 ### MCP Server
 
 ```bash
 docker compose up inspectra
-```
-
-### Run an Audit
-
-```bash
-TARGET_PROJECT=/path/to/project PROFILE=generic FORMAT=markdown \
-  docker compose run audit
 ```
 
 ---
@@ -245,7 +185,6 @@ TARGET_PROJECT=/path/to/project PROFILE=generic FORMAT=markdown \
 | `make test` | Run unit tests |
 | `make validate` | Validate schemas + lint agents |
 | `make smoke` | Smoke test the MCP server |
-| `make audit-local TARGET=/path PROFILE=generic` | Run local audit |
 | `make init TARGET=/path` | Copy agents into a project |
 | `make help` | List all commands |
 
@@ -261,7 +200,6 @@ TARGET_PROJECT=/path/to/project PROFILE=generic FORMAT=markdown \
 | `npm run lint:fix` | Auto-fix ESLint violations |
 | `npm run format` | Format source with Prettier |
 | `npm run format:check` | Check Prettier formatting (CI-safe) |
-| `npm run audit-local` | Run a local audit via CLI |
 
 ---
 

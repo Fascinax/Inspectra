@@ -98,7 +98,7 @@ The final merged report produced by the orchestrator.
 
 ## Rendered Formats
 
-The CLI and report engine can output the consolidated report in multiple formats:
+The report engine can output the consolidated report in multiple formats:
 
 | Format | Command Flag | Description |
 |--------|-------------|-------------|

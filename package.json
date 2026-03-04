@@ -5,8 +5,7 @@
   "private": true,
   "type": "module",
   "bin": {
-    "inspectra": "./bin/init.mjs",
-    "inspectra-audit": "./mcp/dist/cli/audit.js"
+    "inspectra": "./bin/init.mjs"
   },
   "scripts": {
     "build": "npm run build --workspace=mcp",
@@ -18,7 +17,6 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "audit-local": "node mcp/dist/cli/audit.js",
     "validate:schemas": "bash scripts/validate-schemas.sh",
     "test:inspector": "node scripts/test-mcp-inspector.mjs",
     "clean": "rimraf mcp/dist",

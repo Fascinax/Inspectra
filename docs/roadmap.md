@@ -5,12 +5,10 @@
 Inspectra is a functional multi-agent code audit system with:
 - 8 Copilot Custom Agents (orchestrator + 7 domain agents)
 - 28 MCP tools across 7 domains
-- CLI orchestrator for local audits without Copilot
 - JSON Schema contracts for all outputs
 - Scoring engine with weighted domains and grade system
 - Markdown, JSON, HTML, and SARIF report renderers
-- PR integration with delta scoring and merge blocking
-- Trend tracking and audit comparison mode
+- Trend tracking and audit comparison via MCP tools
 - 4 stack-specific profiles
 
 ## v0.2.0 - Tool Depth COMPLETE
@@ -37,7 +35,6 @@ Goal: Expand audit coverage to 6+ domains.
 
 Goal: Full PR workflow with automated comments.
 
-- [x] GitHub Action that runs the CLI on PR diffs
 - [x] PR comment with delta scoring (score change vs. main branch)
 - [x] Inline review comments on specific findings
 - [x] Status check: block merge if critical findings exist
@@ -56,7 +53,6 @@ Goal: Rich, customizable report output.
 
 Goal: Production-ready for teams.
 
-- [ ] Published npm package (`npx inspectra audit`)
 - [ ] VS Code extension for one-click audits
 - [ ] Configuration UI for profiles and thresholds
 - [ ] Plugin system for custom tools

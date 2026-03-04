@@ -14,18 +14,4 @@ services:
     environment:
       - NODE_ENV=development
 
-  # Run a local audit against a mounted project
-  audit:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    volumes:
-      - .:/app:ro
-      - /app/node_modules
-      - ${TARGET_PROJECT:-.}:/target:ro
-    working_dir: /app
-    command: node mcp/dist/cli/audit.js /target --profile=${PROFILE:-generic} --format=${FORMAT:-markdown}
-    environment:
-      - NODE_ENV=production
-    profiles:
-      - audit
+

@@ -1,7 +1,7 @@
 # Inspectra — Makefile
 # Unified commands for build, test, validation, and audit.
 
-.PHONY: all install build test clean lint validate smoke audit-local help
+.PHONY: all install build test clean lint validate smoke help
 
 # Default
 all: install build test
@@ -35,12 +35,6 @@ lint-agents: ## Lint agent and prompt files
 
 smoke: build ## Smoke test the MCP server
 	bash scripts/smoke-test-mcp.sh
-
-# ─── Audit ───────────────────────────────────────────────────────────────────
-
-# Usage: make audit-local TARGET=/path/to/project PROFILE=generic FORMAT=markdown OUTPUT=report.md
-audit-local: build ## Run a full local audit against a target project
-	bash scripts/run-local-audit.sh '$(TARGET)' '$(PROFILE)' '$(FORMAT)' '$(OUTPUT)'
 
 # ─── Setup ───────────────────────────────────────────────────────────────────
 
