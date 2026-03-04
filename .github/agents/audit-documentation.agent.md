@@ -31,11 +31,13 @@ Evaluate the documentation quality and completeness of the target codebase and p
 
 ## Workflow
 
-1. Use `inspectra_check_readme_completeness` to verify README has all expected sections.
-2. Use `inspectra_check_adr_presence` to verify architectural decisions are documented.
-3. Use `inspectra_detect_doc_code_drift` to find stale documentation.
-4. Use `read` and `search` to manually inspect doc quality, API docs, and onboarding instructions.
-5. Combine all findings into a single domain report.
+1. **MCP tools first** — these are your primary and mandatory data sources:
+   a. Use `inspectra_check_readme_completeness` to verify README has all expected sections.
+   b. Use `inspectra_check_adr_presence` to verify architectural decisions are documented.
+   c. Use `inspectra_detect_doc_code_drift` to find stale documentation.
+2. **MCP gate** — verify you received results from at least `inspectra_check_readme_completeness` before continuing. If it returned an error or was unreachable, **STOP** and report the MCP failure. Do NOT continue with manual analysis.
+3. **Supplementary context only** — use `read` and `search` ONLY to enrich MCP-detected findings with additional context (e.g., reading a README to confirm missing sections flagged by the tool). NEVER use read/search to discover new findings independently or as a substitute for MCP tools.
+4. Combine all findings into a single domain report.
 
 ## Output Format
 
@@ -111,6 +113,9 @@ If you encounter something outside your scope, **ignore it** — do NOT report i
 - NEVER produce partial findings when MCP tools are unavailable — fail fast.
 - NEVER use `runSubagent`, `search_subagent`, `read`, or any general-purpose tool as a substitute for a missing `inspectra_*` MCP tool — there is no valid fallback.
 - NEVER rewrite documentation — only report what's missing or stale.
+- NEVER run terminal commands (PowerShell, bash, `execute`) to scan files, count lines, or search for patterns — use `inspectra_*` MCP tools for scanning.
+- NEVER read files from VS Code internal directories (`AppData`, `workspaceStorage`, `chat-session-resources`) — these are not part of the target project.
+- NEVER use `read`/`search` as the primary data source — MCP tools are primary; read/search is supplementary context only.
 
 ## Quality Checklist
 

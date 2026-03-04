@@ -32,11 +32,13 @@ Evaluate the technical debt burden of the target codebase and produce a structur
 
 ## Workflow
 
-1. Use `inspectra_analyze_complexity` to identify high-complexity files and functions.
-2. Use `inspectra_age_todos` to find and date unresolved TODO/FIXME/HACK comments.
-3. Use `inspectra_check_dependency_staleness` to detect outdated or abandoned dependencies.
-4. Use `read` and `search` to manually inspect code rot, deprecated patterns, and maintenance risks.
-5. Combine all findings into a single domain report.
+1. **MCP tools first** — these are your primary and mandatory data sources:
+   a. Use `inspectra_analyze_complexity` to identify high-complexity files and functions.
+   b. Use `inspectra_age_todos` to find and date unresolved TODO/FIXME/HACK comments.
+   c. Use `inspectra_check_dependency_staleness` to detect outdated or abandoned dependencies.
+2. **MCP gate** — verify you received results from at least `inspectra_analyze_complexity` before continuing. If it returned an error or was unreachable, **STOP** and report the MCP failure. Do NOT continue with manual analysis.
+3. **Supplementary context only** — use `read` and `search` ONLY to enrich MCP-detected findings with additional context (e.g., reading a flagged file to confirm deprecated API usage). NEVER use read/search to discover new findings independently or as a substitute for MCP tools.
+4. Combine all findings into a single domain report.
 
 ## Output Format
 
@@ -112,6 +114,9 @@ If you encounter something outside your scope, **ignore it** — do NOT report i
 - NEVER produce partial findings when MCP tools are unavailable — fail fast.
 - NEVER use `runSubagent`, `search_subagent`, `read`, or any general-purpose tool as a substitute for a missing `inspectra_*` MCP tool — there is no valid fallback.
 - NEVER run `npm install`, `npm update`, or any dependency modification command.
+- NEVER run terminal commands (PowerShell, bash, `execute`) to scan files, count lines, or search for patterns — use `inspectra_*` MCP tools for scanning.
+- NEVER read files from VS Code internal directories (`AppData`, `workspaceStorage`, `chat-session-resources`) — these are not part of the target project.
+- NEVER use `read`/`search` as the primary data source — MCP tools are primary; read/search is supplementary context only.
 
 ## Quality Checklist
 

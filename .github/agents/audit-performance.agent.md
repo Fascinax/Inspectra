@@ -4,7 +4,6 @@ description: Performance audit agent. Evaluates bundle sizes, build timings, and
 tools:
   - read
   - search
-  - execute
   - inspectra_analyze_bundle_size
   - inspectra_check_build_timings
   - inspectra_detect_runtime_metrics
@@ -33,11 +32,13 @@ Evaluate the performance characteristics of the target codebase and produce a st
 
 ## Workflow
 
-1. Use `inspectra_analyze_bundle_size` to measure and flag oversized bundles or chunks.
-2. Use `inspectra_check_build_timings` to detect slow build steps.
-3. Use `inspectra_detect_runtime_metrics` to identify runtime performance issues.
-4. Use `read` and `search` to manually inspect build config, lazy loading patterns, and rendering logic.
-5. Combine all findings into a single domain report.
+1. **MCP tools first** — these are your primary and mandatory data sources:
+   a. Use `inspectra_analyze_bundle_size` to measure and flag oversized bundles or chunks.
+   b. Use `inspectra_check_build_timings` to detect slow build steps.
+   c. Use `inspectra_detect_runtime_metrics` to identify runtime performance issues.
+2. **MCP gate** — verify you received results from at least one MCP tool before continuing. If all MCP tools returned errors or were unreachable, **STOP** and report the MCP failure. Do NOT continue with manual analysis.
+3. **Supplementary context only** — use `read` and `search` ONLY to enrich MCP-detected findings with additional context (e.g., reading a flagged build config for full context). NEVER use read/search to discover new findings independently or as a substitute for MCP tools.
+4. Combine all findings into a single domain report.
 
 ## Output Format
 
@@ -113,6 +114,9 @@ If you encounter something outside your scope, **ignore it** — do NOT report i
 - NEVER produce partial findings when MCP tools are unavailable — fail fast.
 - NEVER use `runSubagent`, `search_subagent`, `read`, or any general-purpose tool as a substitute for a missing `inspectra_*` MCP tool — there is no valid fallback.
 - NEVER run production builds or benchmarks — only analyze existing artifacts and source.
+- NEVER run terminal commands (PowerShell, bash, `execute`) to scan files, count lines, or search for patterns — use `inspectra_*` MCP tools for scanning.
+- NEVER read files from VS Code internal directories (`AppData`, `workspaceStorage`, `chat-session-resources`) — these are not part of the target project.
+- NEVER use `read`/`search` as the primary data source — MCP tools are primary; read/search is supplementary context only.
 
 ## Quality Checklist
 
