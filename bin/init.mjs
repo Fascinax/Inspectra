@@ -50,17 +50,27 @@ function listFiles(srcDir, pattern) {
 }
 
 function copyDir(srcDir, destDir, pattern) {
-  if (!existsSync(srcDir)) return 0;
+  if (!existsSync(srcDir)) return { total: 0, updated: 0, unchanged: 0 };
   mkdirSync(destDir, { recursive: true });
-  let count = 0;
+  let total = 0, updated = 0, unchanged = 0;
   for (const file of listFiles(srcDir, pattern)) {
+    const srcFile = join(srcDir, file);
     const destFile = join(destDir, file);
     mkdirSync(dirname(destFile), { recursive: true });
-    copyFileSync(join(srcDir, file), destFile);
-    count++;
-    console.log(`  ✓ ${destFile}`);
+    const srcContent = readFileSync(srcFile);
+    const isNew = !existsSync(destFile);
+    const isDifferent = isNew || !readFileSync(destFile).equals(srcContent);
+    if (isDifferent) {
+      copyFileSync(srcFile, destFile);
+      console.log(`  ${isNew ? "✦ new  " : "↺ updated"} ${destFile}`);
+      updated++;
+    } else {
+      console.log(`  · unchanged ${destFile}`);
+      unchanged++;
+    }
+    total++;
   }
-  return count;
+  return { total, updated, unchanged };
 }
 
 function symlinkDir(srcDir, destDir, pattern, projectRoot) {
@@ -195,17 +205,25 @@ function cmdSetup() {
   const userPromptsDir = join(getVSCodeUserDir(), "prompts");
   mkdirSync(userPromptsDir, { recursive: true });
 
-  let agentCount = 0;
+  let total = 0, updated = 0, unchanged = 0;
   for (const asset of AGENT_ASSETS) {
     const srcDir = join(INSPECTRA_ROOT, asset.src);
-    agentCount += copyDir(srcDir, userPromptsDir, asset.glob);
+    const result = copyDir(srcDir, userPromptsDir, asset.glob);
+    total += result.total;
+    updated += result.updated;
+    unchanged += result.unchanged;
   }
 
-  console.log(`\n  ✓ ${agentCount} agent/prompt files installed to VS Code user directory`);
-  console.log(`    ${userPromptsDir}`);
+  console.log(`\n  ${updated > 0 ? "↺" : "✓"} ${total} agent/prompt files → ${userPromptsDir}`);
+  console.log(`    ${updated} updated, ${unchanged} already up-to-date`);
 
-  console.log(`\n✅ Inspectra is globally available in all VS Code projects.`);
-  console.log(`   No files are added to your projects.`);
+  if (updated === 0) {
+    console.log(`\n✅ Inspectra is already up-to-date. No changes were made to agent files.`);
+  } else {
+    console.log(`\n✅ Inspectra updated — ${updated} file(s) changed.`);
+    console.log(`   Reload the MCP configuration in VS Code if the server was already running:`);
+    console.log(`   Command Palette → MCP: List Servers → restart inspectra`);
+  }
   console.log(`\n   To use: open any project → Copilot Chat → select audit-orchestrator → /audit\n`);
 }
 
@@ -236,7 +254,8 @@ function cmdInitSymlink(targetArg) {
   for (const asset of DATA_ASSETS) {
     const srcDir = join(INSPECTRA_ROOT, asset.src);
     const destDir = join(target, asset.src);
-    total += copyDir(srcDir, destDir, asset.glob);
+    const result = copyDir(srcDir, destDir, asset.glob);
+    total += result.total;
   }
 
   // Write .vscode/mcp.json
@@ -261,16 +280,19 @@ function cmdInitCopy(targetArg) {
 
   console.log(`\nInspectra Init (copy) → ${target}\n`);
 
-  let total = 0;
+  let total = 0, updated = 0, unchanged = 0;
   for (const asset of [...AGENT_ASSETS, ...DATA_ASSETS]) {
     const srcDir = join(INSPECTRA_ROOT, asset.src);
     const destDir = join(target, asset.src);
-    total += copyDir(srcDir, destDir, asset.glob);
+    const result = copyDir(srcDir, destDir, asset.glob);
+    total += result.total;
+    updated += result.updated;
+    unchanged += result.unchanged;
   }
 
   total += writeMcpJson(target);
 
-  console.log(`\nDone — ${total} files copied.`);
+  console.log(`\nDone — ${total} files copied (${updated} updated, ${unchanged} unchanged).`);
   console.log("Files are committed with your repo. Open in VS Code to use.\n");
 }
 
