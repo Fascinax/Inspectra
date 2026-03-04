@@ -18,13 +18,9 @@ npm install
 
 # Build the MCP server
 npm run build
-```
 
-For global access:
-
-```bash
+# Install globally
 npm install -g .
-inspectra setup   # register MCP server in VS Code (one-time)
 ```
 
 ---
@@ -37,43 +33,56 @@ inspectra setup   # register MCP server in VS Code (one-time)
 - npm 10+
 - GitHub Copilot with Custom Agents support
 
-### Global Install (once)
+### Option A — Global Setup (recommended, zero project footprint)
 
 ```bash
-# Clone and install globally
-git clone https://github.com/Fascinax/Inspectra.git
-cd Inspectra
-npm install && npm run build
-npm install -g .
-
-# Register the MCP server in VS Code (one-time)
 inspectra setup
 ```
 
-### Activate on a Project
+This installs everything into your VS Code user directory:*
+
+- MCP server registered in VS Code user settings
+- Agents + prompts available globally in all projects
+
+Then open **any** project in VS Code → Copilot Chat → type `/audit`.
+
+No files are added to your projects.
+
+### Option B — Per-project (symlinks, gitignored)
 
 ```bash
-# Copy agents + configure MCP in any project
 inspectra init /path/to/my-project
 ```
 
-This creates in the target project:
-- `.github/agents/` — agents visible in the Copilot dropdown
-- `.github/prompts/` — audit prompt shortcuts
+This creates symlinked agents in the target project (gitignored automatically):
+
+- `.github/agents/` — agents visible in the Copilot dropdown (symlinked, gitignored)
+- `.github/prompts/` — audit prompt shortcuts (symlinked, gitignored)
 - `.vscode/mcp.json` — MCP server auto-starts when the project opens
-- `policies/` + `schemas/`
+- `policies/` + `schemas/` — scoring rules and contracts (copied)
+
+On Windows without Developer Mode, symlinks fall back to copies automatically.
+
+### Option C — Per-project (committed copies)
+
+```bash
+inspectra init /path/to/my-project --copy
+```
+
+Same as Option B but files are real copies committed with the repo. Useful for CI or when team members don't have Inspectra installed.
 
 ### Run an Audit
 
-Open the target project in VS Code and use Copilot Chat:
-- Select the `audit-orchestrator` agent
-- Type `/audit` for a full audit or `/audit-pr` for a PR-scoped audit
+Open the target project in VS Code, open Copilot Chat, and type:
+
+- `/audit` : full audit (all 7 domains, agent selected automatically)
+- `/audit-pr` : audit scoped to changed files
 
 ---
 
 ## Project Structure
 
-```
+```markdown
 inspectra/
 ├─ .github/
 │  ├─ agents/           # Copilot Custom Agent profiles
@@ -157,7 +166,7 @@ docker compose up inspectra
 ## Audit Domains
 
 | Domain | Agent | MCP Tools | Prefix |
-|--------|-------|-----------|--------|
+| -------- | ------- | ----------- | -------- |
 | Security | `audit-security` | `inspectra_scan_secrets`, `inspectra_check_deps_vulns`, `inspectra_run_semgrep`, `inspectra_check_maven_deps` | `SEC-` |
 | Tests | `audit-tests` | `inspectra_parse_coverage`, `inspectra_parse_test_results`, `inspectra_detect_missing_tests`, `inspectra_parse_playwright_report`, `inspectra_detect_flaky_tests` | `TST-` |
 | Architecture | `audit-architecture` | `inspectra_check_layering`, `inspectra_analyze_dependencies`, `inspectra_detect_circular_deps` | `ARC-` |
@@ -179,7 +188,7 @@ docker compose up inspectra
 ## Make Commands
 
 | Command | Description |
-|---------|-------------|
+| --------- | ------------- |
 | `make bootstrap` | Full setup: install, build, test |
 | `make build` | Build the MCP server |
 | `make test` | Run unit tests |
@@ -191,7 +200,7 @@ docker compose up inspectra
 ## npm Scripts
 
 | Script | Description |
-|--------|-------------|
+| -------- | ------------- |
 | `npm run build` | Compile the MCP server (TypeScript → `mcp/dist/`) |
 | `npm test` | Run 346 unit + integration tests (Vitest) |
 | `npm run test:watch` | Run tests in watch mode |
@@ -234,7 +243,7 @@ Tests are written with [Vitest](https://vitest.dev/) and live alongside source f
 ### Available Profiles
 
 | Profile | Stack |
-|---------|-------|
+| --------- | ------- |
 | `generic` | Any project (conservative defaults) |
 | `java-angular-playwright` | Java + Angular + Playwright full-stack |
 | `java-backend` | Java backend (Quarkus / Spring Boot) |
