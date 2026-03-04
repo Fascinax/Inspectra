@@ -59,3 +59,7 @@ security:
     - rule: "no-child-process-unsanitized"
       pattern: "exec\\(.*req\\.|spawn\\(.*req\\."
       severity: high
+
+# Complexity — TypeScript uses optional chaining (?.) and ternaries heavily,
+# so a lower threshold generates too many false positives.
+complexity_threshold: 55

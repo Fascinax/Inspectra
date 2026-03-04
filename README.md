@@ -6,6 +6,29 @@ Inspectra coordinates specialized audit agents — security, tests, architecture
 
 ---
 
+## Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/Fascinax/Inspectra.git
+cd Inspectra
+
+# Install dependencies
+npm install
+
+# Build the MCP server
+npm run build
+```
+
+For global CLI access:
+
+```bash
+npm install -g .
+inspectra setup   # register MCP server in VS Code (one-time)
+```
+
+---
+
 ## Quick Start
 
 ### Prerequisites
@@ -239,6 +262,23 @@ TARGET_PROJECT=/path/to/project PROFILE=generic FORMAT=markdown \
 | `npm run format` | Format source with Prettier |
 | `npm run format:check` | Check Prettier formatting (CI-safe) |
 | `npm run audit-local` | Run a local audit via CLI |
+
+---
+
+## Testing
+
+```bash
+# Run the full test suite
+npm test
+
+# Watch mode for development
+npm run test:watch
+
+# Generate coverage report
+npm run test:coverage
+```
+
+Tests are written with [Vitest](https://vitest.dev/) and live alongside source files in `mcp/src/__tests__/`.
 
 ---
 

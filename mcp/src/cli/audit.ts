@@ -292,10 +292,10 @@ async function runDocumentationAudit(projectDir: string, config?: ScoringConfig)
   });
 }
 
-async function runTechDebtAudit(projectDir: string, config?: ScoringConfig): Promise<DomainReport> {
+async function runTechDebtAudit(projectDir: string, config?: ScoringConfig, profile?: ProfileConfig): Promise<DomainReport> {
   const start = Date.now();
   console.error("  [tech-debt] Analyzing complexity...");
-  const complexityFindings = await analyzeComplexity(projectDir);
+  const complexityFindings = await analyzeComplexity(projectDir, profile?.complexity_threshold);
 
   console.error("  [tech-debt] Aging TODO/FIXME markers...");
   const agedTodoFindings = await ageTodos(projectDir);
@@ -392,7 +392,7 @@ async function main(): Promise<void> {
     runConventionsAudit(opts.target, policies.profile, policies.scoring),
     runPerformanceAudit(opts.target, policies.scoring),
     runDocumentationAudit(opts.target, policies.scoring),
-    runTechDebtAudit(opts.target, policies.scoring),
+    runTechDebtAudit(opts.target, policies.scoring, policies.profile),
   ]);
 
   console.error("\nMerging reports...");

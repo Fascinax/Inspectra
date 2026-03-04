@@ -7,7 +7,7 @@ import { createIdSequence } from "../utils/id.js";
 /**
  * Estimate complexity using lightweight cyclomatic heuristics per file.
  */
-export async function analyzeComplexity(projectDir: string): Promise<Finding[]> {
+export async function analyzeComplexity(projectDir: string, threshold = 35): Promise<Finding[]> {
   const findings: Finding[] = [];
   const nextId = createIdSequence("DEBT");
   const files = await collectAllFiles(projectDir);
@@ -18,7 +18,7 @@ export async function analyzeComplexity(projectDir: string): Promise<Finding[]> 
     try {
       const content = await readFile(filePath, "utf-8");
       const complexity = estimateComplexity(content);
-      if (complexity < 35) continue;
+      if (complexity < threshold) continue;
 
       findings.push({
         id: nextId(),

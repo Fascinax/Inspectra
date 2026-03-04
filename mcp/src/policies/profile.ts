@@ -49,6 +49,7 @@ export async function loadProfile(policiesDir: string, profileName: string): Pro
     naming: data.naming as Record<string, Record<string, string>> | undefined,
     architecture: data.architecture as ProfileConfig["architecture"] | undefined,
     security: data.security as ProfileConfig["security"] | undefined,
+    complexity_threshold: typeof data.complexity_threshold === "number" ? data.complexity_threshold : undefined,
   };
 }
 
