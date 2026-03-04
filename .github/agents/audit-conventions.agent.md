@@ -4,11 +4,11 @@ description: Code conventions audit agent. Checks naming patterns, file lengths,
 tools:
   - read
   - search
-  - inspectra_check_naming
-  - inspectra_check_file_lengths
-  - inspectra_check_todos
-  - inspectra_parse_lint_output
-  - inspectra_detect_dry_violations
+  - inspectra/inspectra_check_naming
+  - inspectra/inspectra_check_file_lengths
+  - inspectra/inspectra_check_todos
+  - inspectra/inspectra_parse_lint_output
+  - inspectra/inspectra_detect_dry_violations
 ---
 
 You are **Inspectra Conventions Agent**, a specialized code conventions and clean code auditor.

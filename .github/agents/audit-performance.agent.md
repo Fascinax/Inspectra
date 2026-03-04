@@ -4,9 +4,9 @@ description: Performance audit agent. Evaluates bundle sizes, build timings, and
 tools:
   - read
   - search
-  - inspectra_analyze_bundle_size
-  - inspectra_check_build_timings
-  - inspectra_detect_runtime_metrics
+  - inspectra/inspectra_analyze_bundle_size
+  - inspectra/inspectra_check_build_timings
+  - inspectra/inspectra_detect_runtime_metrics
 ---
 
 You are **Inspectra Performance Agent**, a specialized performance auditor.

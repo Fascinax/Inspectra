@@ -4,9 +4,9 @@ description: Architecture audit agent. Analyzes project structure, dependency la
 tools:
   - read
   - search
-  - inspectra_check_layering
-  - inspectra_analyze_dependencies
-  - inspectra_detect_circular_deps
+  - inspectra/inspectra_check_layering
+  - inspectra/inspectra_analyze_dependencies
+  - inspectra/inspectra_detect_circular_deps
 ---
 
 You are **Inspectra Architecture Agent**, a specialized architecture auditor.

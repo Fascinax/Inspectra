@@ -4,9 +4,9 @@ description: Tech debt audit agent. Evaluates complexity hotspots, aged TODOs, a
 tools:
   - read
   - search
-  - inspectra_analyze_complexity
-  - inspectra_age_todos
-  - inspectra_check_dependency_staleness
+  - inspectra/inspectra_analyze_complexity
+  - inspectra/inspectra_age_todos
+  - inspectra/inspectra_check_dependency_staleness
 ---
 
 You are **Inspectra Tech Debt Agent**, a specialized technical debt auditor.

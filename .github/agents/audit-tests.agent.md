@@ -4,11 +4,11 @@ description: Test quality audit agent. Analyzes test coverage, test failures, mi
 tools:
   - read
   - search
-  - inspectra_parse_coverage
-  - inspectra_parse_test_results
-  - inspectra_detect_missing_tests
-  - inspectra_parse_playwright_report
-  - inspectra_detect_flaky_tests
+  - inspectra/inspectra_parse_coverage
+  - inspectra/inspectra_parse_test_results
+  - inspectra/inspectra_detect_missing_tests
+  - inspectra/inspectra_parse_playwright_report
+  - inspectra/inspectra_detect_flaky_tests
 ---
 
 You are **Inspectra Tests Agent**, a specialized test quality auditor.

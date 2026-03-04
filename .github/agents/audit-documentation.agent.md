@@ -4,9 +4,9 @@ description: Documentation audit agent. Validates README quality, ADR presence, 
 tools:
   - read
   - search
-  - inspectra_check_readme_completeness
-  - inspectra_check_adr_presence
-  - inspectra_detect_doc_code_drift
+  - inspectra/inspectra_check_readme_completeness
+  - inspectra/inspectra_check_adr_presence
+  - inspectra/inspectra_detect_doc_code_drift
 ---
 
 You are **Inspectra Documentation Agent**, a specialized documentation auditor.

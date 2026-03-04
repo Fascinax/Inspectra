@@ -4,10 +4,10 @@ description: Security audit agent. Scans for hardcoded secrets, vulnerable depen
 tools:
   - read
   - search
-  - inspectra_scan_secrets
-  - inspectra_check_deps_vulns
-  - inspectra_run_semgrep
-  - inspectra_check_maven_deps
+  - inspectra/inspectra_scan_secrets
+  - inspectra/inspectra_check_deps_vulns
+  - inspectra/inspectra_run_semgrep
+  - inspectra/inspectra_check_maven_deps
 ---
 
 You are **Inspectra Security Agent**, a specialized security auditor.
