@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { findingsResponse, withErrorHandling } from "./response.js";
-import { FindingsOutputSchema, READ_ONLY_ANNOTATIONS, READ_ONLY_OPEN_WORLD_ANNOTATIONS, ResponseFormatField, LimitField, OffsetField, ProjectDirField, ProfileField } from "./schemas.js";
+import { STANDARD_INPUT_SCHEMA, PROFILED_INPUT_SCHEMA, FINDINGS_TOOL_META, READ_ONLY_OPEN_WORLD_ANNOTATIONS, FindingsOutputSchema } from "./schemas.js";
 import {
   checkNamingConventions,
   checkFileLengths,
@@ -39,14 +39,8 @@ Examples:
      { "projectDir": "/app/my-project" }
   2. Get results as Markdown for review:
      { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
-      inputSchema: {
-        projectDir: ProjectDirField,
-        responseFormat: ResponseFormatField,
-        limit: LimitField,
-        offset: OffsetField,
-      },
-      outputSchema: FindingsOutputSchema,
-      annotations: READ_ONLY_ANNOTATIONS,
+      inputSchema: STANDARD_INPUT_SCHEMA,
+      ...FINDINGS_TOOL_META,
     },
     withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
@@ -77,15 +71,8 @@ Examples:
      { "projectDir": "/app/my-project" }
   2. Check with custom profile thresholds:
      { "projectDir": "/app/my-project", "profile": "java-backend" }`,
-      inputSchema: {
-        projectDir: ProjectDirField,
-        profile: ProfileField,
-        responseFormat: ResponseFormatField,
-        limit: LimitField,
-        offset: OffsetField,
-      },
-      outputSchema: FindingsOutputSchema,
-      annotations: READ_ONLY_ANNOTATIONS,
+      inputSchema: PROFILED_INPUT_SCHEMA,
+      ...FINDINGS_TOOL_META,
     },
     withErrorHandling(async ({ projectDir, profile, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
@@ -117,15 +104,8 @@ Examples:
      { "projectDir": "/app/my-project" }
   2. Get TODO markers in Markdown format:
      { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
-      inputSchema: {
-        projectDir: ProjectDirField,
-        profile: ProfileField,
-        responseFormat: ResponseFormatField,
-        limit: LimitField,
-        offset: OffsetField,
-      },
-      outputSchema: FindingsOutputSchema,
-      annotations: READ_ONLY_ANNOTATIONS,
+      inputSchema: PROFILED_INPUT_SCHEMA,
+      ...FINDINGS_TOOL_META,
     },
     withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
@@ -156,12 +136,7 @@ Examples:
      { "projectDir": "/app/my-project" }
   2. Get lint results paginated:
      { "projectDir": "/app/my-project", "limit": 10, "offset": 0 }`,
-      inputSchema: {
-        projectDir: ProjectDirField,
-        responseFormat: ResponseFormatField,
-        limit: LimitField,
-        offset: OffsetField,
-      },
+      inputSchema: STANDARD_INPUT_SCHEMA,
       outputSchema: FindingsOutputSchema,
       annotations: READ_ONLY_OPEN_WORLD_ANNOTATIONS,
     },
@@ -193,14 +168,8 @@ Examples:
      { "projectDir": "/app/my-project" }
   2. Get DRY violations as Markdown:
      { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
-      inputSchema: {
-        projectDir: ProjectDirField,
-        responseFormat: ResponseFormatField,
-        limit: LimitField,
-        offset: OffsetField,
-      },
-      outputSchema: FindingsOutputSchema,
-      annotations: READ_ONLY_ANNOTATIONS,
+      inputSchema: STANDARD_INPUT_SCHEMA,
+      ...FINDINGS_TOOL_META,
     },
     withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);

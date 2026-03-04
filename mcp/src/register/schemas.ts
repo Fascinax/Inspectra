@@ -114,3 +114,32 @@ export const READ_ONLY_OPEN_WORLD_ANNOTATIONS = {
   idempotentHint: true,
   openWorldHint: true,
 } as const;
+
+/** Standard inputSchema for tools that accept projectDir + pagination fields. */
+export const STANDARD_INPUT_SCHEMA = {
+  projectDir: ProjectDirField,
+  responseFormat: ResponseFormatField,
+  limit: LimitField,
+  offset: OffsetField,
+};
+
+/** InputSchema for tools that accept projectDir + profile + pagination fields. */
+export const PROFILED_INPUT_SCHEMA = {
+  projectDir: ProjectDirField,
+  profile: ProfileField,
+  responseFormat: ResponseFormatField,
+  limit: LimitField,
+  offset: OffsetField,
+};
+
+/** Shared outputSchema + annotations for standard read-only findings tools. */
+export const FINDINGS_TOOL_META = {
+  outputSchema: FindingsOutputSchema,
+  annotations: READ_ONLY_ANNOTATIONS,
+};
+
+/** Shared outputSchema + annotations for open-world findings tools. */
+export const FINDINGS_OPEN_WORLD_META = {
+  outputSchema: FindingsOutputSchema,
+  annotations: READ_ONLY_OPEN_WORLD_ANNOTATIONS,
+};

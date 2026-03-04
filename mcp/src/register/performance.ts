@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { findingsResponse, withErrorHandling } from "./response.js";
-import { FindingsOutputSchema, READ_ONLY_ANNOTATIONS, ResponseFormatField, LimitField, OffsetField, ProjectDirField } from "./schemas.js";
+import { STANDARD_INPUT_SCHEMA, FINDINGS_TOOL_META } from "./schemas.js";
 import { analyzeBundleSize, checkBuildTimings, detectRuntimeMetrics } from "../tools/performance.js";
 import { validateProjectDir } from "../utils/paths.js";
 
@@ -30,14 +30,8 @@ Examples:
      { "projectDir": "/app/my-react-app" }
   2. Get Markdown report:
      { "projectDir": "/app/my-react-app", "responseFormat": "markdown" }`,
-      inputSchema: {
-        projectDir: ProjectDirField,
-        responseFormat: ResponseFormatField,
-        limit: LimitField,
-        offset: OffsetField,
-      },
-      outputSchema: FindingsOutputSchema,
-      annotations: READ_ONLY_ANNOTATIONS,
+      inputSchema: STANDARD_INPUT_SCHEMA,
+      ...FINDINGS_TOOL_META,
     },
     withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
@@ -68,14 +62,8 @@ Examples:
      { "projectDir": "/app/my-project" }
   2. Get first 5 slowest steps:
      { "projectDir": "/app/my-project", "limit": 5 }`,
-      inputSchema: {
-        projectDir: ProjectDirField,
-        responseFormat: ResponseFormatField,
-        limit: LimitField,
-        offset: OffsetField,
-      },
-      outputSchema: FindingsOutputSchema,
-      annotations: READ_ONLY_ANNOTATIONS,
+      inputSchema: STANDARD_INPUT_SCHEMA,
+      ...FINDINGS_TOOL_META,
     },
     withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
@@ -105,14 +93,8 @@ Examples:
      { "projectDir": "/app/my-project" }
   2. Get anti-patterns as Markdown:
      { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
-      inputSchema: {
-        projectDir: ProjectDirField,
-        responseFormat: ResponseFormatField,
-        limit: LimitField,
-        offset: OffsetField,
-      },
-      outputSchema: FindingsOutputSchema,
-      annotations: READ_ONLY_ANNOTATIONS,
+      inputSchema: STANDARD_INPUT_SCHEMA,
+      ...FINDINGS_TOOL_META,
     },
     withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);

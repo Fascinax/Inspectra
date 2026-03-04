@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { findingsResponse, withErrorHandling } from "./response.js";
-import { FindingsOutputSchema, READ_ONLY_ANNOTATIONS, READ_ONLY_OPEN_WORLD_ANNOTATIONS, ResponseFormatField, LimitField, OffsetField, ProjectDirField, ProfileField } from "./schemas.js";
+import { STANDARD_INPUT_SCHEMA, FINDINGS_TOOL_META, FINDINGS_OPEN_WORLD_META, ProfileField, ResponseFormatField, LimitField, OffsetField } from "./schemas.js";
 import { scanSecrets, checkDependencyVulnerabilities, runSemgrep, checkMavenDependencies } from "../tools/security.js";
 import { loadProfile } from "../policies/loader.js";
 import { validateProjectDir, validateFilePathsCsv } from "../utils/paths.js";
@@ -45,8 +45,7 @@ Examples:
         limit: LimitField,
         offset: OffsetField,
       },
-      outputSchema: FindingsOutputSchema,
-      annotations: READ_ONLY_ANNOTATIONS,
+      ...FINDINGS_TOOL_META,
     },
     withErrorHandling(async ({ filePathsCsv, profile, responseFormat, limit, offset }) => {
       const filePaths = await validateFilePathsCsv(filePathsCsv);
@@ -79,14 +78,8 @@ Examples:
      { "projectDir": "/app/my-project" }
   2. Get results as Markdown:
      { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
-      inputSchema: {
-        projectDir: ProjectDirField,
-        responseFormat: ResponseFormatField,
-        limit: LimitField,
-        offset: OffsetField,
-      },
-      outputSchema: FindingsOutputSchema,
-      annotations: READ_ONLY_OPEN_WORLD_ANNOTATIONS,
+      inputSchema: STANDARD_INPUT_SCHEMA,
+      ...FINDINGS_OPEN_WORLD_META,
     },
     withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
@@ -117,14 +110,8 @@ Examples:
      { "projectDir": "/app/my-project" }
   2. Paginate results (first 10):
      { "projectDir": "/app/my-project", "limit": 10, "offset": 0 }`,
-      inputSchema: {
-        projectDir: ProjectDirField,
-        responseFormat: ResponseFormatField,
-        limit: LimitField,
-        offset: OffsetField,
-      },
-      outputSchema: FindingsOutputSchema,
-      annotations: READ_ONLY_OPEN_WORLD_ANNOTATIONS,
+      inputSchema: STANDARD_INPUT_SCHEMA,
+      ...FINDINGS_OPEN_WORLD_META,
     },
     withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
@@ -155,14 +142,8 @@ Examples:
      { "projectDir": "/app/java-backend" }
   2. Check a Spring Boot project with Markdown output:
      { "projectDir": "/app/spring-app", "responseFormat": "markdown" }`,
-      inputSchema: {
-        projectDir: ProjectDirField,
-        responseFormat: ResponseFormatField,
-        limit: LimitField,
-        offset: OffsetField,
-      },
-      outputSchema: FindingsOutputSchema,
-      annotations: READ_ONLY_ANNOTATIONS,
+      inputSchema: STANDARD_INPUT_SCHEMA,
+      ...FINDINGS_TOOL_META,
     },
     withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);

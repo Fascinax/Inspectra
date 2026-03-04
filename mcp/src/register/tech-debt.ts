@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { findingsResponse, withErrorHandling } from "./response.js";
-import { FindingsOutputSchema, READ_ONLY_ANNOTATIONS, ResponseFormatField, LimitField, OffsetField, ProjectDirField } from "./schemas.js";
+import { STANDARD_INPUT_SCHEMA, FINDINGS_TOOL_META } from "./schemas.js";
 import { analyzeComplexity, ageTodos, checkDependencyStaleness } from "../tools/tech-debt.js";
 import { validateProjectDir } from "../utils/paths.js";
 
@@ -29,14 +29,8 @@ Examples:
      { "projectDir": "/app/my-project" }
   2. Get top 5 most complex files:
      { "projectDir": "/app/my-project", "limit": 5 }`,
-      inputSchema: {
-        projectDir: ProjectDirField,
-        responseFormat: ResponseFormatField,
-        limit: LimitField,
-        offset: OffsetField,
-      },
-      outputSchema: FindingsOutputSchema,
-      annotations: READ_ONLY_ANNOTATIONS,
+      inputSchema: STANDARD_INPUT_SCHEMA,
+      ...FINDINGS_TOOL_META,
     },
     withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
@@ -67,14 +61,8 @@ Examples:
      { "projectDir": "/app/my-project" }
   2. Get aged TODOs in Markdown:
      { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
-      inputSchema: {
-        projectDir: ProjectDirField,
-        responseFormat: ResponseFormatField,
-        limit: LimitField,
-        offset: OffsetField,
-      },
-      outputSchema: FindingsOutputSchema,
-      annotations: READ_ONLY_ANNOTATIONS,
+      inputSchema: STANDARD_INPUT_SCHEMA,
+      ...FINDINGS_TOOL_META,
     },
     withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
@@ -105,14 +93,8 @@ Examples:
      { "projectDir": "/app/my-project" }
   2. Get staleness report paginated:
      { "projectDir": "/app/monorepo", "limit": 20, "offset": 0 }`,
-      inputSchema: {
-        projectDir: ProjectDirField,
-        responseFormat: ResponseFormatField,
-        limit: LimitField,
-        offset: OffsetField,
-      },
-      outputSchema: FindingsOutputSchema,
-      annotations: READ_ONLY_ANNOTATIONS,
+      inputSchema: STANDARD_INPUT_SCHEMA,
+      ...FINDINGS_TOOL_META,
     },
     withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);

@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { findingsResponse, withErrorHandling } from "./response.js";
-import { FindingsOutputSchema, READ_ONLY_ANNOTATIONS, ResponseFormatField, LimitField, OffsetField, ProjectDirField, ProfileField } from "./schemas.js";
+import { STANDARD_INPUT_SCHEMA, PROFILED_INPUT_SCHEMA, FINDINGS_TOOL_META } from "./schemas.js";
 import {
   parseCoverage,
   parseTestResults,
@@ -43,15 +43,8 @@ Examples:
      { "projectDir": "/app/my-project", "profile": "java-angular-playwright" }
   3. Get results as Markdown:
      { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
-      inputSchema: {
-        projectDir: ProjectDirField,
-        profile: ProfileField,
-        responseFormat: ResponseFormatField,
-        limit: LimitField,
-        offset: OffsetField,
-      },
-      outputSchema: FindingsOutputSchema,
-      annotations: READ_ONLY_ANNOTATIONS,
+      inputSchema: PROFILED_INPUT_SCHEMA,
+      ...FINDINGS_TOOL_META,
     },
     withErrorHandling(async ({ projectDir, profile, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
@@ -83,14 +76,8 @@ Examples:
      { "projectDir": "/app/java-backend" }
   2. Get failures as Markdown:
      { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
-      inputSchema: {
-        projectDir: ProjectDirField,
-        responseFormat: ResponseFormatField,
-        limit: LimitField,
-        offset: OffsetField,
-      },
-      outputSchema: FindingsOutputSchema,
-      annotations: READ_ONLY_ANNOTATIONS,
+      inputSchema: STANDARD_INPUT_SCHEMA,
+      ...FINDINGS_TOOL_META,
     },
     withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
@@ -120,14 +107,8 @@ Examples:
      { "projectDir": "/app/my-project" }
   2. Paginate for large projects (first 20):
      { "projectDir": "/app/big-monorepo", "limit": 20 }`,
-      inputSchema: {
-        projectDir: ProjectDirField,
-        responseFormat: ResponseFormatField,
-        limit: LimitField,
-        offset: OffsetField,
-      },
-      outputSchema: FindingsOutputSchema,
-      annotations: READ_ONLY_ANNOTATIONS,
+      inputSchema: STANDARD_INPUT_SCHEMA,
+      ...FINDINGS_TOOL_META,
     },
     withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
@@ -158,14 +139,8 @@ Examples:
      { "projectDir": "/app/e2e-tests" }
   2. Get first 5 failures:
      { "projectDir": "/app/e2e-tests", "limit": 5 }`,
-      inputSchema: {
-        projectDir: ProjectDirField,
-        responseFormat: ResponseFormatField,
-        limit: LimitField,
-        offset: OffsetField,
-      },
-      outputSchema: FindingsOutputSchema,
-      annotations: READ_ONLY_ANNOTATIONS,
+      inputSchema: STANDARD_INPUT_SCHEMA,
+      ...FINDINGS_TOOL_META,
     },
     withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
@@ -196,14 +171,8 @@ Examples:
      { "projectDir": "/app/my-project" }
   2. Get Markdown report for CI review:
      { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
-      inputSchema: {
-        projectDir: ProjectDirField,
-        responseFormat: ResponseFormatField,
-        limit: LimitField,
-        offset: OffsetField,
-      },
-      outputSchema: FindingsOutputSchema,
-      annotations: READ_ONLY_ANNOTATIONS,
+      inputSchema: STANDARD_INPUT_SCHEMA,
+      ...FINDINGS_TOOL_META,
     },
     withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
