@@ -1,5 +1,6 @@
 import { readFile, access } from "node:fs/promises";
 import { join, relative } from "node:path";
+import { XMLParser } from "fast-xml-parser";
 import type { Finding } from "../types.js";
 import type { ProfileConfig } from "../policies/loader.js";
 import { createIdSequence } from "../utils/id.js";
@@ -70,25 +71,42 @@ export async function parseTestResults(projectDir: string): Promise<Finding[]> {
     await access(junitPath);
     const xml = await readFile(junitPath, "utf-8");
 
-    const failureMatches = xml.matchAll(
-      /<testcase\s[^>]*?\bname="([^"]*)"[^>]*>[\s\S]*?<failure[^>]*message="([^"]*)"[\s\S]*?<\/testcase>/g,
-    );
-    for (const match of failureMatches) {
-      const testName = match[1] ?? "(unknown test)";
-      const message = match[2] ?? "";
-      findings.push({
-        id: nextId(),
-        severity: "high",
-        title: `Failing test: ${testName}`,
-        description: message.substring(0, MAX_DESCRIPTION_LENGTH),
-        domain: "tests",
-        rule: "no-failing-test",
-        confidence: 1.0,
-        evidence: [{ file: relative(projectDir, junitPath) }],
-        recommendation: "Fix the failing test or update it if the expected behavior changed.",
-        effort: "small",
-        tags: ["test-failure"],
-      });
+    const parser = new XMLParser({
+      ignoreAttributes: false,
+      attributeNamePrefix: "@_",
+      isArray: (tagName) => tagName === "testsuite" || tagName === "testcase",
+    });
+    const parsed = parser.parse(xml);
+
+    const testsuites = parsed.testsuites?.testsuite ?? parsed.testsuite ?? [];
+    const suiteList = Array.isArray(testsuites) ? testsuites : [testsuites];
+
+    for (const suite of suiteList) {
+      const testcases = suite.testcase ?? [];
+      const caseList = Array.isArray(testcases) ? testcases : [testcases];
+
+      for (const tc of caseList) {
+        const failure = tc.failure ?? tc.error;
+        if (!failure) continue;
+
+        const testName = tc["@_name"] ?? "(unknown test)";
+        const failureObj = typeof failure === "string" ? { "@_message": failure } : failure;
+        const message = failureObj?.["@_message"] ?? String(failureObj ?? "");
+
+        findings.push({
+          id: nextId(),
+          severity: "high",
+          title: `Failing test: ${testName}`,
+          description: message.substring(0, MAX_DESCRIPTION_LENGTH),
+          domain: "tests",
+          rule: "no-failing-test",
+          confidence: 1.0,
+          evidence: [{ file: relative(projectDir, junitPath) }],
+          recommendation: "Fix the failing test or update it if the expected behavior changed.",
+          effort: "small",
+          tags: ["test-failure"],
+        });
+      }
     }
   } catch {
     /* no junit report */

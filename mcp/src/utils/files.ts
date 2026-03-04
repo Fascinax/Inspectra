@@ -1,42 +1,15 @@
-import { readdir } from "node:fs/promises";
-import { join, extname } from "node:path";
+import { resolve } from "node:path";
+import { globby } from "globby";
 
-const DEFAULT_IGNORED = ["node_modules", "dist", ".git", "coverage", ".cache"];
+const IGNORED_PATTERNS = [
+  "**/node_modules/**",
+  "**/dist/**",
+  "**/.git/**",
+  "**/coverage/**",
+  "**/.cache/**",
+];
+
 const DEFAULT_SOURCE_EXTENSIONS = [".ts", ".js", ".java"];
-
-async function walkSourceFiles(dir: string, extensions: string[], acc: string[]): Promise<void> {
-  try {
-    const entries = await readdir(dir, { withFileTypes: true });
-    for (const entry of entries) {
-      if (DEFAULT_IGNORED.includes(entry.name) || entry.name.startsWith(".")) continue;
-      const fullPath = join(dir, entry.name);
-      if (entry.isDirectory()) {
-        await walkSourceFiles(fullPath, extensions, acc);
-      } else if (extensions.includes(extname(entry.name))) {
-        acc.push(fullPath);
-      }
-    }
-  } catch {
-    /* unreadable — skip */
-  }
-}
-
-async function walkAllFiles(dir: string, acc: string[]): Promise<void> {
-  try {
-    const entries = await readdir(dir, { withFileTypes: true });
-    for (const entry of entries) {
-      if (DEFAULT_IGNORED.includes(entry.name) || entry.name.startsWith(".")) continue;
-      const fullPath = join(dir, entry.name);
-      if (entry.isDirectory()) {
-        await walkAllFiles(fullPath, acc);
-      } else {
-        acc.push(fullPath);
-      }
-    }
-  } catch {
-    /* unreadable — skip */
-  }
-}
 
 /**
  * Recursively collects source files under `dir`, filtered by extension.
@@ -49,9 +22,14 @@ export async function collectSourceFiles(
   dir: string,
   extensions: string[] = DEFAULT_SOURCE_EXTENSIONS,
 ): Promise<string[]> {
-  const acc: string[] = [];
-  await walkSourceFiles(dir, extensions, acc);
-  return acc;
+  const patterns = extensions.map((ext) => `**/*${ext}`);
+  const paths = await globby(patterns, {
+    cwd: dir,
+    ignore: IGNORED_PATTERNS,
+    absolute: true,
+    dot: false,
+  });
+  return paths.map((p) => resolve(p));
 }
 
 /**
@@ -61,7 +39,12 @@ export async function collectSourceFiles(
  * @returns Absolute paths of all files found.
  */
 export async function collectAllFiles(dir: string): Promise<string[]> {
-  const acc: string[] = [];
-  await walkAllFiles(dir, acc);
-  return acc;
+  const paths = await globby("**/*", {
+    cwd: dir,
+    ignore: IGNORED_PATTERNS,
+    absolute: true,
+    dot: false,
+    onlyFiles: true,
+  });
+  return paths.map((p) => resolve(p));
 }

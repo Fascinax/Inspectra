@@ -49,7 +49,7 @@ Goal: Rich, customizable report output.
 - [x] Trend tracking (score over time)
 - [x] HTML report renderer with charts (Obsidian dark theme)
 - [x] Comparison mode: audit A vs. audit B
-- [ ] Handlebars templates for report sections
+- [x] Handlebars templates for report sections
 - [ ] PDF export option
 
 ## v1.0.0 - Stable Release
