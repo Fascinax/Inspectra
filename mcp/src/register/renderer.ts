@@ -44,7 +44,7 @@ Error handling:
 
 Examples:
   1. Write to disk (recommended):
-     { "reportJson": "{...consolidatedReport...}", "outputPath": "/reports/audit.html" }
+     { "reportJson": "{...consolidatedReport...}", "outputPath": "<projectDir>/.inspectra/audit.html" }
   2. In-memory (resource response):
      { "reportJson": "{...consolidatedReport...}" }`,
       inputSchema: {
@@ -52,7 +52,7 @@ Examples:
         outputPath: z
           .string()
           .optional()
-          .describe("File path to write the HTML report. When provided only metadata is returned."),
+          .describe("File path to write the HTML report. Recommended: <projectDir>/.inspectra/audit.html. When provided only metadata is returned."),
       },
       annotations: {
         readOnlyHint: false,
@@ -133,10 +133,10 @@ Error handling:
   - Returns isError: true if reportJson fails Zod validation, puppeteer is not installed, or the file cannot be written.
 
 Examples:
-  { "reportJson": "{...consolidatedReport...}", "outputPath": "/reports/audit.pdf" }`,
+  { "reportJson": "{...consolidatedReport...}", "outputPath": "<projectDir>/.inspectra/audit.pdf" }`,
       inputSchema: {
         reportJson: z.string().describe("JSON string of the ConsolidatedReport to export as PDF"),
-        outputPath: z.string().describe("File path to write the PDF report (e.g. /reports/audit.pdf)"),
+        outputPath: z.string().describe("File path to write the PDF report. Recommended: <projectDir>/.inspectra/audit.pdf"),
       },
       annotations: {
         readOnlyHint: false,

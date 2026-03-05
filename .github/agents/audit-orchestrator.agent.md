@@ -165,10 +165,10 @@ After collecting each domain report, check ALL of these. If any check fails, app
    - `audit-tech-debt` — complexity, stale TODOs, dependency staleness
 3. **Collect** each agent's domain report (JSON following `schemas/domain-report.schema.json`).
 4. **Validate** each domain report against the schema. Required fields: `domain`, `score`, `summary`, `findings`, `metadata` (with `agent`, `timestamp`, `tools_used`). Each finding must have `evidence` as objects (`{"file": "...", "line": N}`), `effort` from `["trivial","small","medium","large","epic"]`, and `id` matching the agent's prefix pattern. If any report fails validation, apply **Rule #1**: diagnose, discard, re-invoke the agent.
-5. **Merge** all validated domain reports using `inspectra_merge_domain_reports`. This tool handles deduplication per `policies/deduplication-rules.yml` and scoring per `policies/scoring-rules.yml`.
+5. **Merge** all validated domain reports using `inspectra_merge_domain_reports`. Pass `projectDir` (absolute path to the audited project root) so the tool persists the consolidated report to `<projectDir>/.inspectra/consolidated-report.json`. This tool also handles deduplication per `policies/deduplication-rules.yml` and scoring per `policies/scoring-rules.yml`.
 6. **Log** the audit activity using `inspectra_log_activity` — record which agents were invoked, their status, and timestamps.
 7. **Produce** the final consolidated report in Markdown from the merge output.
-8. **Render** the report using `inspectra_render_html` (Obsidian dark theme). If the user requests PDF, also call `inspectra_render_pdf`.
+8. **Render** the report using `inspectra_render_html` with `outputPath: "<projectDir>/.inspectra/audit.html"` (Obsidian dark theme). If the user requests PDF, also call `inspectra_render_pdf` with `outputPath: "<projectDir>/.inspectra/audit.pdf"`.  All generated files live under `<projectDir>/.inspectra/`.
 
 ## Delegation Rules
 

@@ -1,4 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { writeFile, mkdir } from "node:fs/promises";
+import { resolve, join } from "node:path";
 import { z } from "zod";
 import { jsonResponse, reportResponse, errorResponse, withErrorHandling } from "./response.js";
 import { ScoreOutputSchema, ResponseFormatField, READ_ONLY_ANNOTATIONS } from "./schemas.js";
@@ -24,10 +26,13 @@ export function registerMergerTools(server: McpServer, policiesDir: string): voi
 
 Accepts an array of domain report JSON objects (one per audited domain). Applies deduplication rules to remove redundant findings, computes weighted domain scores, and produces the final consolidated report with an overall grade.
 
+When projectDir is provided, the consolidated report is also saved to <projectDir>/.inspectra/consolidated-report.json — this is the recommended usage to persist audit results alongside the audited code.
+
 Args:
   - domainReportsJson (string): A JSON string containing an array of domain report objects conforming to domain-report.schema.json.
   - target (string): Repository name or path being audited (e.g., "my-org/my-repo").
   - profile (string): Policy profile used for scoring weights (e.g., "java-angular-playwright", "generic").
+  - projectDir (string, optional): Absolute path to the root of the audited project. When provided, the consolidated report is written to <projectDir>/.inspectra/consolidated-report.json.
 
 Returns: A consolidated report object containing all domain scores, the overall weighted score, grade (A-F), and the merged findings array.
 
@@ -35,17 +40,20 @@ Error handling:
   - Returns isError: true if domainReportsJson fails Zod validation.
 
 Examples:
-  1. Merge two domain reports:
-     { "domainReportsJson": "[{...security report...}, {...tests report...}]", "target": "my-org/my-repo", "profile": "generic" }
-  2. Merge with a specific profile for weighted scoring:
+  1. Merge with project dir (recommended — persists report to .inspectra/):
+     { "domainReportsJson": "[{...security report...}, {...tests report...}]", "target": "my-org/my-repo", "profile": "generic", "projectDir": "/path/to/project" }
+  2. Merge without project dir:
      { "domainReportsJson": "[...]", "target": "my-org/backend", "profile": "java-backend" }`,
       inputSchema: {
-        domainReportsJson: z.string().describe("JSON string � array of domain report objects"),
+        domainReportsJson: z.string().describe("JSON string — array of domain report objects"),
         target: z.string().describe("Repository or path being audited"),
-        profile: z.string().describe("Policy profile used (e.g., java-angular-playwright)"),        responseFormat: ResponseFormatField,      },
+        profile: z.string().describe("Policy profile used (e.g., java-angular-playwright)"),
+        projectDir: z.string().optional().describe("Absolute path to the audited project root. When provided, the consolidated report is saved to <projectDir>/.inspectra/consolidated-report.json."),
+        responseFormat: ResponseFormatField,
+      },
       annotations: READ_ONLY_ANNOTATIONS,
     },
-    withErrorHandling(async ({ domainReportsJson, target, profile, responseFormat }) => {
+    withErrorHandling(async ({ domainReportsJson, target, profile, projectDir, responseFormat }) => {
       let domainReports;
       try {
         domainReports = z.array(DomainReportSchema).parse(JSON.parse(domainReportsJson));
@@ -60,7 +68,13 @@ Examples:
       }
       const policies = await loadAllPolicies(policiesDir, profile);
       const consolidated = mergeReports(domainReports, target, profile, policies);
-      await setLatestReport(JSON.stringify(consolidated, null, 2));
+      const reportJson = JSON.stringify(consolidated, null, 2);
+      await setLatestReport(reportJson);
+      if (projectDir) {
+        const inspectraDir = join(resolve(projectDir), ".inspectra");
+        await mkdir(inspectraDir, { recursive: true });
+        await writeFile(join(inspectraDir, "consolidated-report.json"), reportJson, "utf-8");
+      }
       return reportResponse(consolidated, responseFormat);
     }, "inspectra_merge_domain_reports"),
   );
