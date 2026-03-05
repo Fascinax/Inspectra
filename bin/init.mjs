@@ -296,6 +296,91 @@ function cmdInitCopy(targetArg) {
   console.log("Files are committed with your repo. Open in VS Code to use.\n");
 }
 
+// ─── doctor ──────────────────────────────────────────────────────────────────
+
+function cmdDoctor() {
+  console.log("\n╔══════════════════════════════════════╗");
+  console.log("║     INSPECTRA — Doctor               ║");
+  console.log("╚══════════════════════════════════════╝\n");
+
+  let allOk = true;
+
+  function check(label, ok, hint) {
+    if (ok) {
+      console.log(`  ✓ ${label}`);
+    } else {
+      console.log(`  ✗ ${label}`);
+      if (hint) console.log(`    → ${hint}`);
+      allOk = false;
+    }
+  }
+
+  // 1. Node version
+  const [major] = process.versions.node.split(".").map(Number);
+  check(
+    `Node.js ${process.versions.node}`,
+    major >= 20,
+    "Inspectra requires Node.js 20+. Install from https://nodejs.org",
+  );
+
+  // 2. MCP server built
+  check(
+    `MCP server built  (${MCP_SERVER_PATH})`,
+    existsSync(MCP_SERVER_PATH),
+    "Run: npm run build",
+  );
+
+  // 3. VS Code user settings — MCP server registered
+  const settingsPath = getVSCodeSettingsPath();
+  let vsCodeOk = false;
+  if (existsSync(settingsPath)) {
+    try {
+      const settings = JSON.parse(readFileSync(settingsPath, "utf-8"));
+      vsCodeOk = !!(settings?.mcp?.servers?.inspectra);
+    } catch { /* ignore */ }
+  }
+  check(
+    "VS Code MCP entry  (mcp.servers.inspectra)",
+    vsCodeOk,
+    "Run: inspectra setup",
+  );
+
+  // 4. Agent files
+  const agentsDir = join(INSPECTRA_ROOT, ".github", "agents");
+  const agentFiles = existsSync(agentsDir)
+    ? readdirSync(agentsDir).filter((f) => f.endsWith(".agent.md"))
+    : [];
+  check(
+    `Agent files  (${agentFiles.length} found in .github/agents/)`,
+    agentFiles.length > 0,
+    "Agent files are missing. Re-clone the repository or run: inspectra setup",
+  );
+
+  // 5. policies directory
+  const policiesDir = join(INSPECTRA_ROOT, "policies");
+  check(
+    `Policies directory  (${policiesDir})`,
+    existsSync(policiesDir),
+    "Policies directory is missing. Re-clone the repository.",
+  );
+
+  // 6. schemas directory
+  const schemasDir = join(INSPECTRA_ROOT, "schemas");
+  check(
+    `Schemas directory  (${schemasDir})`,
+    existsSync(schemasDir),
+    "Schemas directory is missing. Re-clone the repository.",
+  );
+
+  console.log("");
+  if (allOk) {
+    console.log("  All checks passed — Inspectra is ready to use.\n");
+  } else {
+    console.log("  Some checks failed. Follow the hints above to fix them.\n");
+    process.exit(1);
+  }
+}
+
 // ─── help ────────────────────────────────────────────────────────────────────
 
 function printHelp() {
@@ -306,6 +391,7 @@ Commands:
   inspectra setup                    Install agents + MCP globally in VS Code (zero project footprint)
   inspectra init <project>           Symlink agents into a project (gitignored) + .vscode/mcp.json
   inspectra init <project> --copy    Copy agents into a project (committed with the repo)
+  inspectra doctor                   Check environment prerequisites and configuration
 
 Typical workflows:
 
@@ -331,6 +417,8 @@ if (!cmd || cmd === "--help" || cmd === "-h") {
   printHelp();
 } else if (cmd === "setup") {
   cmdSetup();
+} else if (cmd === "doctor") {
+  cmdDoctor();
 } else if (cmd === "init") {
   const target = positional[1];
   if (!target) { console.error("Usage: inspectra init <project-path> [--copy]"); process.exit(1); }

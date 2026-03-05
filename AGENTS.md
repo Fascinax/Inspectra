@@ -14,6 +14,10 @@ Inspectra uses GitHub Copilot Custom Agents to perform structured code audits.
 | [audit-performance](.github/agents/audit-performance.agent.md) | Performance | `inspectra_analyze_bundle_size`, `inspectra_check_build_timings`, `inspectra_detect_runtime_metrics` | `PRF-` |
 | [audit-documentation](.github/agents/audit-documentation.agent.md) | Documentation | `inspectra_check_readme_completeness`, `inspectra_check_adr_presence`, `inspectra_detect_doc_code_drift`, `inspectra_detect_env_example_drift` | `DOC-` |
 | [audit-tech-debt](.github/agents/audit-tech-debt.agent.md) | Tech debt | `inspectra_analyze_complexity`, `inspectra_age_todos`, `inspectra_check_dependency_staleness` | `DEBT-` |
+| [audit-accessibility](.github/agents/audit-accessibility.agent.md) | Accessibility | `inspectra_check_a11y_templates` | `ACC-` |
+| [audit-api-design](.github/agents/audit-api-design.agent.md) | API Design | `inspectra_check_rest_conventions` | `API-` |
+| [audit-observability](.github/agents/audit-observability.agent.md) | Observability | `inspectra_check_observability` | `OBS-` |
+| [audit-i18n](.github/agents/audit-i18n.agent.md) | i18n | `inspectra_check_i18n` | `INT-` |
 
 ## How It Works
 

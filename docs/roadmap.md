@@ -79,26 +79,31 @@ Goal: Make existing agents smarter and tools more precise.
 - [ ] `inspectra doctor` command: diagnose setup issues (Node version, MCP connectivity, missing agents)
 - [x] Clearer error messages when a tool fails (structured error with suggested fix)
 - [x] Config file support (`.inspectraignore`) to suppress findings per project
-- [ ] Config file support (`.inspectrarc.yml`) for full profile, threshold, and rule customization — deferred to v0.7.0
-- [ ] Improve profile auto-detection accuracy (detect monorepo structures) — deferred to v0.7.0
+- [x] Config file support (`.inspectrarc.yml`) for full profile, threshold, and rule customization
+- [ ] Improve profile auto-detection accuracy (detect monorepo structures) — deferred to v0.8.0
 
-## v0.7.0 — Multi-Runtime & New Agents
+## v0.7.0 — Multi-Runtime & New Agents ✅ COMPLETE
 
 Goal: Run Inspectra beyond Copilot, expand domain coverage.
 
+### CLI Improvements
+
+- [x] `inspectra doctor` command: checks Node.js version, MCP build, VS Code settings, agent files, policies, schemas
+- [x] Config file support: `utils/project-config.ts` loads `.inspectrarc.yml` / `.inspectrarc.yaml` / `inspectra.config.yml`
+
 ### Claude Code & Codex Support
 
-- [ ] Adapter layer: generate Claude Code (`CLAUDE.md`) agent definitions from `.agent.md` sources
-- [ ] Adapter layer: generate Codex-compatible agent prompts
-- [ ] Shared MCP tools work as-is (MCP protocol is runtime-agnostic)
-- [ ] Document setup instructions per runtime (Copilot, Claude Code, Codex)
+- [x] Adapter tool: `inspectra_generate_claude_md` — generates `CLAUDE.md` from `.agent.md` sources
+- [ ] Adapter layer: generate Codex-compatible agent prompts — deferred to v0.8.0
+- [x] Shared MCP tools work as-is (MCP protocol is runtime-agnostic)
+- [ ] Document setup instructions per runtime (Copilot, Claude Code, Codex) — deferred to v0.8.0
 
 ### New Agents
 
-- [ ] Accessibility agent: detect a11y issues in templates (missing ARIA, contrast, alt text)
-- [ ] API design agent: REST/GraphQL consistency, naming, versioning, error handling
-- [ ] Observability agent: detect missing logging, tracing, health checks
-- [ ] i18n agent: detect hardcoded strings, missing translation keys
+- [x] Accessibility agent (`audit-accessibility`): detect a11y issues in templates — `inspectra_check_a11y_templates` (ACC- prefix)
+- [x] API design agent (`audit-api-design`): REST consistency, naming, versioning — `inspectra_check_rest_conventions` (API- prefix)
+- [x] Observability agent (`audit-observability`): detect missing logging, tracing, health checks — `inspectra_check_observability` (OBS- prefix)
+- [x] i18n agent (`audit-i18n`): detect hardcoded strings, missing i18n library — `inspectra_check_i18n` (INT- prefix)
 
 ## v0.8.0 — Community Ready
 

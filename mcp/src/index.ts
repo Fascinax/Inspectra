@@ -14,6 +14,11 @@ import { registerTechDebtTools } from "./register/tech-debt.js";
 import { registerMergerTools } from "./register/merger.js";
 import { registerRendererTools } from "./register/renderer.js";
 import { registerGovernanceTools } from "./register/governance.js";
+import { registerAccessibilityTools } from "./register/accessibility.js";
+import { registerApiDesignTools } from "./register/api-design.js";
+import { registerObservabilityTools } from "./register/observability.js";
+import { registerI18nTools } from "./register/i18n.js";
+import { registerAdapterTools } from "./register/adapter.js";
 import { registerResources } from "./register/resources.js";
 import { registerPrompts } from "./register/prompts.js";
 import { SERVER_NAME } from "./constants.js";
@@ -42,6 +47,11 @@ registerTechDebtTools(server, POLICIES_DIR);
 registerMergerTools(server, POLICIES_DIR);
 registerRendererTools(server);
 registerGovernanceTools(server);
+registerAccessibilityTools(server);
+registerApiDesignTools(server);
+registerObservabilityTools(server);
+registerI18nTools(server);
+registerAdapterTools(server);
 
 // ─── Register resources ──────────────────────────────────────────────────────
 

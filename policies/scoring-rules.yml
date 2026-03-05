@@ -14,6 +14,7 @@ severity_weights:
 # A domain with no findings scores 100.
 
 # Overall score = weighted average of domain scores
+# Only actively audited domains contribute to the average (weights are re-normalized at runtime).
 domain_weights:
   security: 0.24
   tests: 0.20
@@ -22,6 +23,11 @@ domain_weights:
   performance: 0.10
   documentation: 0.08
   tech-debt: 0.10
+  # v0.7.0 domains (optional, included only when agent is invoked)
+  accessibility: 0.08
+  api-design: 0.07
+  observability: 0.06
+  i18n: 0.05
 
 # Grade mapping
 grades:
