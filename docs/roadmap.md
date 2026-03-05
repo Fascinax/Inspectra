@@ -1,16 +1,18 @@
 # Roadmap
 
-## Current State (v0.5.0)
+## Current State (v0.6.0)
 
 Inspectra is a functional multi-agent code audit system with:
 
-- 8 Copilot Custom Agents (orchestrator + 7 domain agents)
-- 28 MCP tools across 7 domains
+- 8 Copilot Custom Agents (orchestrator + 7 domain agents) with enriched Phase 2 prompts (search strategies, examples, confidence calibration, severity rules)
+- 30 MCP tools across 7 domains (+ `inspectra_check_test_quality`, `inspectra_detect_env_example_drift`)
 - JSON Schema contracts for all outputs
 - Scoring engine with weighted domains and grade system
 - Markdown, JSON, HTML, and SARIF report renderers
 - Trend tracking and audit comparison via MCP tools
-- 4 stack-specific profiles
+- 5 stack-specific profiles with per-profile complexity thresholds
+- Context-aware secret detection with placeholder + comment filtering
+- Per-project finding suppression via `.inspectraignore`
 - 455 passing tests across 58 test files
 
 ## v0.2.0 - Tool Depth COMPLETE
@@ -53,7 +55,7 @@ Goal: Rich, customizable report output.
 
 ---
 
-## v0.6.0 — Agent & Tool Quality
+## v0.6.0 — Agent & Tool Quality — COMPLETE
 
 Goal: Make existing agents smarter and tools more precise.
 
@@ -70,15 +72,15 @@ Goal: Make existing agents smarter and tools more precise.
 - [ ] Architecture: support monorepo multi-project layering
 - [x] Conventions: framework-aware naming rules (e.g., Angular `*Component`, `*Service`)
 - [x] Tests: detect test quality issues (shallow assertions, missing error paths)
-- [ ] Performance: detect common anti-patterns per framework (N+1 in ORMs, missing `trackBy` in Angular)
+- [x] Performance: detect common anti-patterns per framework (N+1 in ORMs, missing `trackBy` in Angular — via Phase 2 search strategy in agent prompt)
 
 ### Developer Experience
 
 - [ ] `inspectra doctor` command: diagnose setup issues (Node version, MCP connectivity, missing agents)
 - [x] Clearer error messages when a tool fails (structured error with suggested fix)
 - [x] Config file support (`.inspectraignore`) to suppress findings per project
-- [ ] Config file support (`.inspectrarc.yml`) for full profile, threshold, and rule customization
-- [ ] Improve profile auto-detection accuracy (detect monorepo structures)
+- [ ] Config file support (`.inspectrarc.yml`) for full profile, threshold, and rule customization — deferred to v0.7.0
+- [ ] Improve profile auto-detection accuracy (detect monorepo structures) — deferred to v0.7.0
 
 ## v0.7.0 — Multi-Runtime & New Agents
 
