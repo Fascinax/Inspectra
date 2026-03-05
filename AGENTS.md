@@ -17,13 +17,15 @@ Inspectra uses GitHub Copilot Custom Agents to perform structured code audits.
 
 ## How It Works
 
-User prompt -> Orchestrator -> domain agents -> merge -> report
+User prompt -> Orchestrator -> domain agents (tool scan + LLM exploration) -> merge -> report
 
 1. The orchestrator receives the audit request and decides which domains to audit.
 2. It delegates to domain agents via handoffs.
-3. Each domain agent calls MCP tools to gather findings.
-4. Each domain agent returns a domain report JSON.
-5. The orchestrator merges reports, deduplicates, scores, and generates Markdown output.
+3. Each domain agent runs a **two-phase hybrid audit**:
+   - **Phase 1 — Tool Scan**: Call MCP tools for deterministic detection (`source: "tool"`, `confidence ≥ 0.8`, IDs 001–499).
+   - **Phase 2 — LLM Exploration**: Read and analyze code to find deeper issues tools can't detect (`source: "llm"`, `confidence ≤ 0.7`, IDs 501+).
+4. Each domain agent returns a domain report JSON combining both phases.
+5. The orchestrator merges reports, validates source/confidence rules, deduplicates, scores, and generates Markdown output.
 
 ## Orchestrator
 

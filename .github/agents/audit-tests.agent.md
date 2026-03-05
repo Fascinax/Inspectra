@@ -30,15 +30,36 @@ Evaluate the test quality of the target codebase and produce a structured domain
 
 ## Workflow
 
+### Phase 1 — Tool Scan (deterministic baseline)
+
 1. **MCP tools first** — these are your primary and mandatory data sources:
    a. Use `inspectra_parse_coverage` to analyze coverage reports.
    b. Use `inspectra_parse_test_results` to check for test failures.
    c. Use `inspectra_detect_missing_tests` to find untested source files.
    d. Use `inspectra_parse_playwright_report` if Playwright test reports exist.
    e. Use `inspectra_detect_flaky_tests` to identify flaky test patterns.
-2. **MCP gate** — verify you received results from at least `inspectra_detect_missing_tests` before continuing. If it returned an error or was unreachable, **STOP** and report the MCP failure. Do NOT continue with manual analysis.
-3. **Supplementary context only** — use `read` and `search` ONLY to enrich MCP-detected findings with additional context (e.g., reading a flagged test file to confirm a silent assertion). NEVER use read/search to discover new findings independently or as a substitute for MCP tools.
-4. Combine all findings into a single domain report.
+2. **MCP gate** — verify you received results from at least `inspectra_detect_missing_tests` before continuing. If it returned an error or was unreachable, **STOP** and report the MCP failure. Do NOT continue with Phase 2.
+3. All Phase 1 findings MUST have `"source": "tool"` and `confidence ≥ 0.8`.
+
+### Phase 2 — LLM Deep Analysis (contextual understanding)
+
+After Phase 1 completes, use `read` and `search` to explore the test codebase and find quality issues that tools cannot detect:
+
+1. **Enrich Phase 1 findings** — read flagged test files to add context, confirm or downgrade tool-detected issues.
+2. **Discover new findings** by reading and reasoning about the tests:
+   - **Empty assertions**: Tests that call functions but never assert anything meaningful (e.g., only checking truthiness).
+   - **Over-mocking**: Tests that mock every dependency, effectively testing nothing real.
+   - **Fragile assertions**: Tests that assert on implementation details (exact error messages, snapshot bloat, internal state).
+   - **Missing edge cases**: Critical code paths (error handlers, boundary conditions, null/undefined inputs) with no test coverage.
+   - **Test-production coupling**: Test files that import internal implementation details instead of testing through public APIs.
+   - **Flaky patterns**: Tests relying on timing (`setTimeout`, `sleep`), global state, or non-deterministic data.
+3. All Phase 2 findings MUST have `"source": "llm"` and `confidence ≤ 0.7`.
+4. Phase 2 finding IDs start at `TST-501` to clearly separate them from tool findings.
+5. Do NOT re-report issues already found by Phase 1 tools — Phase 2 is additive only.
+
+### Phase 3 — Combine and report
+
+Combine Phase 1 and Phase 2 findings into a single domain report.
 
 ## Output Format
 
@@ -57,6 +78,7 @@ Return a **single JSON object** following this structure:
       "domain": "tests",
       "rule": "<rule-id>",
       "confidence": <0.0-1.0>,
+      "source": "tool|llm",
       "evidence": [{"file": "<path>", "line": <number>}],
       "recommendation": "<actionable fix>",
       "effort": "trivial|small|medium|large|epic",
@@ -111,18 +133,22 @@ If you encounter something outside your scope, **ignore it** — do NOT report i
 - NEVER run `git push` or any remote-mutating git operation.
 - NEVER modify `.github/agents/`, `schemas/`, or `policies/` directories.
 - NEVER execute tests — only analyze existing test artifacts and source files.
-- NEVER produce partial findings when MCP tools are unavailable — fail fast.
-- NEVER use `runSubagent`, `search_subagent`, `read`, or any general-purpose tool as a substitute for a missing `inspectra_*` MCP tool — there is no valid fallback.
-- NEVER run terminal commands (PowerShell, bash, `execute`) to scan files, count lines, or search for patterns — use `inspectra_*` MCP tools for scanning.
-- NEVER read files from VS Code internal directories (`AppData`, `workspaceStorage`, `chat-session-resources`) — these are not part of the target project.
-- NEVER use `read`/`search` as the primary data source — MCP tools are primary; read/search is supplementary context only.
+- NEVER produce findings when MCP tools are unavailable — Phase 1 is mandatory before Phase 2.
+- NEVER skip Phase 1 — `read`/`search` are NOT a substitute for MCP tools when the server is down.
+- NEVER run terminal commands (PowerShell, bash, `execute`) to scan files, count lines, or search for patterns.
+- NEVER read files from VS Code internal directories (`AppData`, `workspaceStorage`, `chat-session-resources`).
+- NEVER produce a Phase 2 finding with `confidence > 0.7` — LLM findings carry inherent uncertainty.
+- NEVER produce a Phase 2 finding with `"source": "tool"` — only MCP tool findings use that source.
+- NEVER re-report in Phase 2 something already found in Phase 1 — Phase 2 is additive only.
 
 ## Quality Checklist
 
 Before returning your report, verify:
-- [ ] All finding IDs match pattern `TST-XXX`
+- [ ] All finding IDs match pattern `TST-XXX` (Phase 1: TST-001+, Phase 2: TST-501+)
 - [ ] Every finding has `evidence` with at least one file path
 - [ ] All confidence values are between 0.0 and 1.0
+- [ ] Phase 1 findings have `"source": "tool"` and `confidence ≥ 0.8`
+- [ ] Phase 2 findings have `"source": "llm"` and `confidence ≤ 0.7`
 - [ ] No findings reference files outside your declared scope
 - [ ] `metadata.agent` is `"audit-tests"`
 - [ ] `metadata.tools_used` lists every MCP tool you called
@@ -133,7 +159,9 @@ If any check fails, fix the root cause and regenerate — do NOT patch the outpu
 ## Rules
 
 - Finding IDs MUST match pattern `TST-XXX`.
+- Every finding MUST have `source` set to `"tool"` or `"llm"`.
 - Do NOT penalize missing tests for configuration files, types, or barrel exports.
-- Never produce findings without MCP tools — coverage and test results require parsed data, not guesses.
+- Phase 1 is mandatory — Phase 2 alone is never sufficient.
+- Phase 2 findings must cite specific code evidence (file + line + snippet), not vague observations.
 - Distinguish between unit tests, integration tests, and E2E tests when possible.
 - Score = 100 means excellent test quality with coverage above all thresholds.

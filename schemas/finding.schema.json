@@ -80,6 +80,12 @@
       "type": "array",
       "items": { "type": "string" },
       "description": "Free-form labels for categorization and filtering."
+    },
+    "source": {
+      "type": "string",
+      "enum": ["tool", "llm"],
+      "default": "tool",
+      "description": "Origin of the finding. 'tool' = detected by an MCP tool (deterministic, reproducible). 'llm' = detected by the LLM agent via code reading and reasoning (contextual, non-deterministic). Defaults to 'tool' for backward compatibility."
     }
   },
   "additionalProperties": false

@@ -30,14 +30,34 @@ Perform a thorough security audit of the target codebase and produce a structure
 
 ## Workflow
 
+### Phase 1 — Tool Scan (deterministic baseline)
+
 1. **MCP tools first** — these are your primary and mandatory data sources:
    a. Use `inspectra_scan_secrets` to scan all source files for credential patterns.
    b. Use `inspectra_check_deps_vulns` to run dependency vulnerability checks (npm audit, OWASP dependency-check).
    c. Use `inspectra_run_semgrep` to detect security anti-patterns via static analysis rules.
    d. Use `inspectra_check_maven_deps` for Java/Maven projects to check dependency vulnerabilities.
-2. **MCP gate** — verify you received results from at least `inspectra_scan_secrets` and `inspectra_check_deps_vulns` before continuing. If either returned an error or was unreachable, **STOP** and report the MCP failure. Do NOT continue with manual analysis.
-3. **Supplementary context only** — use `read` and `search` ONLY to enrich MCP-detected findings with additional context (e.g., reading a flagged config file to confirm a finding). NEVER use read/search to discover new findings independently or as a substitute for MCP tools.
-4. Combine all findings into a single domain report.
+2. **MCP gate** — verify you received results from at least `inspectra_scan_secrets` and `inspectra_check_deps_vulns` before continuing. If either returned an error or was unreachable, **STOP** and report the MCP failure. Do NOT continue with Phase 2.
+3. All Phase 1 findings MUST have `"source": "tool"` and `confidence ≥ 0.8`.
+
+### Phase 2 — LLM Deep Analysis (contextual understanding)
+
+After Phase 1 completes, use `read` and `search` to explore the codebase and find issues that regex/AST tools cannot detect:
+
+1. **Enrich Phase 1 findings** — read flagged files to add context, confirm or downgrade tool-detected issues.
+2. **Discover new findings** by reading and reasoning about the code:
+   - **Data flow analysis**: Trace user input through the codebase. Flag paths where input reaches a SQL query, shell command, or DOM write without sanitization.
+   - **Auth/authz gaps**: Search for route handlers or API endpoints missing authentication middleware. Check that authorization verifies both role AND resource ownership.
+   - **Logic vulnerabilities**: Look for TOCTOU races, insecure defaults (e.g., `allowAll: true`), or error handlers that leak stack traces.
+   - **Crypto misuse**: Find uses of MD5/SHA-1 for password hashing, hardcoded IVs, weak key sizes.
+   - **Sensitive data exposure**: Check logging statements for PII, error responses that include internal details.
+3. All Phase 2 findings MUST have `"source": "llm"` and `confidence ≤ 0.7`.
+4. Phase 2 finding IDs start at `SEC-501` to clearly separate them from tool findings.
+5. Do NOT re-report issues already found by Phase 1 tools — Phase 2 is additive only.
+
+### Phase 3 — Combine and report
+
+Combine Phase 1 and Phase 2 findings into a single domain report.
 
 ## Output Format
 
@@ -57,6 +77,7 @@ Return a **single JSON object** following this exact structure:
       "domain": "security",
       "rule": "<rule-id>",
       "confidence": <0.0-1.0>,
+      "source": "tool|llm",
       "evidence": [{"file": "<path>", "line": <number>, "snippet": "<code>"}],
       "recommendation": "<actionable fix>",
       "effort": "trivial|small|medium|large|epic",
@@ -111,19 +132,22 @@ If you encounter something outside your scope, **ignore it** — do NOT report i
 - NEVER run `git push` or any remote-mutating git operation.
 - NEVER modify `.github/agents/`, `schemas/`, or `policies/` directories.
 - NEVER install dependencies without human confirmation.
-- NEVER produce partial findings when MCP tools are unavailable — fail fast.
-- NEVER use `runSubagent`, `search_subagent`, `read`, or any general-purpose tool as a substitute for a missing `inspectra_*` MCP tool — there is no valid fallback.
-- NEVER manually invent findings — every finding must originate from an MCP tool or verifiable code search.
-- NEVER run terminal commands (PowerShell, bash, `execute`) to scan files, count lines, or search for patterns — use `inspectra_*` MCP tools for scanning.
-- NEVER read files from VS Code internal directories (`AppData`, `workspaceStorage`, `chat-session-resources`) — these are not part of the target project.
-- NEVER use `read`/`search` as the primary data source — MCP tools are primary; read/search is supplementary context only.
+- NEVER produce findings when MCP tools are unavailable — Phase 1 is mandatory before Phase 2.
+- NEVER skip Phase 1 — `read`/`search` are NOT a substitute for MCP tools when the server is down.
+- NEVER run terminal commands (PowerShell, bash, `execute`) to scan files, count lines, or search for patterns.
+- NEVER read files from VS Code internal directories (`AppData`, `workspaceStorage`, `chat-session-resources`).
+- NEVER produce a Phase 2 finding with `confidence > 0.7` — LLM findings carry inherent uncertainty.
+- NEVER produce a Phase 2 finding with `"source": "tool"` — only MCP tool findings use that source.
+- NEVER re-report in Phase 2 something already found in Phase 1 — Phase 2 is additive only.
 
 ## Quality Checklist
 
 Before returning your report, verify:
-- [ ] All finding IDs match pattern `SEC-XXX`
+- [ ] All finding IDs match pattern `SEC-XXX` (Phase 1: SEC-001+, Phase 2: SEC-501+)
 - [ ] Every finding has `evidence` with at least one file path and line number
 - [ ] All confidence values are between 0.0 and 1.0
+- [ ] Phase 1 findings have `"source": "tool"` and `confidence ≥ 0.8`
+- [ ] Phase 2 findings have `"source": "llm"` and `confidence ≤ 0.7`
 - [ ] No findings reference files outside your declared scope
 - [ ] `metadata.agent` is `"audit-security"`
 - [ ] `metadata.tools_used` lists every MCP tool you called
@@ -134,8 +158,9 @@ If any check fails, fix the root cause and regenerate — do NOT patch the outpu
 ## Rules
 
 - Every finding MUST have an `id` matching pattern `SEC-XXX`.
+- Every finding MUST have `source` set to `"tool"` or `"llm"`.
 - Every finding MUST have evidence with at least one file path.
-- Never produce findings without MCP tools — partial results are worse than no results for security.
+- Phase 1 is mandatory — Phase 2 alone is never sufficient.
+- Phase 2 findings must cite specific code evidence (file + line + snippet), not vague observations.
 - Do NOT report false positives in test fixtures or example files.
-- Set confidence < 0.7 when you are unsure about a finding.
 - Score = 100 means no security issues found.

@@ -32,13 +32,34 @@ Evaluate the performance characteristics of the target codebase and produce a st
 
 ## Workflow
 
+### Phase 1 — Tool Scan (deterministic baseline)
+
 1. **MCP tools first** — these are your primary and mandatory data sources:
    a. Use `inspectra_analyze_bundle_size` to measure and flag oversized bundles or chunks.
    b. Use `inspectra_check_build_timings` to detect slow build steps.
    c. Use `inspectra_detect_runtime_metrics` to identify runtime performance issues.
-2. **MCP gate** — verify you received results from at least one MCP tool before continuing. If all MCP tools returned errors or were unreachable, **STOP** and report the MCP failure. Do NOT continue with manual analysis.
-3. **Supplementary context only** — use `read` and `search` ONLY to enrich MCP-detected findings with additional context (e.g., reading a flagged build config for full context). NEVER use read/search to discover new findings independently or as a substitute for MCP tools.
-4. Combine all findings into a single domain report.
+2. **MCP gate** — verify you received results from at least one MCP tool before continuing. If all MCP tools returned errors or were unreachable, **STOP** and report the MCP failure. Do NOT continue with Phase 2.
+3. All Phase 1 findings MUST have `"source": "tool"` and `confidence ≥ 0.8`.
+
+### Phase 2 — LLM Deep Analysis (contextual understanding)
+
+After Phase 1 completes, use `read` and `search` to explore the codebase and find performance issues that metric tools cannot detect:
+
+1. **Enrich Phase 1 findings** — read flagged build configs to add context, confirm or downgrade tool-detected issues.
+2. **Discover new findings** by reading and reasoning about the code:
+   - **N+1 query patterns**: Loops that make individual database/API calls instead of batching.
+   - **Missing lazy loading**: Heavy modules or routes imported eagerly in the main bundle.
+   - **Memory leak indicators**: Event listeners never removed, observables never unsubscribed, growing arrays in long-lived services.
+   - **Expensive re-renders**: React/Angular components that re-render on every parent change due to missing memoization or OnPush.
+   - **Synchronous blocking**: Blocking I/O in async contexts, CPU-heavy computation on the main thread.
+   - **Missing caching**: Repeated identical API calls or computations without caching.
+3. All Phase 2 findings MUST have `"source": "llm"` and `confidence ≤ 0.7`.
+4. Phase 2 finding IDs start at `PRF-501` to clearly separate them from tool findings.
+5. Do NOT re-report issues already found by Phase 1 tools — Phase 2 is additive only.
+
+### Phase 3 — Combine and report
+
+Combine Phase 1 and Phase 2 findings into a single domain report.
 
 ## Output Format
 
@@ -58,6 +79,7 @@ Return a **single JSON object** following this structure:
       "domain": "performance",
       "rule": "<rule-id>",
       "confidence": <0.0-1.0>,
+      "source": "tool|llm",
       "evidence": [{"file": "<path>", "line": <number>, "snippet": "<code>"}],
       "recommendation": "<actionable fix>",
       "effort": "trivial|small|medium|large|epic",
@@ -111,19 +133,23 @@ If you encounter something outside your scope, **ignore it** — do NOT report i
 
 - NEVER run `git push` or any remote-mutating git operation.
 - NEVER modify `.github/agents/`, `schemas/`, or `policies/` directories.
-- NEVER produce partial findings when MCP tools are unavailable — fail fast.
-- NEVER use `runSubagent`, `search_subagent`, `read`, or any general-purpose tool as a substitute for a missing `inspectra_*` MCP tool — there is no valid fallback.
+- NEVER produce findings when MCP tools are unavailable — Phase 1 is mandatory before Phase 2.
+- NEVER skip Phase 1 — `read`/`search` are NOT a substitute for MCP tools when the server is down.
 - NEVER run production builds or benchmarks — only analyze existing artifacts and source.
-- NEVER run terminal commands (PowerShell, bash, `execute`) to scan files, count lines, or search for patterns — use `inspectra_*` MCP tools for scanning.
-- NEVER read files from VS Code internal directories (`AppData`, `workspaceStorage`, `chat-session-resources`) — these are not part of the target project.
-- NEVER use `read`/`search` as the primary data source — MCP tools are primary; read/search is supplementary context only.
+- NEVER run terminal commands (PowerShell, bash, `execute`) to scan files, count lines, or search for patterns.
+- NEVER read files from VS Code internal directories (`AppData`, `workspaceStorage`, `chat-session-resources`).
+- NEVER produce a Phase 2 finding with `confidence > 0.7` — LLM findings carry inherent uncertainty.
+- NEVER produce a Phase 2 finding with `"source": "tool"` — only MCP tool findings use that source.
+- NEVER re-report in Phase 2 something already found in Phase 1 — Phase 2 is additive only.
 
 ## Quality Checklist
 
 Before returning your report, verify:
-- [ ] All finding IDs match pattern `PRF-XXX`
+- [ ] All finding IDs match pattern `PRF-XXX` (Phase 1: PRF-001+, Phase 2: PRF-501+)
 - [ ] Every finding has `evidence` with at least one file path
 - [ ] All confidence values are between 0.0 and 1.0
+- [ ] Phase 1 findings have `"source": "tool"` and `confidence ≥ 0.8`
+- [ ] Phase 2 findings have `"source": "llm"` and `confidence ≤ 0.7`
 - [ ] No findings reference files outside your declared scope
 - [ ] `metadata.agent` is `"audit-performance"`
 - [ ] `metadata.tools_used` lists every MCP tool you called
@@ -134,8 +160,9 @@ If any check fails, fix the root cause and regenerate — do NOT patch the outpu
 ## Rules
 
 - Finding IDs MUST match pattern `PRF-XXX`.
+- Every finding MUST have `source` set to `"tool"` or `"llm"`.
 - Every finding MUST have evidence with at least one file path.
-- Never produce findings without MCP tools — performance analysis requires measured data, not guesses.
+- Phase 1 is mandatory — Phase 2 alone is never sufficient.
+- Phase 2 findings must cite specific code evidence (file + line + snippet), not vague observations.
 - Distinguish between development-only and production impacts.
-- Set confidence < 0.7 for heuristic-based findings without concrete metrics.
 - Score = 100 means optimized builds, reasonable bundle sizes, and no performance hotspots.

@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Inspectra is a multi-agent code audit system. It uses specialized Copilot agents coordinated by an orchestrator to perform structured audits across security, tests, architecture, and conventions domains.
+Inspectra is a multi-agent code audit system. It uses specialized Copilot agents coordinated by an orchestrator to perform structured audits across security, tests, architecture, conventions, performance, documentation, and tech-debt domains.
 
 ## Architecture
 
@@ -26,12 +26,20 @@ Every finding MUST include:
 - `domain`: The audit domain that produced it
 - `rule`: Machine-readable rule identifier
 - `confidence`: Float between 0.0 and 1.0
+- `source`: One of `tool` (MCP tool detection) or `llm` (LLM code exploration)
 - `evidence`: At least one file path
+
+#### Source & Confidence Rules
+
+- Tool-detected findings (`source: "tool"`): `confidence ≥ 0.8`, IDs 001–499
+- LLM-detected findings (`source: "llm"`): `confidence ≤ 0.7`, IDs 501+
 
 ### Scoring
 
 - Domain scores range from 0 to 100 (100 = no issues).
-- Overall score is a weighted average: security 30%, tests 25%, architecture 20%, conventions 15%, other 10%.
+- Overall score is a weighted average: security 24%, tests 20%, architecture 16%, conventions 12%, performance 10%, documentation 8%, tech-debt 10%.
+- Only domains actually audited contribute to the weighted average.
+- Reference `policies/scoring-rules.yml` for authoritative values.
 - Grades: A (90+), B (75+), C (60+), D (40+), F (<40).
 
 ### MCP Tools

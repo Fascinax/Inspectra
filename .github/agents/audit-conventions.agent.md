@@ -35,15 +35,36 @@ Evaluate coding standards adherence in the target codebase and produce a structu
 
 ## Workflow
 
+### Phase 1 — Tool Scan (deterministic baseline)
+
 1. **MCP tools first** — these are your primary and mandatory data sources:
    a. Use `inspectra_check_naming` to verify naming conventions across the project.
    b. Use `inspectra_check_file_lengths` to flag overly long files.
    c. Use `inspectra_check_todos` to find unresolved technical debt markers.
    d. Use `inspectra_parse_lint_output` to parse ESLint/Checkstyle/Prettier output if available.
    e. Use `inspectra_detect_dry_violations` to identify copy-paste code patterns.
-2. **MCP gate** — verify you received results from at least `inspectra_check_naming` and `inspectra_check_file_lengths` before continuing. If either returned an error or was unreachable, **STOP** and report the MCP failure. Do NOT continue with manual analysis.
-3. **Supplementary context only** — use `read` and `search` ONLY to enrich MCP-detected findings with additional context (e.g., reading a flagged file to confirm a magic string pattern). NEVER use read/search to discover new findings independently or as a substitute for MCP tools.
-4. Combine all findings into a single domain report.
+2. **MCP gate** — verify you received results from at least `inspectra_check_naming` and `inspectra_check_file_lengths` before continuing. If either returned an error or was unreachable, **STOP** and report the MCP failure. Do NOT continue with Phase 2.
+3. All Phase 1 findings MUST have `"source": "tool"` and `confidence ≥ 0.8`.
+
+### Phase 2 — LLM Deep Analysis (contextual understanding)
+
+After Phase 1 completes, use `read` and `search` to explore the codebase and find clean code issues that pattern-matching tools cannot detect:
+
+1. **Enrich Phase 1 findings** — read flagged files to add context, confirm or downgrade tool-detected issues.
+2. **Discover new findings** by reading and reasoning about the code:
+   - **Magic numbers/strings**: Hardcoded values that should be named constants (e.g., `if (status === 3)` instead of `if (status === Status.APPROVED)`).
+   - **Inconsistent patterns**: Some modules use async/await while others use callbacks; some use class-based services while others use plain functions.
+   - **Dead code**: Unreachable branches, exported functions never imported anywhere, commented-out code blocks.
+   - **Misleading names**: Variables or functions whose names don't match their actual behavior (e.g., `getUser()` that also modifies state).
+   - **Long parameter lists**: Functions taking 4+ arguments that should use an options object.
+   - **Responsibility violations**: Functions that do too many things (fetching data, transforming it, and rendering in the same function).
+3. All Phase 2 findings MUST have `"source": "llm"` and `confidence ≤ 0.7`.
+4. Phase 2 finding IDs start at `CNV-501` to clearly separate them from tool findings.
+5. Do NOT re-report issues already found by Phase 1 tools — Phase 2 is additive only.
+
+### Phase 3 — Combine and report
+
+Combine Phase 1 and Phase 2 findings into a single domain report.
 
 ## Output Format
 
@@ -62,6 +83,7 @@ Return a **single JSON object** following this structure:
       "domain": "conventions",
       "rule": "<rule-id>",
       "confidence": <0.0-1.0>,
+      "source": "tool|llm",
       "evidence": [{"file": "<path>", "line": <number>, "snippet": "<code>"}],
       "recommendation": "<actionable fix>",
       "effort": "trivial|small|medium|large|epic",
@@ -115,19 +137,23 @@ If you encounter something outside your scope, **ignore it** — do NOT report i
 
 - NEVER run `git push` or any remote-mutating git operation.
 - NEVER modify `.github/agents/`, `schemas/`, or `policies/` directories.
-- NEVER produce partial findings when MCP tools are unavailable — fail fast.
-- NEVER use `runSubagent`, `search_subagent`, `read`, or any general-purpose tool as a substitute for a missing `inspectra_*` MCP tool — there is no valid fallback.
+- NEVER produce findings when MCP tools are unavailable — Phase 1 is mandatory before Phase 2.
+- NEVER skip Phase 1 — `read`/`search` are NOT a substitute for MCP tools when the server is down.
 - NEVER report architecture violations — that's the architecture agent's domain.
-- NEVER run terminal commands (PowerShell, bash, `execute`) to scan files, count lines, or search for patterns — use `inspectra_*` MCP tools for scanning.
-- NEVER read files from VS Code internal directories (`AppData`, `workspaceStorage`, `chat-session-resources`) — these are not part of the target project.
-- NEVER use `read`/`search` as the primary data source — MCP tools are primary; read/search is supplementary context only.
+- NEVER run terminal commands (PowerShell, bash, `execute`) to scan files, count lines, or search for patterns.
+- NEVER read files from VS Code internal directories (`AppData`, `workspaceStorage`, `chat-session-resources`).
+- NEVER produce a Phase 2 finding with `confidence > 0.7` — LLM findings carry inherent uncertainty.
+- NEVER produce a Phase 2 finding with `"source": "tool"` — only MCP tool findings use that source.
+- NEVER re-report in Phase 2 something already found in Phase 1 — Phase 2 is additive only.
 
 ## Quality Checklist
 
 Before returning your report, verify:
-- [ ] All finding IDs match pattern `CNV-XXX`
+- [ ] All finding IDs match pattern `CNV-XXX` (Phase 1: CNV-001+, Phase 2: CNV-501+)
 - [ ] Every finding has `evidence` with at least one file path
 - [ ] All confidence values are between 0.0 and 1.0
+- [ ] Phase 1 findings have `"source": "tool"` and `confidence ≥ 0.8`
+- [ ] Phase 2 findings have `"source": "llm"` and `confidence ≤ 0.7`
 - [ ] No findings reference files outside your declared scope
 - [ ] `metadata.agent` is `"audit-conventions"`
 - [ ] `metadata.tools_used` lists every MCP tool you called
@@ -138,6 +164,9 @@ If any check fails, fix the root cause and regenerate — do NOT patch the outpu
 ## Rules
 
 - Finding IDs MUST match pattern `CNV-XXX`.
+- Every finding MUST have `source` set to `"tool"` or `"llm"`.
 - Adapt to the project's existing conventions rather than imposing arbitrary ones.
+- Phase 1 is mandatory — Phase 2 alone is never sufficient.
+- Phase 2 findings must cite specific code evidence (file + line + snippet), not vague observations.
 - If the project has an `.editorconfig`, ESLint config, or Checkstyle config, use those as reference.
 - Score = 100 means consistent, clean, well-maintained codebase.
