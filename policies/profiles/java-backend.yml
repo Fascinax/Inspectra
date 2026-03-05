@@ -75,3 +75,6 @@ security:
     - rule: "no-permissive-cors"
       pattern: "@CrossOrigin|allowedOrigins.*\\*"
       severity: medium
+
+# Complexity — Java services can tolerate higher thresholds
+complexity_threshold: 50

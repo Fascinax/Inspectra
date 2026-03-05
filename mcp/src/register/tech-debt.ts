@@ -1,13 +1,14 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { findingsResponse, withErrorHandling } from "./response.js";
-import { STANDARD_INPUT_SCHEMA, FINDINGS_TOOL_META } from "./schemas.js";
+import { STANDARD_INPUT_SCHEMA, PROFILED_INPUT_SCHEMA, FINDINGS_TOOL_META } from "./schemas.js";
 import { analyzeComplexity, ageTodos, checkDependencyStaleness } from "../tools/tech-debt.js";
+import { loadProfile } from "../policies/loader.js";
 import { validateProjectDir } from "../utils/paths.js";
 
 /**
  * Registers all tech-debt-domain MCP tools on the given server instance.
  */
-export function registerTechDebtTools(server: McpServer): void {
+export function registerTechDebtTools(server: McpServer, policiesDir: string): void {
   server.registerTool(
     "inspectra_analyze_complexity",
     {
@@ -29,12 +30,13 @@ Examples:
      { "projectDir": "/app/my-project" }
   2. Get top 5 most complex files:
      { "projectDir": "/app/my-project", "limit": 5 }`,
-      inputSchema: STANDARD_INPUT_SCHEMA,
+      inputSchema: PROFILED_INPUT_SCHEMA,
       ...FINDINGS_TOOL_META,
     },
-    withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
+    withErrorHandling(async ({ projectDir, profile, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
-      const findings = await analyzeComplexity(safeDir);
+      const profileConfig = profile ? await loadProfile(policiesDir, profile) : undefined;
+      const findings = await analyzeComplexity(safeDir, undefined, profileConfig);
       return findingsResponse(findings, responseFormat, { limit, offset });
     }, "inspectra_analyze_complexity"),
   );

@@ -38,7 +38,7 @@ registerArchitectureTools(server, POLICIES_DIR);
 registerConventionsTools(server, POLICIES_DIR);
 registerPerformanceTools(server);
 registerDocumentationTools(server);
-registerTechDebtTools(server);
+registerTechDebtTools(server, POLICIES_DIR);
 registerMergerTools(server, POLICIES_DIR);
 registerRendererTools(server);
 registerGovernanceTools(server);

@@ -10,6 +10,7 @@ import { loadAllPolicies, loadScoringRules } from "../policies/loader.js";
 import { DomainReportSchema, FindingSchema } from "../types.js";
 import { setLatestReport } from "./resources.js";
 import { ParseError } from "../errors.js";
+import { loadIgnoreRules } from "../utils/ignore.js";
 
 /**
  * Registers the merger and scoring MCP tools on the given server instance.
@@ -67,6 +68,9 @@ Examples:
         );
       }
       const policies = await loadAllPolicies(policiesDir, profile);
+      if (projectDir) {
+        policies.ignoreRules = await loadIgnoreRules(resolve(projectDir));
+      }
       const consolidated = mergeReports(domainReports, target, profile, policies);
       const reportJson = JSON.stringify(consolidated, null, 2);
       await setLatestReport(reportJson);

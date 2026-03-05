@@ -1,5 +1,6 @@
 import { relative, extname } from "node:path";
 import type { Finding } from "../types.js";
+import type { ProfileConfig } from "../types.js";
 import { collectAllFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
 
@@ -18,10 +19,50 @@ const NAMING_CONVENTIONS: Array<{ pattern: RegExp; expected: string; rule: strin
 ];
 
 /**
+ * Derives additional file-location patterns from a profile's naming.java.suffixes
+ * and naming.playwright rules so profile-specific conventions are enforced.
+ */
+function buildProfileConventions(
+  profile: ProfileConfig,
+): Array<{ pattern: RegExp; expected: string; rule: string }> {
+  const conventions: Array<{ pattern: RegExp; expected: string; rule: string }> = [];
+
+  const javaNaming = profile.naming?.["java"] as Record<string, unknown> | undefined;
+  const suffixes = javaNaming?.["suffixes"] as Array<{ pattern?: string; directory?: string }> | undefined;
+  if (Array.isArray(suffixes)) {
+    for (const entry of suffixes) {
+      if (!entry.pattern || !entry.directory) continue;
+      // Convert glob-style "*Controller.java" → regex
+      const escaped = entry.pattern.replace("*", "").replace(".java", "\\.java");
+      conventions.push({
+        pattern: new RegExp(`${escaped}$`),
+        expected: `Java ${entry.directory} naming`,
+        rule: `java-naming-${entry.directory}`,
+      });
+    }
+  }
+
+  // Playwright page objects
+  const playwrightNaming = profile.naming?.["playwright"] as Record<string, unknown> | undefined;
+  if (playwrightNaming?.["page_objects"]) {
+    conventions.push({
+      pattern: /\.page\.ts$/,
+      expected: "Playwright page object naming",
+      rule: "playwright-naming-page-objects",
+    });
+  }
+
+  return conventions;
+}
+
+/**
  * Checks that files follow expected naming conventions for Angular components,
  * Java layer classes, test files, and generic kebab-case modules.
+ * When a `profile` is supplied its `naming` rules augment the built-in conventions.
  */
-export async function checkNamingConventions(projectDir: string): Promise<Finding[]> {
+export async function checkNamingConventions(projectDir: string, profile?: ProfileConfig): Promise<Finding[]> {
+  const profileConventions = profile ? buildProfileConventions(profile) : [];
+  const allConventions = [...NAMING_CONVENTIONS, ...profileConventions];
   const findings: Finding[] = [];
   const nextId = createIdSequence("CNV");
 
@@ -31,7 +72,7 @@ export async function checkNamingConventions(projectDir: string): Promise<Findin
   for (const filePath of sourceFiles) {
     const fileName = filePath.split(/[/\\]/).pop() ?? "";
 
-    const matchedConvention = NAMING_CONVENTIONS.find((c) => c.pattern.test(fileName));
+    const matchedConvention = allConventions.find((c) => c.pattern.test(fileName));
     if (matchedConvention) continue;
 
     if (isInConventionalDirectory(filePath) && !followsDirectoryConvention(filePath)) {

@@ -86,3 +86,6 @@ security:
     - rule: "no-innerhtml-binding"
       pattern: "\\[innerHTML\\]"
       severity: medium
+
+# Complexity — balanced threshold for full-stack
+complexity_threshold: 40

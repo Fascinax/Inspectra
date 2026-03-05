@@ -74,3 +74,5 @@ security:
     - rule: "no-document-write"
       pattern: "document\\.write"
       severity: high
+# Complexity — Angular components should be lean
+complexity_threshold: 25

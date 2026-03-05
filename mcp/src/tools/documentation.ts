@@ -1,6 +1,7 @@
 import { readFile, readdir } from "node:fs/promises";
 import { join, relative } from "node:path";
 import type { Finding } from "../types.js";
+import { collectSourceFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
 
 /**
@@ -136,6 +137,78 @@ export async function detectDocCodeDrift(projectDir: string): Promise<Finding[]>
     }
   } catch {
     return findings;
+  }
+
+  return findings;
+}
+
+/**
+ * Checks .env.example alignment: verifies that documented environment variables
+ * are actually referenced in the source code, and flags stale entries.
+ */
+export async function detectEnvExampleDrift(projectDir: string): Promise<Finding[]> {
+  const findings: Finding[] = [];
+  const nextId = createIdSequence("DOC", 300);
+
+  let exampleContent: string;
+  try {
+    exampleContent = await readFile(join(projectDir, ".env.example"), "utf-8");
+  } catch {
+    return findings; // no .env.example — skip silently
+  }
+
+  // Extract keys: lines matching KEY=... or KEY (no value)
+  const envKeys = exampleContent
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith("#"))
+    .map((l) => l.split("=")[0]?.trim() ?? "")
+    .filter(Boolean);
+
+  if (envKeys.length === 0) return findings;
+
+  // Gather source file contents once
+  let sourceFiles: string[] = [];
+  try {
+    sourceFiles = await collectSourceFiles(projectDir);
+  } catch {
+    return findings;
+  }
+
+  // For each key, check if it appears in source as process.env.KEY or @ConfigProperty
+  const sourceContents: string[] = [];
+  for (const f of sourceFiles) {
+    try {
+      sourceContents.push(await readFile(f, "utf-8"));
+    } catch {
+      /* skip unreadable */
+    }
+  }
+  const combinedSource = sourceContents.join("\n");
+
+  for (const key of envKeys) {
+    const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    // Match process.env.KEY, env.KEY, System.getenv("KEY"), @ConfigProperty("KEY")
+    const usagePattern = new RegExp(
+      `process\.env\.${escaped}|env\.${escaped}|getenv\(.*["']${escaped}["']|@ConfigProperty\(.*["']${escaped}["']`,
+    );
+    if (!usagePattern.test(combinedSource)) {
+      findings.push({
+        id: nextId(),
+        severity: "low",
+        title: `Env var in .env.example not found in source: ${key}`,
+        description: `The environment variable '${key}' is documented in .env.example but does not appear to be referenced in the source code. It may be stale.`,
+        domain: "documentation",
+        rule: "env-example-stale-key",
+        confidence: 0.65,
+        evidence: [{ file: ".env.example", snippet: key }],
+        recommendation:
+          `Remove '${key}' from .env.example if it is no longer used, or add the corresponding reference in source code.`,
+        effort: "trivial",
+        tags: ["drift", "env", "configuration"],
+        source: "tool",
+      });
+    }
   }
 
   return findings;

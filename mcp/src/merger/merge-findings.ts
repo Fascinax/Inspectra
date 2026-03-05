@@ -3,6 +3,7 @@ import type { MergeOptions } from "../policies/loader.js";
 import { deduplicateFindings } from "./deduplicate.js";
 import { computeOverallScore, deriveGrade } from "./score.js";
 import { buildSummary, applyConfidenceAdjustments } from "./merge-helpers.js";
+import { applyIgnoreRules } from "../utils/ignore.js";
 
 /**
  * Merges domain reports into a single consolidated audit report.
@@ -21,7 +22,8 @@ export function mergeReports(
   const filtered = allFindings.filter((f) => f.confidence >= autoDismiss && f.confidence >= minConfidence);
 
   const adjusted = applyConfidenceAdjustments(filtered, options?.confidence?.adjustments ?? []);
-  const deduplicated = deduplicateFindings(adjusted, options?.deduplication);
+  const ignored = applyIgnoreRules(adjusted, options?.ignoreRules ?? []);
+  const deduplicated = deduplicateFindings(ignored, options?.deduplication);
 
   const ranked = [...deduplicated].sort((a, b) => {
     const sevDiff = SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity];

@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { promisify } from "node:util";
 import type { Finding } from "../types.js";
 import { createIdSequence } from "../utils/id.js";
+import { logger } from "../logger.js";
 
 export { scanSecrets, SECRET_PATTERNS } from "./security-secrets.js";
 
@@ -56,8 +57,8 @@ export async function checkDependencyVulnerabilities(projectDir: string): Promis
         source: "tool",
       });
     }
-  } catch {
-    /* npm audit not available or project has no package-lock.json */
+  } catch (err) {
+    logger.warn("checkDependencyVulnerabilities: npm audit failed or unavailable", { error: String(err) });
   }
 
   return findings;
@@ -102,7 +103,8 @@ export async function runSemgrep(projectDir: string): Promise<Finding[]> {
       tags: ["semgrep", r.check_id.split(".")[0] ?? r.check_id],
       source: "tool" as const,
     }));
-  } catch {
+  } catch (err) {
+    logger.warn("runSemgrep: unexpected error during scan", { error: String(err) });
     return [];
   }
 }

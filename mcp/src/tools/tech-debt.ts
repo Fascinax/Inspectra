@@ -1,17 +1,21 @@
 import { readFile } from "node:fs/promises";
 import { extname, relative } from "node:path";
 import type { Finding } from "../types.js";
+import type { ProfileConfig } from "../types.js";
 import { collectAllFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
 import { computeCyclomaticComplexity } from "../utils/ast.js";
 
 /**
  * Estimate complexity using lightweight cyclomatic heuristics per file.
+ * `threshold` and `profile.complexity_threshold` are checked in that order;
+ * the default is 35 when neither is provided.
  */
-export async function analyzeComplexity(projectDir: string, threshold = 35): Promise<Finding[]> {
+export async function analyzeComplexity(projectDir: string, threshold?: number, profile?: ProfileConfig): Promise<Finding[]> {
   const findings: Finding[] = [];
   const nextId = createIdSequence("DEBT");
   const files = await collectAllFiles(projectDir);
+  const effectiveThreshold = threshold ?? profile?.complexity_threshold ?? 35;
 
   for (const filePath of files) {
     if (![".ts", ".js", ".java"].includes(extname(filePath))) continue;
@@ -19,7 +23,7 @@ export async function analyzeComplexity(projectDir: string, threshold = 35): Pro
     try {
       const content = await readFile(filePath, "utf-8");
       const complexity = computeCyclomaticComplexity(content, extname(filePath));
-      if (complexity < threshold) continue;
+      if (complexity < effectiveThreshold) continue;
 
       findings.push({
         id: nextId(),

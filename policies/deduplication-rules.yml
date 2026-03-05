@@ -28,6 +28,10 @@ cross_domain_aliases:
     canonical: missing-unit-test
     keep_domain: tests
 
+  - rules: [unresolved-todo, aged-todo]
+    canonical: aged-todo
+    keep_domain: tech-debt
+
   - rules: [hardcoded-secret, no-hardcoded-secret]
     canonical: no-hardcoded-secret
     keep_domain: security

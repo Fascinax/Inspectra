@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { relative } from "node:path";
 import type { Finding } from "../types.js";
+import type { ProfileConfig } from "../types.js";
 import { collectSourceFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
 import { extractModuleSpecifiers } from "../utils/ast.js";
@@ -15,21 +16,43 @@ const LAYER_PATTERNS: Record<string, RegExp> = {
 };
 
 /**
+ * Builds a layer-detection pattern map from profile-defined layer names,
+ * merging them into the default LAYER_PATTERNS.
+ */
+function buildLayerPatterns(profileLayers?: string[]): Record<string, RegExp> {
+  if (!profileLayers || profileLayers.length === 0) return LAYER_PATTERNS;
+  const custom: Record<string, RegExp> = {};
+  for (const layer of profileLayers) {
+    // Each profile layer name is also treated as a directory segment to match
+    const escaped = layer.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    custom[layer] = new RegExp(`\\/${escaped}s?\/`, "i");
+  }
+  // Profile patterns take priority; fall back to built-ins for unspecified layers
+  return { ...LAYER_PATTERNS, ...custom };
+}
+
+/**
  * Verifies clean architecture layer boundaries in the project's source files.
- * Flags imports that violate the allowed dependency direction
- * (presentation → application → domain, infrastructure is isolated).
+ * Flags imports that violate the allowed dependency direction.
+ * When a `profile` is supplied its `architecture.layers` and
+ * `architecture.allowed_dependencies` are used to override the defaults.
  */
 export async function checkLayering(
   projectDir: string,
   allowedDependencies?: Record<string, string[]>,
+  profile?: ProfileConfig,
 ): Promise<Finding[]> {
   const findings: Finding[] = [];
   const nextId = createIdSequence("ARC");
 
+  // Profile-derived overrides (explicit params take precedence)
+  const effectiveAllowed = allowedDependencies ?? profile?.architecture?.allowed_dependencies;
+  const layerPatterns = buildLayerPatterns(profile?.architecture?.layers);
+
   const files = await collectSourceFiles(projectDir);
 
   for (const filePath of files) {
-    const sourceLayer = detectLayer(filePath);
+    const sourceLayer = detectLayer(filePath, layerPatterns);
     if (!sourceLayer) continue;
 
     try {
@@ -37,10 +60,10 @@ export async function checkLayering(
       const importPaths = extractImports(content);
 
       for (const imp of importPaths) {
-        const targetLayer = detectLayer(imp);
+        const targetLayer = detectLayer(imp, layerPatterns);
         if (!targetLayer) continue;
 
-        if (isViolation(sourceLayer, targetLayer, allowedDependencies)) {
+        if (isViolation(sourceLayer, targetLayer, effectiveAllowed)) {
           findings.push({
             id: nextId(),
             severity: "high",
@@ -69,9 +92,9 @@ export function extractImports(content: string, fileExt = ".ts"): string[] {
   return extractModuleSpecifiers(content, fileExt);
 }
 
-function detectLayer(filePath: string): string | undefined {
+function detectLayer(filePath: string, patterns: Record<string, RegExp> = LAYER_PATTERNS): string | undefined {
   const normalized = filePath.replace(/\\/g, "/");
-  for (const [layer, pattern] of Object.entries(LAYER_PATTERNS)) {
+  for (const [layer, pattern] of Object.entries(patterns)) {
     if (pattern.test(normalized)) return layer;
   }
   return undefined;

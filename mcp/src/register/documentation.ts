@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { findingsResponse, withErrorHandling } from "./response.js";
 import { STANDARD_INPUT_SCHEMA, FINDINGS_TOOL_META } from "./schemas.js";
-import { checkReadmeCompleteness, checkAdrPresence, detectDocCodeDrift } from "../tools/documentation.js";
+import { checkReadmeCompleteness, checkAdrPresence, detectDocCodeDrift, detectEnvExampleDrift } from "../tools/documentation.js";
 import { validateProjectDir } from "../utils/paths.js";
 
 /**
@@ -101,5 +101,35 @@ Examples:
       const findings = await detectDocCodeDrift(safeDir);
       return findingsResponse(findings, responseFormat, { limit, offset });
     }, "inspectra_detect_doc_code_drift"),
+  );
+
+  server.registerTool(
+    "inspectra_detect_env_example_drift",
+    {
+      title: "Detect Env Example Drift",
+      description: `Detect stale entries in .env.example by checking whether documented environment variables are still referenced in source code.
+
+Reads .env.example and searches for each key in source files using patterns like process.env.KEY, env.KEY, getenv("KEY"), and @ConfigProperty("KEY"). Keys that are documented but have no source reference are flagged.
+
+Args:
+  - projectDir (string): Absolute path to the project root.
+
+Returns: Array of Finding objects (domain: "documentation", prefix: DOC-). Each finding identifies an env var key that is documented but unused.
+
+Error handling:
+  - Returns empty findings if no .env.example file is found.
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Check env example alignment:
+     { "projectDir": "/app/my-project" }`,
+      inputSchema: STANDARD_INPUT_SCHEMA,
+      ...FINDINGS_TOOL_META,
+    },
+    withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
+      const safeDir = await validateProjectDir(projectDir);
+      const findings = await detectEnvExampleDrift(safeDir);
+      return findingsResponse(findings, responseFormat, { limit, offset });
+    }, "inspectra_detect_env_example_drift"),
   );
 }

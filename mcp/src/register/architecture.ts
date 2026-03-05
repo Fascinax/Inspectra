@@ -42,7 +42,7 @@ Examples:
     withErrorHandling(async ({ projectDir, profile, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
       const profileConfig = profile ? await loadProfile(policiesDir, profile) : undefined;
-      const findings = await checkLayering(safeDir, profileConfig?.architecture?.allowed_dependencies);
+      const findings = await checkLayering(safeDir, profileConfig?.architecture?.allowed_dependencies, profileConfig);
       return findingsResponse(findings, responseFormat, { limit, offset });
     }, "inspectra_check_layering"),
   );

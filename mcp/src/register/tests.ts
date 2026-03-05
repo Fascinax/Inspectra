@@ -7,6 +7,7 @@ import {
   detectMissingTests,
   parsePlaywrightReport,
   detectFlakyTests,
+  checkTestQuality,
 } from "../tools/tests.js";
 import { loadProfile } from "../policies/loader.js";
 import { validateProjectDir } from "../utils/paths.js";
@@ -179,5 +180,39 @@ Examples:
       const findings = await detectFlakyTests(safeDir);
       return findingsResponse(findings, responseFormat, { limit, offset });
     }, "inspectra_detect_flaky_tests"),
+  );
+
+  server.registerTool(
+    "inspectra_check_test_quality",
+    {
+      title: "Check Test Quality",
+      description: `Analyze test files for quality issues: missing assertions and excessive mocking.
+
+Detects test files that have test blocks with no assertion statements (always-passing tests) and files
+with significantly more mock setup calls than assertions (over-mocked tests).
+
+Args:
+  - projectDir (string): Absolute path to the project root.
+
+Returns: Array of Finding objects (domain: "tests", prefix: TST-). Findings include the
+test file path, the detected quality issue, and a recommendation.
+
+Error handling:
+  - Returns empty findings if no test files are found.
+  - Throws if projectDir does not exist or is not a directory.
+
+Examples:
+  1. Check test quality:
+     { "projectDir": "/app/my-project" }
+  2. Get Markdown report:
+     { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
+      inputSchema: STANDARD_INPUT_SCHEMA,
+      ...FINDINGS_TOOL_META,
+    },
+    withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
+      const safeDir = await validateProjectDir(projectDir);
+      const findings = await checkTestQuality(safeDir);
+      return findingsResponse(findings, responseFormat, { limit, offset });
+    }, "inspectra_check_test_quality"),
   );
 }

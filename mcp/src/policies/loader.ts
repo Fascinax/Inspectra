@@ -15,8 +15,10 @@ import {
 import { loadDeduplicationRules, type DeduplicationAlias, type DeduplicationConfig } from "./deduplication.js";
 import { loadProfile, detectProfile } from "./profile.js";
 import { loadSeverityMatrix, type SeverityMatrixLevel, type SeverityMatrixConfig } from "./severity-matrix.js";
+import type { IgnoreRule } from "../utils/ignore.js";
 
-// ─── Re-exports ───────────────────────────────────────────────────────────────
+// ─── Re-exports ─────────────────────────────────────────────────────────────────────────────────
+export type { IgnoreRule };
 export type { GradeConfig, ScoringConfig, ProfileConfig, SecurityPatternOverride };
 export { DEFAULT_SCORING, loadScoringRules };
 export { DEFAULT_CONFIDENCE, loadConfidenceRules };
@@ -34,6 +36,8 @@ export interface MergeOptions {
   deduplication?: DeduplicationConfig;
   profile?: ProfileConfig;
   severityMatrix?: SeverityMatrixConfig;
+  /** Per-project suppress list loaded from .inspectraignore */
+  ignoreRules?: IgnoreRule[];
 }
 
 // ─── loadAllPolicies ──────────────────────────────────────────────────────────

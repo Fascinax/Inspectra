@@ -39,12 +39,13 @@ Examples:
      { "projectDir": "/app/my-project" }
   2. Get results as Markdown for review:
      { "projectDir": "/app/my-project", "responseFormat": "markdown" }`,
-      inputSchema: STANDARD_INPUT_SCHEMA,
+      inputSchema: PROFILED_INPUT_SCHEMA,
       ...FINDINGS_TOOL_META,
     },
-    withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
+    withErrorHandling(async ({ projectDir, profile, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
-      const findings = await checkNamingConventions(safeDir);
+      const profileConfig = profile ? await loadProfile(policiesDir, profile) : undefined;
+      const findings = await checkNamingConventions(safeDir, profileConfig);
       return findingsResponse(findings, responseFormat, { limit, offset });
     }, "inspectra_check_naming"),
   );

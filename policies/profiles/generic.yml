@@ -53,3 +53,6 @@ architecture:
 # Security — no stack-specific overrides
 security:
   additional_patterns: []
+
+# Complexity threshold for tech-debt analysis (cyclomatic score per file)
+complexity_threshold: 35
