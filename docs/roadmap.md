@@ -76,7 +76,7 @@ Goal: Make existing agents smarter and tools more precise.
 
 ### Developer Experience
 
-- [ ] `inspectra doctor` command: diagnose setup issues (Node version, MCP connectivity, missing agents)
+- [x] `inspectra doctor` command: diagnose setup issues (Node version, MCP connectivity, missing agents) — moved to v0.7.0
 - [x] Clearer error messages when a tool fails (structured error with suggested fix)
 - [x] Config file support (`.inspectraignore`) to suppress findings per project
 - [x] Config file support (`.inspectrarc.yml`) for full profile, threshold, and rule customization

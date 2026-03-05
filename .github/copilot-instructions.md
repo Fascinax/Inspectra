@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Inspectra is a multi-agent code audit system. It uses specialized Copilot agents coordinated by an orchestrator to perform structured audits across security, tests, architecture, conventions, performance, documentation, and tech-debt domains.
+Inspectra is a multi-agent code audit system. It uses specialized Copilot agents coordinated by an orchestrator to perform structured audits across 11 domains: security, tests, architecture, conventions, performance, documentation, tech-debt, accessibility, api-design, observability, and i18n.
 
 ## Architecture
 
@@ -37,7 +37,7 @@ Every finding MUST include:
 ### Scoring
 
 - Domain scores range from 0 to 100 (100 = no issues).
-- Overall score is a weighted average: security 24%, tests 20%, architecture 16%, conventions 12%, performance 10%, documentation 8%, tech-debt 10%.
+- Overall score is a weighted average of audited domain scores. Core weights: security 24%, tests 20%, architecture 16%, conventions 12%, performance 10%, documentation 8%, tech-debt 10%. Extended weights (v0.7+): accessibility 8%, api-design 7%, observability 6%, i18n 5%. Weights are re-normalized at runtime based on which domains were actually audited.
 - Only domains actually audited contribute to the weighted average.
 - Reference `policies/scoring-rules.yml` for authoritative values.
 - Grades: A (90+), B (75+), C (60+), D (40+), F (<40).
@@ -66,6 +66,11 @@ Tools are registered in the `inspectra` MCP server. Agents should call them by p
 | `inspectra_compare_reports` | Report Engine | Compare two reports and diff findings |
 | `inspectra_log_activity` | Governance | Record agent activity to JSONL log |
 | `inspectra_read_activity_log` | Governance | Read agent activity log entries |
+| `inspectra_check_a11y_templates` | Accessibility | Detect a11y issues in HTML/Angular/JSX templates |
+| `inspectra_check_rest_conventions` | API Design | Check REST route naming and versioning |
+| `inspectra_check_observability` | Observability | Detect missing logging, tracing, health endpoints |
+| `inspectra_check_i18n` | i18n | Detect hardcoded strings and missing i18n setup |
+| `inspectra_generate_claude_md` | Adapter | Generate CLAUDE.md from agent definitions |
 
 ### Technology Stack
 
@@ -115,6 +120,10 @@ Each domain agent has a strict scope:
 | audit-performance | Build configs, bundle outputs, runtime code | Functional correctness |
 | audit-documentation | README, docs/, ADRs, inline API docs | Code logic |
 | audit-tech-debt | All source files for complexity, staleness metrics | Feature correctness |
+| audit-accessibility | HTML/Angular/JSX/TSX templates | Non-template source code, runtime behavior |
+| audit-api-design | Route definitions, controller files | Business logic, database queries |
+| audit-observability | Service files, config, error handling | Functional correctness, UI code |
+| audit-i18n | Templates, i18n config, translation files | Backend logic, non-user-facing strings |
 
 If an agent encounters something outside its scope, it MUST ignore it — not report it.
 

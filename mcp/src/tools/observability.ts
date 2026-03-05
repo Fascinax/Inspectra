@@ -33,8 +33,8 @@ const SOURCE_EXTENSIONS = [".ts", ".js", ".java"];
  * - No tracing setup detected
  * - No metrics instrumentation detected
  */
-export async function checkObservability(projectDir: string): Promise<Finding[]> {
-  const files = await collectSourceFiles(projectDir, SOURCE_EXTENSIONS);
+export async function checkObservability(projectDir: string, ignoreDirs?: string[]): Promise<Finding[]> {
+  const files = await collectSourceFiles(projectDir, SOURCE_EXTENSIONS, ignoreDirs);
 
   const findings: Finding[] = [];
   const nextId = createIdSequence("OBS");

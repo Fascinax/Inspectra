@@ -2,7 +2,7 @@
 
 **Multi-agent code audit system** powered by GitHub Copilot Custom Agents and MCP.
 
-Inspectra coordinates specialized audit agents — security, tests, architecture, conventions — to produce structured, scored, and actionable code quality reports.
+Inspectra coordinates specialized audit agents — security, tests, architecture, conventions, performance, documentation, tech-debt, accessibility, api-design, observability, and i18n — to produce structured, scored, and actionable code quality reports.
 
 ---
 
@@ -75,7 +75,7 @@ Same as Option B but files are real copies committed with the repo. Useful for C
 
 Open the target project in VS Code, open Copilot Chat, and type:
 
-- `/audit` : full audit (all 7 domains, agent selected automatically)
+- `/audit` : full audit (all 11 domains, agent selected automatically)
 - `/audit-pr` : audit scoped to changed files
 
 ---
@@ -90,7 +90,14 @@ inspectra/
 │  │  ├─ audit-security.agent.md
 │  │  ├─ audit-tests.agent.md
 │  │  ├─ audit-architecture.agent.md
-│  │  └─ audit-conventions.agent.md
+│  │  ├─ audit-conventions.agent.md
+│  │  ├─ audit-performance.agent.md
+│  │  ├─ audit-documentation.agent.md
+│  │  ├─ audit-tech-debt.agent.md
+│  │  ├─ audit-accessibility.agent.md
+│  │  ├─ audit-api-design.agent.md
+│  │  ├─ audit-observability.agent.md
+│  │  └─ audit-i18n.agent.md
 │  ├─ prompts/          # Reusable prompt files
 │  │  ├─ audit.prompt.md
 │  │  └─ audit-pr.prompt.md
@@ -100,17 +107,28 @@ inspectra/
 │
 ├─ mcp/                 # MCP server (TypeScript)
 │  └─ src/
-│     ├─ index.ts       # Server entry point (12 tools registered)
+│     ├─ index.ts       # Server entry point
 │     ├─ types.ts       # Zod schemas & TypeScript types
 │     ├─ tools/
-│     │  ├─ security.ts      # inspectra_scan_secrets, inspectra_check_deps_vulns
-│     │  ├─ tests.ts         # inspectra_parse_coverage, inspectra_parse_test_results, inspectra_detect_missing_tests
-│     │  ├─ architecture.ts  # inspectra_check_layering, inspectra_analyze_dependencies
-│     │  └─ conventions.ts  # inspectra_check_naming, inspectra_check_file_lengths, inspectra_check_todos
-│     └─ merger/
-│        ├─ merge-findings.ts  # inspectra_merge_domain_reports tool
-│        ├─ deduplicate.ts     # Deduplication logic
-│        └─ score.ts           # Scoring engine
+│     │  ├─ security.ts        # inspectra_scan_secrets, inspectra_check_deps_vulns
+│     │  ├─ tests.ts           # inspectra_parse_coverage, inspectra_parse_test_results, inspectra_detect_missing_tests
+│     │  ├─ architecture.ts    # inspectra_check_layering, inspectra_analyze_dependencies
+│     │  ├─ conventions.ts     # inspectra_check_naming, inspectra_check_file_lengths, inspectra_check_todos
+│     │  ├─ performance.ts     # inspectra_analyze_bundle_size, inspectra_check_build_timings
+│     │  ├─ documentation.ts   # inspectra_check_readme_completeness, inspectra_check_adr_presence
+│     │  ├─ tech-debt.ts       # inspectra_analyze_complexity, inspectra_age_todos
+│     │  ├─ accessibility.ts   # inspectra_check_a11y_templates
+│     │  ├─ api-design.ts      # inspectra_check_rest_conventions
+│     │  ├─ observability.ts   # inspectra_check_observability
+│     │  ├─ i18n.ts            # inspectra_check_i18n
+│     │  └─ adapter.ts         # inspectra_generate_claude_md
+│     ├─ merger/
+│     │  ├─ merge-findings.ts  # inspectra_merge_domain_reports tool
+│     │  ├─ deduplicate.ts     # Deduplication logic
+│     │  └─ score.ts           # Scoring engine
+│     ├─ register/      # Tool registration modules
+│     ├─ policies/      # Policy loader & scoring defaults
+│     └─ utils/         # Shared utilities (files, paths, project-config)
 │
 ├─ schemas/             # JSON Schema contracts
 │  ├─ finding.schema.json
@@ -127,7 +145,8 @@ inspectra/
 │     ├─ generic.yml
 │     ├─ java-angular-playwright.yml
 │     ├─ java-backend.yml
-│     └─ angular-frontend.yml
+│     ├─ angular-frontend.yml
+│     └─ typescript-node.yml
 │
 ├─ scripts/             # Dev & CI utility scripts
 │  ├─ bootstrap.sh
@@ -145,6 +164,7 @@ inspectra/
 │  ├─ adding-an-agent.md
 │  ├─ output-format.md
 │  ├─ scoring-model.md
+│  ├─ agent-governance.md
 │  └─ roadmap.md
 │
 ├─ Makefile             # Unified command runner
@@ -174,13 +194,17 @@ docker compose up inspectra
 | Performance | `audit-performance` | `inspectra_analyze_bundle_size`, `inspectra_check_build_timings`, `inspectra_detect_runtime_metrics` | `PRF-` |
 | Documentation | `audit-documentation` | `inspectra_check_readme_completeness`, `inspectra_check_adr_presence`, `inspectra_detect_doc_code_drift` | `DOC-` |
 | Tech debt | `audit-tech-debt` | `inspectra_analyze_complexity`, `inspectra_age_todos`, `inspectra_check_dependency_staleness` | `DEBT-` |
+| Accessibility | `audit-accessibility` | `inspectra_check_a11y_templates` | `ACC-` |
+| API Design | `audit-api-design` | `inspectra_check_rest_conventions` | `API-` |
+| Observability | `audit-observability` | `inspectra_check_observability` | `OBS-` |
+| i18n | `audit-i18n` | `inspectra_check_i18n` | `INT-` |
 
 ---
 
 ## Scoring Model
 
 - **Domain scores**: 0–100 (100 = no issues)
-- **Overall score**: Weighted average across all 7 domains
+- **Overall score**: Weighted average across all audited domains (weights in `policies/scoring-rules.yml`)
 - **Grades**: A (90+), B (75+), C (60+), D (40+), F (<40)
 
 ---

@@ -35,8 +35,8 @@ const ANGULAR_INLINE_TEMPLATE = /template\s*:\s*`([\s\S]*?)`/;
  * - Root <html> element without lang attribute
  * - Form inputs without ARIA labels
  */
-export async function checkA11yTemplates(projectDir: string): Promise<Finding[]> {
-  const files = await collectAllFiles(projectDir);
+export async function checkA11yTemplates(projectDir: string, ignoreDirs?: string[]): Promise<Finding[]> {
+  const files = await collectAllFiles(projectDir, ignoreDirs);
   const targetFiles = files.filter(
     (f) => TEMPLATE_EXTENSIONS.has(extname(f)) || COMPONENT_TS_PATTERN.test(f),
   );

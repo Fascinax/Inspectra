@@ -12,6 +12,10 @@ export const DEFAULT_SCORING: ScoringConfig = {
     performance: 0.1,
     documentation: 0.08,
     "tech-debt": 0.1,
+    accessibility: 0.08,
+    "api-design": 0.07,
+    observability: 0.06,
+    i18n: 0.05,
   },
 };
 

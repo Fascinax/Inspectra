@@ -33,7 +33,7 @@ User prompt -> Orchestrator -> domain agents (tool scan + LLM exploration) -> me
 
 ## Orchestrator
 
-- Full audit (`/audit`): invokes all 7 domain agents.
+- Full audit (`/audit`): invokes all 11 domain agents.
 - PR audit (`/audit-pr`): invokes only agents relevant to changed files.
 - Targeted audit: invokes only the requested domain.
 

@@ -35,8 +35,8 @@ const SOURCE_EXTENSIONS = [".ts", ".js", ".java"];
  * - Missing API versioning (/api/users instead of /api/v1/users)
  * - Non-plural collection resource names (/user instead of /users)
  */
-export async function checkRestConventions(projectDir: string): Promise<Finding[]> {
-  const files = await collectSourceFiles(projectDir, SOURCE_EXTENSIONS);
+export async function checkRestConventions(projectDir: string, ignoreDirs?: string[]): Promise<Finding[]> {
+  const files = await collectSourceFiles(projectDir, SOURCE_EXTENSIONS, ignoreDirs);
 
   const findings: Finding[] = [];
   const nextId = createIdSequence("API");

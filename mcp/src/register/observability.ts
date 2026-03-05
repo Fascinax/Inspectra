@@ -3,6 +3,7 @@ import { findingsResponse, withErrorHandling } from "./response.js";
 import { STANDARD_INPUT_SCHEMA, FINDINGS_TOOL_META } from "./schemas.js";
 import { checkObservability } from "../tools/observability.js";
 import { validateProjectDir } from "../utils/paths.js";
+import { loadProjectConfig, resolveConfig } from "../utils/project-config.js";
 
 /**
  * Registers all observability-domain MCP tools on the given server instance.
@@ -34,7 +35,8 @@ Examples:
     },
     withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
       const safeDir = await validateProjectDir(projectDir);
-      const findings = await checkObservability(safeDir);
+      const config = resolveConfig(await loadProjectConfig(safeDir));
+      const findings = await checkObservability(safeDir, config.ignore_dirs);
       return findingsResponse(findings, responseFormat, { limit, offset });
     }, "inspectra_check_observability"),
   );

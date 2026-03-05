@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import { globby } from "globby";
 
-const IGNORED_PATTERNS = [
+const DEFAULT_IGNORED_PATTERNS = [
   "**/node_modules/**",
   "**/dist/**",
   "**/.git/**",
@@ -12,20 +12,32 @@ const IGNORED_PATTERNS = [
 const DEFAULT_SOURCE_EXTENSIONS = [".ts", ".js", ".java"];
 
 /**
+ * Builds ignore patterns by merging the built-in defaults with optional
+ * extra directories supplied by the caller (e.g. from `.inspectrarc.yml`).
+ */
+function buildIgnorePatterns(extraIgnoreDirs?: string[]): string[] {
+  if (!extraIgnoreDirs?.length) return DEFAULT_IGNORED_PATTERNS;
+  const extra = extraIgnoreDirs.map((d) => `**/${d}/**`);
+  return [...DEFAULT_IGNORED_PATTERNS, ...extra];
+}
+
+/**
  * Recursively collects source files under `dir`, filtered by extension.
  *
  * @param dir - Root directory to walk.
  * @param extensions - File extensions to include (default: `.ts`, `.js`, `.java`).
+ * @param ignoreDirs - Extra directory names to ignore (merged with built-in defaults).
  * @returns Absolute paths of all matching files.
  */
 export async function collectSourceFiles(
   dir: string,
   extensions: string[] = DEFAULT_SOURCE_EXTENSIONS,
+  ignoreDirs?: string[],
 ): Promise<string[]> {
   const patterns = extensions.map((ext) => `**/*${ext}`);
   const paths = await globby(patterns, {
     cwd: dir,
-    ignore: IGNORED_PATTERNS,
+    ignore: buildIgnorePatterns(ignoreDirs),
     absolute: true,
     dot: false,
   });
@@ -36,12 +48,13 @@ export async function collectSourceFiles(
  * Recursively collects every file under `dir` regardless of extension.
  *
  * @param dir - Root directory to walk.
+ * @param ignoreDirs - Extra directory names to ignore (merged with built-in defaults).
  * @returns Absolute paths of all files found.
  */
-export async function collectAllFiles(dir: string): Promise<string[]> {
+export async function collectAllFiles(dir: string, ignoreDirs?: string[]): Promise<string[]> {
   const paths = await globby("**/*", {
     cwd: dir,
-    ignore: IGNORED_PATTERNS,
+    ignore: buildIgnorePatterns(ignoreDirs),
     absolute: true,
     dot: false,
     onlyFiles: true,

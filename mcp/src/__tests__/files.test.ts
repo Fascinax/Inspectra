@@ -50,6 +50,14 @@ describe("collectSourceFiles", () => {
     expect(files).toHaveLength(1);
     expect(files[0]).toContain("data.json");
   });
+
+  it("ignores extra directories when ignoreDirs is provided", async () => {
+    mkdirSync(join(tempDir, "vendor", "lib"), { recursive: true });
+    writeFileSync(join(tempDir, "vendor", "lib", "vendored.ts"), "");
+    const files = await collectSourceFiles(tempDir, undefined, ["vendor"]);
+    expect(files.every((f) => !f.includes("vendor"))).toBe(true);
+    expect(files.some((f) => f.endsWith("app.ts"))).toBe(true);
+  });
 });
 
 describe("collectAllFiles", () => {
@@ -76,5 +84,13 @@ describe("collectAllFiles", () => {
     for (const f of files) {
       expect(f).toContain(tempDir);
     }
+  });
+
+  it("ignores extra directories when ignoreDirs is provided", async () => {
+    mkdirSync(join(tempDir, "generated"), { recursive: true });
+    writeFileSync(join(tempDir, "generated", "output.ts"), "");
+    const files = await collectAllFiles(tempDir, ["generated"]);
+    expect(files.every((f) => !f.includes("generated"))).toBe(true);
+    expect(files).toHaveLength(2); // a.ts + sub/b.md
   });
 });

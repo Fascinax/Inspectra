@@ -32,8 +32,8 @@ const SOURCE_EXTENSIONS = [".ts", ".js"];
  * - Missing i18n configuration file
  * - Angular templates using text without i18n attribute
  */
-export async function checkI18n(projectDir: string): Promise<Finding[]> {
-  const allFiles = await collectSourceFiles(projectDir, [...TEMPLATE_EXTENSIONS, ...SOURCE_EXTENSIONS]);
+export async function checkI18n(projectDir: string, ignoreDirs?: string[]): Promise<Finding[]> {
+  const allFiles = await collectSourceFiles(projectDir, [...TEMPLATE_EXTENSIONS, ...SOURCE_EXTENSIONS], ignoreDirs);
 
   const templateFiles = allFiles.filter((f) => TEMPLATE_EXTENSIONS.includes(extname(f)));
   const sourceFiles = allFiles.filter((f) => SOURCE_EXTENSIONS.includes(extname(f)));

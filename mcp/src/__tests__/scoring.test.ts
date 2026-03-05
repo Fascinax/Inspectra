@@ -53,8 +53,20 @@ describe("DEFAULT_SCORING", () => {
     expect(DEFAULT_SCORING.severity_weights).toHaveProperty("info");
   });
 
-  it("has domain_weights that sum to ~1", () => {
-    const sum = Object.values(DEFAULT_SCORING.domain_weights).reduce((a, b) => a + b, 0);
-    expect(sum).toBeCloseTo(1.0, 1);
+  it("has domain_weights for all 11 domains (re-normalized at runtime)", () => {
+    const weights = DEFAULT_SCORING.domain_weights;
+    const domains = Object.keys(weights);
+    expect(domains).toHaveLength(11);
+    expect(domains).toContain("security");
+    expect(domains).toContain("accessibility");
+    expect(domains).toContain("api-design");
+    expect(domains).toContain("observability");
+    expect(domains).toContain("i18n");
+
+    // Weights are intentionally > 1.0 because they get re-normalized at runtime
+    // based on which domains are actually audited. Core 7 sum to 1.0, extended 4 add 0.26.
+    const sum = Object.values(weights).reduce((a, b) => a + b, 0);
+    expect(sum).toBeGreaterThan(1.0);
+    expect(sum).toBeCloseTo(1.26, 1);
   });
 });

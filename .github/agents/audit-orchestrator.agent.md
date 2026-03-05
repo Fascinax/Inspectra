@@ -235,8 +235,10 @@ After merging, produce a Markdown report with this structure:
 | Conventions | XX/100 | X | X | X |
 | Performance | XX/100 | X | X | X |
 | Documentation | XX/100 | X | X | X |
-| Tech Debt | XX/100 | X | X | X |
-
+| Tech Debt | XX/100 | X | X | X || Accessibility | XX/100 | X | X | X |
+| API Design | XX/100 | X | X | X |
+| Observability | XX/100 | X | X | X |
+| i18n | XX/100 | X | X | X |
 ## Top Priority Findings
 (list top 10 findings sorted by severity, with title, file, source, and recommendation)
 
@@ -286,7 +288,7 @@ Before returning the final report, verify:
 - [ ] All domain reports passed schema validation (summary, metadata, evidence format, effort enum)
 - [ ] `inspectra_merge_domain_reports` was called successfully with all available domain reports
 - [ ] Overall score and grade are from the merge output — not manually computed
-- [ ] Scoring weights match `policies/scoring-rules.yml` (security 24%, tests 20%, architecture 16%, conventions 12%, performance 10%, documentation 8%, tech-debt 10%)
+- [ ] Scoring weights match `policies/scoring-rules.yml` (security 24%, tests 20%, architecture 16%, conventions 12%, performance 10%, documentation 8%, tech-debt 10%, accessibility 8%, api-design 7%, observability 6%, i18n 5%)
 - [ ] Cross-domain deduplication was performed by the merge tool (no duplicate findings)
 - [ ] Metadata includes `timestamp`, `agents_invoked`, and `profile`
 - [ ] Finding counts match actual findings in the merged report
@@ -298,7 +300,7 @@ Before returning the final report, verify:
 ## Task Decomposition
 
 When receiving a complex audit request:
-1. Identify which domains are relevant (full audit = all 7, PR audit = relevant subset)
+1. Identify which domains are relevant (full audit = all 11, PR audit = relevant subset)
 2. Delegate each domain to its specialized agent — one agent, one domain, one report
 3. Do NOT give any agent a cross-domain task
 4. Collect, merge, and report — the orchestrator composes, agents analyze
