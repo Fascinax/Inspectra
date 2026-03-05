@@ -53,17 +53,51 @@ Goal: Rich, customizable report output.
 
 ---
 
-## v0.6.0 — Developer Experience & Polish
+## v0.6.0 — Agent & Tool Quality
 
-Goal: Make Inspectra easy to use, debug, and trust.
+Goal: Make existing agents smarter and tools more precise.
+
+### Improve Current Agents
+
+- [ ] Tune Phase 2 (LLM exploration) prompts based on real audit feedback
+- [ ] Better severity calibration: reduce false positives, sharpen critical/high distinction
+- [ ] Add domain-specific examples in agent prompts to guide LLM reasoning
+- [ ] Improve orchestrator deduplication across tool + LLM findings
+
+### Better Tools
+
+- [ ] Security: reduce false-positive rate on secret detection (context-aware patterns)
+- [ ] Architecture: support monorepo multi-project layering
+- [ ] Conventions: framework-aware naming rules (e.g., Angular `*Component`, `*Service`)
+- [ ] Tests: detect test quality issues (shallow assertions, missing error paths)
+- [ ] Performance: detect common anti-patterns per framework (N+1 in ORMs, missing `trackBy` in Angular)
+
+### Developer Experience
 
 - [ ] `inspectra doctor` command: diagnose setup issues (Node version, MCP connectivity, missing agents)
 - [ ] Clearer error messages when a tool fails (structured error with suggested fix)
-- [ ] `--json` output flag on CLI commands for CI/script consumption
 - [ ] Config file support (`.inspectrarc.yml`) to customize profiles, thresholds, ignored paths per project
 - [ ] Improve profile auto-detection accuracy (detect monorepo structures)
 
-## v0.7.0 — Community Ready
+## v0.7.0 — Multi-Runtime & New Agents
+
+Goal: Run Inspectra beyond Copilot, expand domain coverage.
+
+### Claude Code & Codex Support
+
+- [ ] Adapter layer: generate Claude Code (`CLAUDE.md`) agent definitions from `.agent.md` sources
+- [ ] Adapter layer: generate Codex-compatible agent prompts
+- [ ] Shared MCP tools work as-is (MCP protocol is runtime-agnostic)
+- [ ] Document setup instructions per runtime (Copilot, Claude Code, Codex)
+
+### New Agents
+
+- [ ] Accessibility agent: detect a11y issues in templates (missing ARIA, contrast, alt text)
+- [ ] API design agent: REST/GraphQL consistency, naming, versioning, error handling
+- [ ] Observability agent: detect missing logging, tracing, health checks
+- [ ] i18n agent: detect hardcoded strings, missing translation keys
+
+## v0.8.0 — Community Ready
 
 Goal: Package and publish for external users.
 
