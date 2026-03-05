@@ -7,6 +7,7 @@ import { compareReports, renderComparisonMarkdown } from "../renderer/compare.js
 import { renderHtml } from "../renderer/html.js";
 import { renderPdf } from "../renderer/pdf.js";
 import { jsonResponse, errorResponse, withErrorHandling } from "./response.js";
+import { getLatestReport } from "./resources.js";
 import { ResponseFormatField, READ_ONLY_ANNOTATIONS } from "./schemas.js";
 import { ParseError } from "../errors.js";
 
@@ -34,21 +35,32 @@ Accepts a consolidated audit report JSON object. When outputPath is provided the
 When outputPath is omitted the HTML document is returned as an embedded resource (type: resource, mimeType: text/html) alongside a short text summary. The full HTML is available to the MCP client but is not injected into the conversation context.
 
 Args:
-  - reportJson (string): JSON string of a ConsolidatedReport object conforming to consolidated-report.schema.json.
+  - reportJson (string, optional): JSON string of a ConsolidatedReport object conforming to consolidated-report.schema.json. Not required when useLatestReport is true.
+  - useLatestReport (boolean, optional): When true, reads the report cached by the last inspectra_merge_domain_reports call instead of requiring reportJson. Recommended to avoid re-passing large JSON payloads.
   - outputPath (string, optional): Absolute or relative path to write the .html file. When provided, only metadata is returned.
 
 Returns: compact summary text (always) + embedded resource when outputPath is omitted.
 
 Error handling:
-  - Returns isError: true if reportJson fails Zod validation or the file cannot be written.
+  - Returns isError: true if reportJson fails Zod validation, no cached report exists when useLatestReport is true, or the file cannot be written.
 
 Examples:
-  1. Write to disk (recommended):
+  1. Write to disk using cached report (recommended after inspectra_merge_domain_reports):
+     { "useLatestReport": true, "outputPath": "<projectDir>/.inspectra/audit.html" }
+  2. Write to disk with explicit JSON:
      { "reportJson": "{...consolidatedReport...}", "outputPath": "<projectDir>/.inspectra/audit.html" }
-  2. In-memory (resource response):
-     { "reportJson": "{...consolidatedReport...}" }`,
+  3. In-memory (resource response):
+     { "useLatestReport": true }`,
+
       inputSchema: {
-        reportJson: z.string().describe("JSON string of the ConsolidatedReport to render as HTML"),
+        reportJson: z
+          .string()
+          .optional()
+          .describe("JSON string of the ConsolidatedReport to render as HTML. Not required when useLatestReport is true."),
+        useLatestReport: z
+          .boolean()
+          .optional()
+          .describe("When true, reads the report cached by the last inspectra_merge_domain_reports call. Recommended to avoid re-passing large JSON."),
         outputPath: z
           .string()
           .optional()
@@ -61,10 +73,35 @@ Examples:
         openWorldHint: false,
       },
     },
-    withErrorHandling(async ({ reportJson, outputPath }) => {
+    withErrorHandling(async ({ reportJson, outputPath, useLatestReport }) => {
+      let rawJson: string;
+      if (useLatestReport) {
+        const cached = await getLatestReport();
+        if (!cached) {
+          return errorResponse(
+            new ParseError(
+              "No cached report found. Run inspectra_merge_domain_reports first, or pass reportJson directly.",
+              "Call inspectra_merge_domain_reports to generate a consolidated report before rendering with useLatestReport: true.",
+            ),
+            "inspectra_render_html",
+          );
+        }
+        rawJson = cached;
+      } else if (reportJson) {
+        rawJson = reportJson;
+      } else {
+        return errorResponse(
+          new ParseError(
+            "Either reportJson or useLatestReport must be provided.",
+            "Pass reportJson with the consolidated report JSON, or set useLatestReport: true to use the cached report from the last merge.",
+          ),
+          "inspectra_render_html",
+        );
+      }
+
       let report;
       try {
-        report = ConsolidatedReportSchema.parse(JSON.parse(reportJson));
+        report = ConsolidatedReportSchema.parse(JSON.parse(rawJson));
       } catch (err) {
         return errorResponse(
           new ParseError(
@@ -124,18 +161,29 @@ Converts the HTML report (Obsidian dark theme, embedded charts) to a print-ready
 Requires puppeteer: run \`npm install puppeteer --prefix mcp\` before using this tool.
 
 Args:
-  - reportJson (string): JSON string of a ConsolidatedReport object conforming to consolidated-report.schema.json.
+  - reportJson (string, optional): JSON string of a ConsolidatedReport object conforming to consolidated-report.schema.json. Not required when useLatestReport is true.
+  - useLatestReport (boolean, optional): When true, reads the report cached by the last inspectra_merge_domain_reports call. Recommended to avoid re-passing large JSON payloads.
   - outputPath (string): Absolute or relative path to write the .pdf file. Required for PDF output.
 
 Returns: compact summary text with score, grade, file size, and output path.
 
 Error handling:
-  - Returns isError: true if reportJson fails Zod validation, puppeteer is not installed, or the file cannot be written.
+  - Returns isError: true if reportJson fails Zod validation, no cached report exists when useLatestReport is true, puppeteer is not installed, or the file cannot be written.
 
 Examples:
-  { "reportJson": "{...consolidatedReport...}", "outputPath": "<projectDir>/.inspectra/audit.pdf" }`,
+  1. Preferred (after inspectra_merge_domain_reports):
+     { "useLatestReport": true, "outputPath": "<projectDir>/.inspectra/audit.pdf" }
+  2. Explicit JSON:
+     { "reportJson": "{...consolidatedReport...}", "outputPath": "<projectDir>/.inspectra/audit.pdf" }`,
       inputSchema: {
-        reportJson: z.string().describe("JSON string of the ConsolidatedReport to export as PDF"),
+        reportJson: z
+          .string()
+          .optional()
+          .describe("JSON string of the ConsolidatedReport to export as PDF. Not required when useLatestReport is true."),
+        useLatestReport: z
+          .boolean()
+          .optional()
+          .describe("When true, reads the report cached by the last inspectra_merge_domain_reports call. Recommended to avoid re-passing large JSON."),
         outputPath: z.string().describe("File path to write the PDF report. Recommended: <projectDir>/.inspectra/audit.pdf"),
       },
       annotations: {
@@ -145,10 +193,35 @@ Examples:
         openWorldHint: false,
       },
     },
-    withErrorHandling(async ({ reportJson, outputPath }) => {
+    withErrorHandling(async ({ reportJson, outputPath, useLatestReport }) => {
+      let rawJson: string;
+      if (useLatestReport) {
+        const cached = await getLatestReport();
+        if (!cached) {
+          return errorResponse(
+            new ParseError(
+              "No cached report found. Run inspectra_merge_domain_reports first, or pass reportJson directly.",
+              "Call inspectra_merge_domain_reports to generate a consolidated report before rendering with useLatestReport: true.",
+            ),
+            "inspectra_render_pdf",
+          );
+        }
+        rawJson = cached;
+      } else if (reportJson) {
+        rawJson = reportJson;
+      } else {
+        return errorResponse(
+          new ParseError(
+            "Either reportJson or useLatestReport must be provided.",
+            "Pass reportJson with the consolidated report JSON, or set useLatestReport: true to use the cached report from the last merge.",
+          ),
+          "inspectra_render_pdf",
+        );
+      }
+
       let report;
       try {
-        report = ConsolidatedReportSchema.parse(JSON.parse(reportJson));
+        report = ConsolidatedReportSchema.parse(JSON.parse(rawJson));
       } catch (err) {
         return errorResponse(
           new ParseError(

@@ -163,12 +163,12 @@ After collecting each domain report, check ALL of these. If any check fails, app
    - `audit-performance` — bundle size, build timings, runtime metrics
    - `audit-documentation` — README completeness, ADRs, doc-code drift
    - `audit-tech-debt` — complexity, stale TODOs, dependency staleness
-3. **Collect** each agent's domain report (JSON following `schemas/domain-report.schema.json`).
+3. **Collect** each agent's domain report (JSON following `schemas/domain-report.schema.json`). Domain agent results come back as **direct in-context tool responses** — they are never stored in files. NEVER attempt to read them from disk. NEVER open any file path containing `workspaceStorage`, `AppData`, `toolu_`, or `chat-session-resources` to retrieve agent output.
 4. **Validate** each domain report against the schema. Required fields: `domain`, `score`, `summary`, `findings`, `metadata` (with `agent`, `timestamp`, `tools_used`). Each finding must have `evidence` as objects (`{"file": "...", "line": N}`), `effort` from `["trivial","small","medium","large","epic"]`, and `id` matching the agent's prefix pattern. If any report fails validation, apply **Rule #1**: diagnose, discard, re-invoke the agent.
 5. **Merge** all validated domain reports using `inspectra_merge_domain_reports`. Pass `projectDir` (absolute path to the audited project root) so the tool persists the consolidated report to `<projectDir>/.inspectra/consolidated-report.json`. This tool also handles deduplication per `policies/deduplication-rules.yml` and scoring per `policies/scoring-rules.yml`.
 6. **Log** the audit activity using `inspectra_log_activity` — record which agents were invoked, their status, and timestamps.
 7. **Produce** the final consolidated report in Markdown from the merge output.
-8. **Render** the report using `inspectra_render_html` with `outputPath: "<projectDir>/.inspectra/audit.html"` (Obsidian dark theme). If the user requests PDF, also call `inspectra_render_pdf` with `outputPath: "<projectDir>/.inspectra/audit.pdf"`.  All generated files live under `<projectDir>/.inspectra/`.
+8. **Render** the report using `inspectra_render_html` with `useLatestReport: true` and `outputPath: "<projectDir>/.inspectra/audit.html"` (Obsidian dark theme). The merger already cached the report — do NOT re-pass the full JSON. If the user requests PDF, also call `inspectra_render_pdf` with `useLatestReport: true` and `outputPath: "<projectDir>/.inspectra/audit.pdf"`.  All generated files live under `<projectDir>/.inspectra/`.
 
 ## Delegation Rules
 
@@ -247,6 +247,7 @@ If a user asks for something that spans a single domain, delegate to that one do
 - NEVER compose the final report manually when `inspectra_merge_domain_reports` fails — fix the input data (re-invoke failing agents per Rule #1) and re-call the merge tool.
 - NEVER use `inspectra_score_findings` to work around a failed merge — that is patching bad output (Rule #1 violation).
 - NEVER use hardcoded scoring weights — always follow `policies/scoring-rules.yml`.
+- NEVER read files from `workspaceStorage`, `AppData`, `toolu_*`, or `chat-session-resources` paths — these are VS Code internal session artifacts, not agent outputs. Agent results are always available as in-context tool responses.
 - NEVER compute overall scores or domain scores yourself — the merge tool computes them.
 - NEVER skip `inspectra_log_activity` — every audit must be traceable.
 - NEVER skip `inspectra_render_html` — every audit must produce an HTML report.

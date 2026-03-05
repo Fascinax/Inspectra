@@ -32,7 +32,7 @@ export async function setLatestReport(reportJson: string): Promise<void> {
   await writeFile(REPORT_PATH, reportJson, "utf-8");
 }
 
-async function getLatestReport(): Promise<string | null> {
+export async function getLatestReport(): Promise<string | null> {
   try {
     return await readFile(REPORT_PATH, "utf-8");
   } catch {
