@@ -28,6 +28,7 @@ export async function checkReadmeCompleteness(projectDir: string): Promise<Findi
         recommendation: "Add a README with setup, usage, and testing instructions.",
         effort: "small",
         tags: ["readme", "onboarding"],
+        source: "tool",
       },
     ];
   }
@@ -49,6 +50,7 @@ export async function checkReadmeCompleteness(projectDir: string): Promise<Findi
       recommendation: `Add a '${section}' section to improve discoverability for contributors and users.`,
       effort: "trivial",
       tags: ["readme"],
+      source: "tool",
     });
   }
 
@@ -85,6 +87,7 @@ export async function checkAdrPresence(projectDir: string): Promise<Finding[]> {
       recommendation: "Add ADRs for major architecture and technology decisions.",
       effort: "small",
       tags: ["adr", "architecture-docs"],
+      source: "tool",
     },
   ];
 }
@@ -128,6 +131,7 @@ export async function detectDocCodeDrift(projectDir: string): Promise<Finding[]>
         recommendation: `Document how to run '${expected}' in README to keep docs aligned with code.`,
         effort: "trivial",
         tags: ["drift", "readme"],
+        source: "tool",
       });
     }
   } catch {

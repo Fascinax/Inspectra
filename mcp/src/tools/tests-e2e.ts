@@ -33,6 +33,7 @@ export async function parsePlaywrightReport(projectDir: string): Promise<Finding
         recommendation: "Fix the failing Playwright test or update expected behavior.",
         effort: "medium",
         tags: ["playwright", "test-failure"],
+        source: "tool",
       });
     }
   });
@@ -74,6 +75,7 @@ async function detectJunitFlakyTests(projectDir: string, nextId: () => string): 
         recommendation: "Investigate sources of non-determinism: async timing, shared state, external dependencies.",
         effort: "medium",
         tags: ["flaky-test", "reliability"],
+        source: "tool",
       });
     }
   } catch {
@@ -106,6 +108,7 @@ async function detectPlaywrightFlakyTests(projectDir: string, nextId: () => stri
         recommendation: "Isolate test dependencies, fix race conditions or timing issues.",
         effort: "medium",
         tags: ["flaky-test", "playwright", "reliability"],
+        source: "tool",
       });
     }
   });

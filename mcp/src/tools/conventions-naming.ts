@@ -47,6 +47,7 @@ export async function checkNamingConventions(projectDir: string): Promise<Findin
           "Rename the file to match the project's naming conventions (e.g., *.service.ts, *.controller.java).",
         effort: "trivial",
         tags: ["naming"],
+        source: "tool",
       });
     }
   }

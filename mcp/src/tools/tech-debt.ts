@@ -33,6 +33,7 @@ export async function analyzeComplexity(projectDir: string, threshold = 35): Pro
         recommendation: "Refactor into smaller functions/modules and simplify branching logic.",
         effort: "large",
         tags: ["complexity", "maintainability"],
+        source: "tool",
       });
     } catch {
       /* skip unreadable files */
@@ -88,6 +89,7 @@ export async function ageTodos(projectDir: string): Promise<Finding[]> {
           recommendation: "Resolve this item or convert it into a tracked issue with an owner and due date.",
           effort: "small",
           tags: ["todo", "debt"],
+          source: "tool",
         });
       }
     } catch {
@@ -136,6 +138,7 @@ export async function checkDependencyStaleness(projectDir: string): Promise<Find
         recommendation: "Pin or regularly review versions and automate update checks in CI.",
         effort: "small",
         tags: ["dependencies", "staleness"],
+        source: "tool",
       },
     ];
   } catch {

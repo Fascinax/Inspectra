@@ -45,6 +45,7 @@ export async function checkFileLengths(projectDir: string, profile?: ProfileConf
           recommendation: "Extract classes/functions into separate files following single responsibility principle.",
           effort: "medium",
           tags: ["complexity", "maintainability"],
+          source: "tool",
         });
       }
     } catch {
@@ -93,6 +94,7 @@ export async function checkTodoFixmes(projectDir: string): Promise<Finding[]> {
             recommendation: "Resolve the TODO/FIXME or create a tracked issue.",
             effort: "small",
             tags: ["tech-debt", tag.toLowerCase()],
+            source: "tool",
           });
         }
       }

@@ -52,6 +52,7 @@ export async function detectMissingTests(projectDir: string): Promise<Finding[]>
         recommendation: "Create a corresponding test file.",
         effort: "medium",
         tags: ["missing-test"],
+        source: "tool",
       });
     }
   }

@@ -40,6 +40,7 @@ export async function analyzeBundleSize(projectDir: string): Promise<Finding[]> 
           recommendation: "Apply code splitting, remove unused dependencies, and enable minification/tree-shaking.",
           effort: "medium",
           tags: ["bundle", "build"],
+          source: "tool",
         });
       }
 
@@ -69,6 +70,7 @@ export async function analyzeBundleSize(projectDir: string): Promise<Finding[]> 
         recommendation: "Split bundles and lazy-load non-critical code paths.",
         effort: "medium",
         tags: ["bundle", "runtime"],
+        source: "tool",
       });
     } catch {
       /* skip unreadable files */
@@ -111,6 +113,7 @@ export async function checkBuildTimings(projectDir: string): Promise<Finding[]> 
           recommendation: "Profile the build, cache dependencies/artifacts, and optimize heavy steps.",
           effort: "medium",
           tags: ["build", "ci"],
+          source: "tool",
         });
       }
 
@@ -127,6 +130,7 @@ export async function checkBuildTimings(projectDir: string): Promise<Finding[]> 
           recommendation: "Stabilize flaky/slow tasks and improve build cache hit rate.",
           effort: "medium",
           tags: ["build", "ci", "stability"],
+          source: "tool",
         });
       }
 
@@ -195,6 +199,7 @@ export async function detectRuntimeMetrics(projectDir: string): Promise<Finding[
             recommendation: "Prefer async alternatives and add guards/timeouts for long-running loops.",
             effort: "small",
             tags: ["runtime", "latency"],
+            source: "tool",
           });
         }
       }

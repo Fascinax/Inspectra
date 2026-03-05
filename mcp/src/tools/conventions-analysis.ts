@@ -56,7 +56,7 @@ async function runEslintJson(projectDir: string): Promise<string | null> {
     try {
       const { stdout } = await execFileAsync(
         "npx",
-        ["--no-install", "eslint", "--format", "json", "--no-eslintrc", "--rule", "{}", projectDir],
+        ["--no-install", "eslint", "--format", "json", "--max-warnings", "-1", projectDir],
         { cwd: projectDir, timeout: ESLINT_TIMEOUT_MS },
       );
       return stdout;
@@ -96,6 +96,7 @@ function parseEslintFindings(eslintJson: string, projectDir: string, nextId: () 
           recommendation: `Fix the ESLint violation for rule '${msg.ruleId}'.`,
           effort: "trivial",
           tags: ["eslint", "lint"],
+          source: "tool",
         });
       }
     }
@@ -115,28 +116,34 @@ async function parseCheckstyleFindings(projectDir: string, nextId: () => string)
   for (const p of checkstyleCandidates) {
     try {
       const xml = await readFile(p, "utf-8");
-      const errorMatches = xml.matchAll(
-        /<error\s+line="(\d+)"[^>]*severity="([^"]*)"[^>]*message="([^"]*)"[^>]*source="([^"]*)"/g,
-      );
-      const fileMatch = xml.match(/<file\s+name="([^"]*)"/);
-      const filePath = fileMatch ? relative(projectDir, fileMatch[1] ?? p) : p;
-      for (const m of errorMatches) {
-        const [, line, severity, message, source] = m;
-        if (!line || !severity || !message || !source) continue;
-        const ruleName = source.split(".").pop() ?? source;
-        findings.push({
-          id: nextId(),
-          severity: severity === "error" ? "medium" : "low",
-          title: `Checkstyle [${ruleName}]: ${message.substring(0, MAX_TITLE_EXCERPT_LENGTH)}`,
-          description: message,
-          domain: "conventions",
-          rule: `checkstyle/${ruleName}`,
-          confidence: 1.0,
-          evidence: [{ file: relative(projectDir, filePath), line: parseInt(line, 10) }],
-          recommendation: `Fix the Checkstyle violation for rule '${ruleName}'.`,
-          effort: "trivial",
-          tags: ["checkstyle", "lint"],
-        });
+      // Iterate each <file ...> block to correctly attribute errors per source file
+      const fileBlocks = xml.matchAll(/<file\s+name="([^"]*)">([^]*?)<\/file>/g);
+      for (const fileBlock of fileBlocks) {
+        const [, filePath, blockContent] = fileBlock;
+        if (!filePath || !blockContent) continue;
+        const relFile = relative(projectDir, filePath);
+        const errorMatches = blockContent.matchAll(
+          /<error\s+line="(\d+)"[^>]*severity="([^"]*)"[^>]*message="([^"]*)"[^>]*source="([^"]*)"/g,
+        );
+        for (const m of errorMatches) {
+          const [, line, severity, message, source] = m;
+          if (!line || !severity || !message || !source) continue;
+          const ruleName = source.split(".").pop() ?? source;
+          findings.push({
+            id: nextId(),
+            severity: severity === "error" ? "medium" : "low",
+            title: `Checkstyle [${ruleName}]: ${message.substring(0, MAX_TITLE_EXCERPT_LENGTH)}`,
+            description: message,
+            domain: "conventions",
+            rule: `checkstyle/${ruleName}`,
+            confidence: 1.0,
+            evidence: [{ file: relFile, line: parseInt(line, 10) }],
+            recommendation: `Fix the Checkstyle violation for rule '${ruleName}'.`,
+            effort: "trivial",
+            tags: ["checkstyle", "lint"],
+            source: "tool",
+          });
+        }
       }
       break;
     } catch {

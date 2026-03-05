@@ -53,6 +53,7 @@ export async function checkLayering(
             recommendation: `Invert the dependency using an interface in the domain layer.`,
             effort: "large",
             tags: ["layering", "clean-architecture"],
+            source: "tool",
           });
         }
       }

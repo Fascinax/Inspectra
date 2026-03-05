@@ -54,6 +54,7 @@ export const FindingSchema = z
     recommendation: z.string().max(1000).optional().describe("Suggested fix or remediation"),
     effort: z.enum(EFFORT_LEVELS).optional().describe("Estimated effort to fix"),
     tags: z.array(z.string()).optional().describe("Classification tags for filtering"),
+    source: z.enum(["tool", "llm"]).optional().describe("Source of the finding: 'tool' for MCP tool detections, 'llm' for LLM analysis"),
   })
   .strict()
   .describe("A single audit finding");

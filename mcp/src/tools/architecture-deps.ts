@@ -33,6 +33,7 @@ export async function analyzeModuleDependencies(projectDir: string): Promise<Fin
         recommendation: "Audit dependencies and remove unused packages with `depcheck`.",
         effort: "medium",
         tags: ["dependencies"],
+        source: "tool",
       });
     }
 
@@ -50,6 +51,7 @@ export async function analyzeModuleDependencies(projectDir: string): Promise<Fin
         recommendation: "Verify whether all these packages are needed or if they overlap.",
         effort: "small",
         tags: ["dependencies"],
+        source: "tool",
       });
     }
   } catch {
@@ -126,6 +128,7 @@ export async function detectCircularDependencies(projectDir: string): Promise<Fi
                 "Break the cycle by extracting shared logic into a separate module or using dependency injection.",
               effort: "large",
               tags: ["circular-dependency", "coupling"],
+              source: "tool",
             });
           }
         }

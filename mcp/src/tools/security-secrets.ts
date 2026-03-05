@@ -15,7 +15,6 @@ export const SECRET_PATTERNS = [
     pattern: /-----BEGIN\s+(RSA|EC|DSA|OPENSSH)\s+PRIVATE\s+KEY-----/g,
     severity: "critical" as const,
   },
-  { rule: "no-env-file-committed", pattern: /^\.env$/g, severity: "medium" as const },
   {
     rule: "no-jwt-hardcoded",
     pattern: /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g,
@@ -47,6 +46,25 @@ export async function scanSecrets(
   const nextId = createIdSequence("SEC");
 
   for (const filePath of filePaths) {
+    // Check if this is a committed .env file — test the filename, not the content
+    const fileName = filePath.split(/[\/\\]/).pop() ?? "";
+    if (/^\.env(?:\.(local|development|staging|production|test))?$/.test(fileName)) {
+      findings.push({
+        id: nextId(),
+        severity: "medium",
+        title: `Committed .env file detected: ${fileName}`,
+        description: `The file '${fileName}' appears to be a committed environment file. .env files often contain secrets and should not be tracked by version control.`,
+        domain: "security",
+        rule: "no-env-file-committed",
+        confidence: 0.95,
+        evidence: [{ file: filePath }],
+        recommendation: "Add .env to .gitignore and use .env.example as a template with placeholder values.",
+        effort: "small",
+        tags: ["secret", "dotenv"],
+        source: "tool",
+      });
+    }
+
     const fileFindings = await scanSingleFile(filePath, allPatterns, nextId);
     findings.push(...fileFindings);
   }
@@ -89,6 +107,7 @@ async function scanSingleFile(
             recommendation: "Move this value to an environment variable or a secrets manager.",
             effort: "small",
             tags: ["secret", "credentials"],
+            source: "tool",
           });
         }
       }

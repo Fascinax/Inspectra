@@ -106,6 +106,7 @@ function createDryFindings(
       recommendation: "Extract the duplicated logic into a shared utility function or module.",
       effort: "medium",
       tags: ["dry", "duplication", "maintainability"],
+      source: "tool",
     });
   }
 

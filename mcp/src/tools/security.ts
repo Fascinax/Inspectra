@@ -53,6 +53,7 @@ export async function checkDependencyVulnerabilities(projectDir: string): Promis
         recommendation: `Run \`npm audit fix\` or upgrade ${pkgName} to a patched version.`,
         effort: "small",
         tags: ["dependency", "vulnerability"],
+        source: "tool",
       });
     }
   } catch {
@@ -99,6 +100,7 @@ export async function runSemgrep(projectDir: string): Promise<Finding[]> {
       recommendation: r.extra.fix ?? "Review and address the flagged pattern.",
       effort: "small" as const,
       tags: ["semgrep", r.check_id.split(".")[0] ?? r.check_id],
+      source: "tool" as const,
     }));
   } catch {
     return [];
@@ -154,6 +156,7 @@ export async function checkMavenDependencies(projectDir: string): Promise<Findin
         "Audit dependencies and remove unused ones. Run `mvn dependency:analyze` to find unused declarations.",
       effort: "medium",
       tags: ["dependencies", "maven"],
+      source: "tool",
     });
   }
 
@@ -174,6 +177,7 @@ export async function checkMavenDependencies(projectDir: string): Promise<Findin
       recommendation: "Replace SNAPSHOT versions with stable releases before deploying to production.",
       effort: "small",
       tags: ["dependencies", "maven", "reproducibility"],
+      source: "tool",
     });
   }
 
@@ -203,6 +207,7 @@ function mapNpmSeverity(npmSev: string): Finding["severity"] {
 
 function mapSemgrepSeverity(sev: string): Finding["severity"] {
   const normalized = sev.toUpperCase();
+  if (normalized === "CRITICAL") return "critical";
   if (normalized === "ERROR") return "high";
   if (normalized === "WARNING") return "medium";
   if (normalized === "INFO") return "info";

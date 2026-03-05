@@ -105,6 +105,7 @@ export async function parseTestResults(projectDir: string): Promise<Finding[]> {
           recommendation: "Fix the failing test or update it if the expected behavior changed.",
           effort: "small",
           tags: ["test-failure"],
+          source: "tool",
         });
       }
     }
@@ -138,5 +139,6 @@ function buildCoverageFinding(params: BuildCoverageParams): Finding {
     recommendation: `Add tests to increase ${metric} coverage above ${threshold}%.`,
     effort: "medium",
     tags: ["coverage"],
+    source: "tool",
   };
 }
