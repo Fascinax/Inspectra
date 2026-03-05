@@ -46,16 +46,68 @@ Evaluate the performance characteristics of the target codebase and produce a st
 After Phase 1 completes, use `read` and `search` to explore the codebase and find performance issues that metric tools cannot detect:
 
 1. **Enrich Phase 1 findings** — read flagged build configs to add context, confirm or downgrade tool-detected issues.
-2. **Discover new findings** by reading and reasoning about the code:
-   - **N+1 query patterns**: Loops that make individual database/API calls instead of batching.
-   - **Missing lazy loading**: Heavy modules or routes imported eagerly in the main bundle.
-   - **Memory leak indicators**: Event listeners never removed, observables never unsubscribed, growing arrays in long-lived services.
-   - **Expensive re-renders**: React/Angular components that re-render on every parent change due to missing memoization or OnPush.
-   - **Synchronous blocking**: Blocking I/O in async contexts, CPU-heavy computation on the main thread.
-   - **Missing caching**: Repeated identical API calls or computations without caching.
+2. **Discover new findings** using the strategies below.
 3. All Phase 2 findings MUST have `"source": "llm"` and `confidence ≤ 0.7`.
 4. Phase 2 finding IDs start at `PRF-501` to clearly separate them from tool findings.
 5. Do NOT re-report issues already found by Phase 1 tools — Phase 2 is additive only.
+
+#### Search Strategy
+
+Search in this priority order:
+
+1. **Angular: missing trackBy** — Search `*ngFor` in `.html` templates → check each occurrence for a `trackBy` binding. Missing `trackBy` on a list driven by a dynamic data source causes full DOM re-renders on every change detection cycle. Only flag lists that are clearly driven by external data (not static arrays of 2–3 items).
+2. **Angular/RxJS: unsubscribed observables** — Search `.subscribe(` in component `.ts` files → check if each subscription is paired with `takeUntil(`, `takeUntilDestroyed(`, `unsubscribe()` in `ngOnDestroy`, or uses the `async` pipe. A bare `.subscribe(` in a component without any cleanup is a memory leak.
+3. **N+1 query patterns** — Search for `findOne(`, `find(`, `getRepository(`, `em.find(` inside `for` loops, `forEach`, `map`, or `Promise.all` with individual lookups per item. Batching should be used instead.
+4. **Missing lazy loading** — Search `import` statements at the top of route entry files (not `loadChildren: () => import(...)`) for heavy modules like chart libraries, PDF generators, or video players. Eagerly importing these increases the initial bundle.
+5. **Memory leak indicators** — Search `setInterval(`, `addEventListener(` in service or component files → verify that matching `clearInterval(` or `removeEventListener(` exist in the cleanup lifecycle (`ngOnDestroy`, `componentWillUnmount`, `dispose`).
+
+#### Examples
+
+**High signal — Angular memory leak (unsubscribed observable):**
+```ts
+// user-list.component.ts:34
+ngOnInit() {
+  this.userService.users$.subscribe(users => this.users = users);
+  // No takeUntil, no takeUntilDestroyed, no async pipe — leaks on component destroy
+}
+```
+Emit: PRF-501, severity=`high`, rule=`unsubscribed-observable`, confidence=0.65
+
+**High signal — missing trackBy in Angular template:**
+```html
+<!-- product-list.component.html:12 -->
+<li *ngFor="let p of products$ | async">{{ p.name }}</li>
+<!-- products$ emits from HTTP — full list re-renders on every emission without trackBy -->
+```
+Emit: PRF-502, severity=`medium`, rule=`missing-trackby`, confidence=0.60
+
+**False positive to avoid — static short list:**
+```html
+<li *ngFor="let tab of tabs">{{ tab.label }}</li>
+<!-- tabs = [{id:1, label:'A'}, {id:2, label:'B'}] — static, 2 items, no trackBy needed -->
+```
+Do NOT emit missing-trackBy for static short lists (3 items or fewer, or assigned inline).
+
+**False positive to avoid — HTTP call in ngOnInit with takeUntilDestroyed:**
+```ts
+this.http.get('/api/users').pipe(takeUntilDestroyed()).subscribe(...);
+// Properly scoped — no leak
+```
+Do NOT emit unsubscribed-observable when the subscription is properly scoped.
+
+#### Confidence Calibration
+
+- **0.65–0.70**: Structural pattern clearly indicates a production performance problem (leak, N+1, no cleanup).
+- **0.50–0.64**: Potential issue that depends on data size or usage frequency that can’t be confirmed statically.
+- **0.35–0.49**: Theoretical optimization with marginal real-world impact on typical usage.
+
+#### Severity Decision for LLM Findings
+
+- **critical**: Memory leak in a long-lived service that accumulates across navigation (not cleaned up, grows unbounded).
+- **high**: N+1 query pattern in a route that runs frequently; unsubscribed observable in a frequently rendered component.
+- **medium**: Missing `trackBy` on a list of moderate size; missing lazy loading for a heavy module.
+- **low**: Minor caching or memoization improvement with marginal impact.
+- **info**: Theoretical optimization suggestion without a measurable expected gain.
 
 ### Phase 3 — Combine and report
 

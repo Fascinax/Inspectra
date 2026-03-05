@@ -51,16 +51,69 @@ Evaluate coding standards adherence in the target codebase and produce a structu
 After Phase 1 completes, use `read` and `search` to explore the codebase and find clean code issues that pattern-matching tools cannot detect:
 
 1. **Enrich Phase 1 findings** — read flagged files to add context, confirm or downgrade tool-detected issues.
-2. **Discover new findings** by reading and reasoning about the code:
-   - **Magic numbers/strings**: Hardcoded values that should be named constants (e.g., `if (status === 3)` instead of `if (status === Status.APPROVED)`).
-   - **Inconsistent patterns**: Some modules use async/await while others use callbacks; some use class-based services while others use plain functions.
-   - **Dead code**: Unreachable branches, exported functions never imported anywhere, commented-out code blocks.
-   - **Misleading names**: Variables or functions whose names don't match their actual behavior (e.g., `getUser()` that also modifies state).
-   - **Long parameter lists**: Functions taking 4+ arguments that should use an options object.
-   - **Responsibility violations**: Functions that do too many things (fetching data, transforming it, and rendering in the same function).
+2. **Discover new findings** using the strategies below.
 3. All Phase 2 findings MUST have `"source": "llm"` and `confidence ≤ 0.7`.
 4. Phase 2 finding IDs start at `CNV-501` to clearly separate them from tool findings.
 5. Do NOT re-report issues already found by Phase 1 tools — Phase 2 is additive only.
+
+#### Search Strategy
+
+Search in this priority order:
+
+1. **Magic numbers** — Search for integer/float literals (e.g., `< 18`, `> 100`, `=== 3`) in conditional expressions and function arguments → check if the value has an obvious business meaning that should be a named constant. Skip values `0`, `1`, `-1` (universally understood) and values already assigned to a descriptively named constant.
+2. **Misleading names** — Search for functions named `get*` or `find*` → read the body → flag any that perform a non-retrieval side effect (writes to DB, sends event, modifies state). A getter with a side effect breaks the principle of least surprise.
+3. **Long parameter lists** — Search for function signatures with 4+ parameters. Read the function to check if the params should be grouped into an options object or a DTO.
+4. **Dead code** — Search for `export function`, `export class`, `public ` in non-test files → check if the exported symbol is imported anywhere in the project. A symbol with zero imports is a dead export candidate.
+5. **Inconsistent error handling** — Search for `try/catch` blocks → compare the pattern used across files. Flag if some files swallow errors (`catch(e) {}`), some re-throw, and some log-and-continue — inconsistency here is its own finding.
+
+#### Examples
+
+**High signal — magic number with business meaning:**
+```ts
+// checkout.service.ts:34
+if (user.age < 18) { // What is 18? Should be MIN_LEGAL_AGE constant
+  throw new Error('User too young');
+}
+```
+Emit: CNV-501, severity=`low`, rule=`magic-number`, confidence=0.55
+
+**High signal — misleading function name:**
+```ts
+// user.service.ts:67
+async function getUser(id: string) {
+  const user = await repo.findOne(id);
+  await analytics.track('user_fetched'); // Hidden side effect in a getter!
+  return user;
+}
+```
+Emit: CNV-502, severity=`medium`, rule=`misleading-name`, confidence=0.65
+
+**False positive to avoid — value already named:**
+```ts
+const MAX_RETRY_ATTEMPTS = 3;
+for (let i = 0; i < MAX_RETRY_ATTEMPTS; i++) { ... }
+```
+Do NOT emit magic-number — the value `3` is already assigned to a descriptively named constant.
+
+**False positive to avoid — accepted universal constants:**
+```ts
+if (index === -1) return null; // -1 is universally understood as "not found"
+if (array.length === 0) return; // 0 length is universally understood
+```
+Do NOT emit magic-number for `0`, `1`, `-1` in standard idioms.
+
+#### Confidence Calibration
+
+- **0.65–0.70**: Clear intent mismatch, responsibility violation, or misleading name confirmed by reading the function body.
+- **0.50–0.64**: Pattern suggests a violation but may be intentional (e.g., utility function with many params for a good reason).
+- **0.35–0.49**: Style preference that reduces readability but doesn't affect correctness or maintainability.
+
+#### Severity Decision for LLM Findings
+
+- **high**: Responsibility violation or misleading behavior that would cause bugs during maintenance (e.g., a getter that deletes data).
+- **medium**: Dead code, misleading names, or parameter-list issues that slow down future changes.
+- **low**: Magic numbers, minor naming inconsistencies, optional refactoring improvements.
+- **info**: Style suggestions without real maintenance impact.
 
 ### Phase 3 — Combine and report
 

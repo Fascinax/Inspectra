@@ -46,16 +46,75 @@ Evaluate the technical debt burden of the target codebase and produce a structur
 After Phase 1 completes, use `read` and `search` to explore the codebase and find tech debt that metric tools cannot detect:
 
 1. **Enrich Phase 1 findings** — read flagged files to understand the TODO context, confirm or downgrade tool-detected complexity.
-2. **Discover new findings** by reading and reasoning about the code:
-   - **Half-finished refactors**: Two patterns coexisting for the same concern (e.g., old callback API alongside new Promise-based API), suggesting an incomplete migration.
-   - **Workaround archaeology**: Comments containing "hack", "temporary", "workaround", "fixme" — read the context to assess whether the workaround became permanent.
-   - **Deprecated API usage**: Code calling APIs marked as deprecated in the framework (e.g., `ComponentFactoryResolver` in Angular, `Date()` constructor misuse).
-   - **Dead code paths**: Exported functions never imported, switch cases that can never match, unreachable code after early returns.
-   - **Tightly coupled modules**: Changes in one module that would force cascading changes in many others (shotgun surgery).
-   - **Missing abstractions**: Repeated patterns that should be extracted (e.g., similar error handling in 10 places, copy-pasted validation logic).
+2. **Discover new findings** using the strategies below.
 3. All Phase 2 findings MUST have `"source": "llm"` and `confidence ≤ 0.7`.
 4. Phase 2 finding IDs start at `DEBT-501` to clearly separate them from tool findings.
 5. Do NOT re-report issues already found by Phase 1 tools — Phase 2 is additive only.
+
+#### Search Strategy
+
+Search in this priority order:
+
+1. **Half-finished refactors** — Search for dual patterns in the same file or module: `callback` functions alongside `async/await` for the same domain, `Promise`-returning and callback-accepting overloads of the same operation. Two patterns for the same concern = incomplete migration.
+2. **Deprecated framework APIs** — Search for these framework-specific deprecated symbols:
+   - **Angular**: `ComponentFactoryResolver`, `Renderer` (not `Renderer2`), `ModuleWithComponentFactories`, `getModuleFactory`
+   - **React**: `componentWillMount`, `componentWillUpdate`, `componentWillReceiveProps`, `findDOMNode`, `ReactDOM.render` (removed in React 18)
+   - **TypeORM**: `getConnection()`, `createConnection()` (deprecated since 0.3 — use `DataSource` instead)
+   - **Spring Boot**: `@EnableSwagger2` (replaced by SpringDoc), `WebSecurityConfigurerAdapter` (deprecated since 5.7)
+3. **Permanent workarounds** — Search `// HACK`, `// WORKAROUND`, `// TEMPORARY`, `// FIXME` → read each comment and its surrounding code → assess whether the workaround has become permanent (no clear path to removal, no linked issue).
+4. **Dead exports** — Search `export ` in source files → for each exported symbol, search across the project for any import of that symbol. Symbols with zero external imports are dead export candidates.
+5. **Interface/type naming debt** — Search for types/interfaces with names like `Legacy*`, `Old*`, `*V1`, `*Deprecated` → check if they are actively used or can be removed.
+
+#### Examples
+
+**High signal — half-finished refactor:**
+```ts
+// user.service.ts — two patterns coexist for user creation
+async createUser(dto: CreateUserDto) { // New async/await API
+  return this.repo.save(dto);
+}
+
+createUserLegacy(dto: any, callback: Function) { // Old callback API still called from 3 places
+  this.repo.save(dto).then(u => callback(null, u)).catch(e => callback(e));
+}
+```
+Emit: DEBT-501, severity=`medium`, rule=`incomplete-migration`, confidence=0.65
+
+**High signal — deprecated Angular API:**
+```ts
+// app.module.ts:19
+import { ComponentFactoryResolver } from '@angular/core'; // Removed in Angular 17+
+// Modern replacement: ViewContainerRef.createComponent()
+```
+Emit: DEBT-502, severity=`high`, rule=`deprecated-api-usage`, confidence=0.70
+
+**False positive to avoid — intentionally versioned API endpoints:**
+```ts
+router.get('/api/v1/users', handleV1); // Maintained legacy API for backward compatibility
+router.get('/api/v2/users', handleV2); // Current API
+// Both are actively maintained and documented — this is NOT dead code or debt
+```
+Do NOT emit tech-debt for intentionally supported versioned APIs.
+
+**False positive to avoid — documented trade-off:**
+```ts
+// HACK: We bypass the cache here because the cache layer doesn't support streaming (tracked in JIRA-1234)
+return this.streamDirectFromDB(id);
+```
+Do NOT emit a `permanent-workaround` finding if the workaround has a specific, tracked reason and a referenced ticket.
+
+#### Confidence Calibration
+
+- **0.65–0.70**: Deprecated API confirmed against framework changelog; or clear incomplete migration with two patterns coexisting and one direction still actively called.
+- **0.50–0.64**: Pattern suggests debt but could be intentional (the older pattern might still need to exist for backward compat).
+- **0.35–0.49**: Speculative concern based on naming or code age alone, without confirmed technical impact.
+
+#### Severity Decision for LLM Findings
+
+- **high**: Deprecated API removed or scheduled for removal in the current framework version; half-refactor where the old path is the primary code path.
+- **medium**: Deprecated API still works but is officially discouraged; half-refactor where both paths are equally used.
+- **low**: Stale naming, minor dead exports, HACK comments with a clear workaround path.
+- **info**: Refactoring suggestion that reduces complexity without any urgent technical risk.
 
 ### Phase 3 — Combine and report
 

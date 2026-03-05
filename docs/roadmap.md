@@ -59,24 +59,25 @@ Goal: Make existing agents smarter and tools more precise.
 
 ### Improve Current Agents
 
-- [ ] Tune Phase 2 (LLM exploration) prompts based on real audit feedback
-- [ ] Better severity calibration: reduce false positives, sharpen critical/high distinction
-- [ ] Add domain-specific examples in agent prompts to guide LLM reasoning
-- [ ] Improve orchestrator deduplication across tool + LLM findings
+- [x] Tune Phase 2 (LLM exploration) prompts based on real audit feedback
+- [x] Better severity calibration: reduce false positives, sharpen critical/high distinction
+- [x] Add domain-specific examples in agent prompts to guide LLM reasoning
+- [x] Improve orchestrator deduplication across tool + LLM findings
 
 ### Better Tools
 
-- [ ] Security: reduce false-positive rate on secret detection (context-aware patterns)
+- [x] Security: reduce false-positive rate on secret detection (context-aware patterns)
 - [ ] Architecture: support monorepo multi-project layering
-- [ ] Conventions: framework-aware naming rules (e.g., Angular `*Component`, `*Service`)
-- [ ] Tests: detect test quality issues (shallow assertions, missing error paths)
+- [x] Conventions: framework-aware naming rules (e.g., Angular `*Component`, `*Service`)
+- [x] Tests: detect test quality issues (shallow assertions, missing error paths)
 - [ ] Performance: detect common anti-patterns per framework (N+1 in ORMs, missing `trackBy` in Angular)
 
 ### Developer Experience
 
 - [ ] `inspectra doctor` command: diagnose setup issues (Node version, MCP connectivity, missing agents)
-- [ ] Clearer error messages when a tool fails (structured error with suggested fix)
-- [ ] Config file support (`.inspectrarc.yml`) to customize profiles, thresholds, ignored paths per project
+- [x] Clearer error messages when a tool fails (structured error with suggested fix)
+- [x] Config file support (`.inspectraignore`) to suppress findings per project
+- [ ] Config file support (`.inspectrarc.yml`) for full profile, threshold, and rule customization
 - [ ] Improve profile auto-detection accuracy (detect monorepo structures)
 
 ## v0.7.0 — Multi-Runtime & New Agents

@@ -45,16 +45,66 @@ Evaluate the architectural health of the target codebase and produce a structure
 After Phase 1 completes, use `read` and `search` to explore the codebase structure and find architectural issues that import-graph tools cannot detect:
 
 1. **Enrich Phase 1 findings** — read flagged modules to add context, confirm or downgrade tool-detected violations.
-2. **Discover new findings** by reading and reasoning about the architecture:
-   - **God modules**: Files or classes with too many responsibilities (e.g., a service handling HTTP, business logic, and database access).
-   - **Leaky abstractions**: Implementation details exposed through public APIs (e.g., returning database entities directly from controllers).
-   - **Missing boundaries**: Features that should be separate modules but are tangled in the same directory/namespace.
-   - **Inconsistent patterns**: Some modules use dependency injection while others use direct imports; some use repository pattern while others query directly.
-   - **Barrel file bloat**: Index re-exports that create false coupling between unrelated modules.
-   - **Violation of the dependency rule**: Domain logic importing infrastructure concerns (HTTP clients, ORMs) directly.
+2. **Discover new findings** using the strategies below.
 3. All Phase 2 findings MUST have `"source": "llm"` and `confidence ≤ 0.7`.
 4. Phase 2 finding IDs start at `ARC-501` to clearly separate them from tool findings.
 5. Do NOT re-report issues already found by Phase 1 tools — Phase 2 is additive only.
+
+#### Search Strategy
+
+Search in this priority order:
+
+1. **Cross-layer imports** — Search for `import` statements in domain/entity files → flag any that import from `infrastructure/`, `http/`, `controllers/`, `routes/`, or framework-specific packages (`@angular/common/http`, `typeorm`, `mongoose`, `axios`). Domain logic importing infrastructure is a layer violation.
+2. **God modules** — Identify service files over 400 lines. Read the top of the file with `search` to count the number of distinct responsibilities (HTTP handling, business logic, database access, email sending = 4 responsibilities in one file). Any file handling 3+ unrelated concerns is a God module candidate.
+3. **Leaky abstractions** — Search for controller/route files that contain `import` from a repository or ORM entity directly (e.g., `import { User } from '../domain/user.entity'` in `api/user.controller.ts`) → check if the entity is returned verbatim in the HTTP response without a DTO.
+4. **Inconsistent DI patterns** — Search for `new ServiceName(` in source files (not tests) → direct instantiation bypassing the DI container breaks testability and introduces hidden coupling.
+5. **Barrel bloat** — Open `index.ts` files that re-export 10+ symbols from different subdirectories → check if unrelated modules are coupled purely through the barrel.
+
+#### Examples
+
+**High signal — layer violation (domain imports infrastructure):**
+```ts
+// domain/user.service.ts:8
+import { HttpClient } from '@angular/common/http'; // Infrastructure concern imported into the domain layer
+```
+Emit: ARC-501, severity=`high`, rule=`domain-imports-infrastructure`, confidence=0.65
+
+**High signal — God module:**
+```ts
+// OrderService.ts — 850 lines handling:
+// • HTTP request parsing  • Order business rules
+// • Payment processing     • Email notification
+// • PDF invoice generation
+```
+Emit: ARC-502, severity=`high`, rule=`god-module`, confidence=0.60
+
+**False positive to avoid — utility importing npm package:**
+```ts
+// utils/date-helpers.ts
+import dayjs from 'dayjs'; // A utility helper importing a library is intentional and correct
+```
+Do NOT emit a layer violation for utility files importing npm packages.
+
+**False positive to avoid — infrastructure importing infrastructure:**
+```ts
+// infrastructure/user.repository.ts
+import { DataSource } from 'typeorm'; // Repository depending on ORM is correct by design
+```
+Do NOT emit a violation when an infrastructure file imports another infrastructure concern.
+
+#### Confidence Calibration
+
+- **0.65–0.70**: Import direction clearly and deliberately violates the stated architecture (e.g., domain → database ORM).
+- **0.50–0.64**: Possible violation, but the project's intended architecture isn't clearly documented.
+- **0.40–0.49**: Structural concern that depends on intent or may be a transitional state during a refactor.
+
+#### Severity Decision for LLM Findings
+
+- **critical**: Circular dependency between two core domain modules; the architecture is fundamentally broken.
+- **high**: Deliberate layer violation that defeats the architecture's isolation guarantees (domain imports infrastructure).
+- **medium**: God module or leaky abstraction that makes the code hard to change but doesn't break isolation.
+- **low**: Minor structural concern (barrel bloat, inconsistent DI in non-critical utilities).
+- **info**: Refactoring suggestion that improves clarity without fixing a real violation.
 
 ### Phase 3 — Combine and report
 
