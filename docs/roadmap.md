@@ -11,6 +11,7 @@ Inspectra is a functional multi-agent code audit system with:
 - Markdown, JSON, HTML, and SARIF report renderers
 - Trend tracking and audit comparison via MCP tools
 - 4 stack-specific profiles
+- 455 passing tests across 58 test files
 
 ## v0.2.0 - Tool Depth COMPLETE
 
@@ -50,12 +51,48 @@ Goal: Rich, customizable report output.
 - [x] Handlebars templates for report sections
 - [x] PDF export option
 
-## v1.0.0 - Stable Release
+---
 
-Goal: Production-ready for teams.
+## v0.6.0 — Developer Experience & Polish
 
-- [ ] VS Code extension for one-click audits
-- [ ] Configuration UI for profiles and thresholds
-- [ ] Plugin system for custom tools
-- [ ] Multi-language support (Python, Go, Rust)
-- [ ] Documentation site
+Goal: Make Inspectra easy to use, debug, and trust.
+
+- [ ] `inspectra doctor` command: diagnose setup issues (Node version, MCP connectivity, missing agents)
+- [ ] Clearer error messages when a tool fails (structured error with suggested fix)
+- [ ] `--json` output flag on CLI commands for CI/script consumption
+- [ ] Config file support (`.inspectrarc.yml`) to customize profiles, thresholds, ignored paths per project
+- [ ] Improve profile auto-detection accuracy (detect monorepo structures)
+
+## v0.7.0 — Community Ready
+
+Goal: Package and publish for external users.
+
+- [ ] Publish to npm (`npx inspectra setup`)
+- [ ] Contributing guide (CONTRIBUTING.md)
+- [ ] README badges (CI status, npm version, test count)
+- [ ] Demo GIF/video in README showing a full audit run
+- [ ] Changelog (CHANGELOG.md, auto-generated from conventional commits)
+- [ ] GitHub Releases with pre-built artifacts
+
+## v1.0.0 — Stable Release
+
+Goal: Stability contract — no breaking changes to schemas, tools, or CLI.
+
+- [ ] Semver commitment: schemas, tool names, and CLI flags are stable
+- [ ] All existing features hardened with edge-case tests
+- [ ] Lightweight plugin system (drop a `.ts` tool file into a `plugins/` folder)
+- [ ] At least 2 real-world audit reports shared as case studies in `examples/`
+- [ ] Comprehensive README with troubleshooting section
+
+---
+
+## Future Ideas (post-v1.0, unscheduled)
+
+These are aspirational. They'll only be prioritized if there's real user demand.
+
+- VS Code extension for one-click audits
+- Configuration UI for profiles and thresholds
+- Multi-language support (Python, Go, Rust analyzers)
+- Documentation site (likely Docusaurus or VitePress)
+- Dashboard web app for audit history visualization
+- Slack/Teams webhook integration for audit notifications
