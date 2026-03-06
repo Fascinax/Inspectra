@@ -47,7 +47,7 @@ Weights (re-normalized at runtime): security 24%, tests 20%, architecture 16%, c
 - No mocking of file system — use real temp dirs
 - Run `npx tsc --noEmit --project mcp/tsconfig.src.json` before committing
 
-## MCP Tools (39 total)
+## MCP Tools (42 total)
 
 Security: `scan_secrets`, `check_deps_vulns`, `run_semgrep`, `check_maven_deps`
 Tests: `parse_coverage`, `parse_test_results`, `detect_missing_tests`, `parse_playwright_report`, `detect_flaky_tests`, `check_test_quality`
@@ -55,7 +55,7 @@ Architecture: `check_layering`, `analyze_dependencies`, `detect_circular_deps`
 Conventions: `check_naming`, `check_file_lengths`, `check_todos`, `parse_lint_output`, `detect_dry_violations`, `check_function_lengths`, `check_param_counts`, `check_magic_numbers`
 Performance: `analyze_bundle_size`, `check_build_timings`, `detect_runtime_metrics`
 Documentation: `check_readme_completeness`, `check_adr_presence`, `detect_doc_code_drift`, `detect_env_example_drift`
-Tech-debt: `analyze_complexity`, `age_todos`, `check_dependency_staleness`
+Tech-debt: `analyze_complexity`, `age_todos`, `check_dependency_staleness`, `check_dead_exports`, `detect_deprecated_apis`, `detect_code_smells`
 Accessibility: `check_a11y_templates`
 API Design: `check_rest_conventions`
 Observability: `check_observability`

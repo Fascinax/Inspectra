@@ -13,7 +13,7 @@ Inspectra uses GitHub Copilot Custom Agents to perform structured code audits.
 | [audit-conventions](.github/agents/audit-conventions.agent.md) | Conventions | `inspectra_check_naming`, `inspectra_check_file_lengths`, `inspectra_check_todos`, `inspectra_parse_lint_output`, `inspectra_detect_dry_violations`, `inspectra_check_function_lengths`, `inspectra_check_param_counts`, `inspectra_check_magic_numbers` | `CNV-` |
 | [audit-performance](.github/agents/audit-performance.agent.md) | Performance | `inspectra_analyze_bundle_size`, `inspectra_check_build_timings`, `inspectra_detect_runtime_metrics` | `PRF-` |
 | [audit-documentation](.github/agents/audit-documentation.agent.md) | Documentation | `inspectra_check_readme_completeness`, `inspectra_check_adr_presence`, `inspectra_detect_doc_code_drift`, `inspectra_detect_env_example_drift` | `DOC-` |
-| [audit-tech-debt](.github/agents/audit-tech-debt.agent.md) | Tech debt | `inspectra_analyze_complexity`, `inspectra_age_todos`, `inspectra_check_dependency_staleness` | `DEBT-` |
+| [audit-tech-debt](.github/agents/audit-tech-debt.agent.md) | Tech debt | `inspectra_analyze_complexity`, `inspectra_age_todos`, `inspectra_check_dependency_staleness`, `inspectra_check_dead_exports`, `inspectra_detect_deprecated_apis`, `inspectra_detect_code_smells` | `DEBT-` |
 | [audit-accessibility](.github/agents/audit-accessibility.agent.md) | Accessibility | `inspectra_check_a11y_templates` | `ACC-` |
 | [audit-api-design](.github/agents/audit-api-design.agent.md) | API Design | `inspectra_check_rest_conventions` | `API-` |
 | [audit-observability](.github/agents/audit-observability.agent.md) | Observability | `inspectra_check_observability` | `OBS-` |
