@@ -84,16 +84,30 @@ function buildContext(report: ConsolidatedReport) {
     topFindingsView: report.top_findings.map(buildFindingView),
     hasAgents: !!report.metadata.agents_invoked?.length,
     agentsText: report.metadata.agents_invoked?.join(", ") ?? "",
-    domainReportsView: report.domain_reports.map((dr) => ({
-      domain: dr.domain,
-      score: dr.score,
-      domainName: capitalize(dr.domain),
-      scoreColor: scoreToColor(dr.score),
-      hasFindings: dr.findings.length > 0,
-      findingCount: dr.findings.length,
-      findingPlural: dr.findings.length !== 1 ? "s" : "",
-      findingsView: dr.findings.map(buildFindingView),
-    })),
+    domainReportsView: report.domain_reports.map((dr) => {
+      const findingsView = dr.findings.map(buildFindingView);
+      const critCount = dr.findings.filter((f) => f.severity === "critical").length;
+      const highCount = dr.findings.filter((f) => f.severity === "high").length;
+      const medCount = dr.findings.filter((f) => f.severity === "medium").length;
+      const sevBadges = [
+        ...(critCount > 0 ? [{ label: "C", count: critCount, color: "#ef4444" }] : []),
+        ...(highCount > 0 ? [{ label: "H", count: highCount, color: "#f97316" }] : []),
+        ...(medCount > 0 ? [{ label: "M", count: medCount, color: "#eab308" }] : []),
+      ];
+      return {
+        domain: dr.domain,
+        domainId: dr.domain.toLowerCase().replace(/[^a-z0-9]/g, "-"),
+        score: dr.score,
+        domainName: capitalize(dr.domain),
+        scoreColor: scoreToColor(dr.score),
+        hasFindings: dr.findings.length > 0,
+        findingCount: dr.findings.length,
+        findingPlural: dr.findings.length !== 1 ? "s" : "",
+        findingsView,
+        hasSevBadges: sevBadges.length > 0,
+        sevBadges,
+      };
+    }),
   };
 }
 

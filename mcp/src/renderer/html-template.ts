@@ -73,17 +73,27 @@ export const REPORT_TEMPLATE = `<!DOCTYPE html>
       </div>
     </div>
 
+    {{!-- Domain Nav --}}
+    <nav class="domain-nav" aria-label="Jump to domain">
+      {{#each domainReportsView}}
+      <a href="#domain-{{domainId}}" class="domain-nav-pill" style="border-color:{{scoreColor}};color:{{scoreColor}}">{{domainName}}</a>
+      {{/each}}
+    </nav>
+
     {{!-- Domain Grid --}}
     <div class="domain-grid">
       {{#each domainReportsView}}
-      <div class="domain-card">
+      <a class="domain-card" href="#domain-{{domainId}}">
         <div class="domain-name">{{domain}}</div>
         <div class="domain-score" style="color:{{scoreColor}}">{{score}}<span style="font-size:0.9rem;color:var(--text-muted)">/100</span></div>
         <div class="progress-bar">
           <div class="progress-fill" style="width:{{score}}%;background:{{scoreColor}}"></div>
         </div>
-        <div class="finding-count">{{findingCount}} finding{{findingPlural}}</div>
-      </div>
+        <div class="domain-card-footer">
+          <span class="finding-count">{{findingCount}} finding{{findingPlural}}</span>
+          {{#if hasSevBadges}}<span class="domain-sev-badges">{{#each sevBadges}}<span class="sev-mini" style="background:{{color}}22;color:{{color}}">{{label}}&thinsp;{{count}}</span>{{/each}}</span>{{/if}}
+        </div>
+      </a>
       {{/each}}
     </div>
 
@@ -117,17 +127,23 @@ export const REPORT_TEMPLATE = `<!DOCTYPE html>
 
     {{!-- Domain Sections --}}
     {{#each domainReportsView}}
-    <div class="domain-section">
+    <details class="domain-section" id="domain-{{domainId}}" open>
+      <summary class="domain-summary">
+        <span class="domain-summary-name">{{domainName}}</span>
+        <span class="domain-summary-score" style="color:{{scoreColor}}">{{score}}/100</span>
+        {{#if hasFindings}}<span class="domain-summary-count">{{findingCount}} finding{{findingPlural}}</span>{{/if}}
+        <span class="domain-chevron">&#9660;</span>
+      </summary>
       {{#if hasFindings}}
-      <h3>{{domainName}} ({{score}}/100) &mdash; {{findingCount}} finding{{findingPlural}}</h3>
-      {{#each findingsView}}
-      {{> findingCard}}
-      {{/each}}
+      <div class="findings-list">
+        {{#each findingsView}}
+        {{> findingCard}}
+        {{/each}}
+      </div>
       {{else}}
-      <h3>{{domainName}} ({{score}}/100)</h3>
-      <p style="color:var(--text-muted);font-style:italic">No findings &mdash; clean!</p>
+      <p class="no-findings">No findings &mdash; clean!</p>
       {{/if}}
-    </div>
+    </details>
     {{/each}}
 
     {{!-- Footer --}}
@@ -139,5 +155,6 @@ export const REPORT_TEMPLATE = `<!DOCTYPE html>
     </footer>
 
   </div>
+  <a href="#" class="back-to-top" title="Back to top" aria-label="Back to top">&#8593;</a>
 </body>
 </html>`;

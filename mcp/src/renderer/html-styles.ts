@@ -23,6 +23,8 @@ export function renderStyles(): string {
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
+  html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+
   body {
     font-family: var(--font-sans);
     background: var(--bg-primary);
@@ -134,6 +136,9 @@ export function renderStyles(): string {
     margin-bottom: 32px;
   }
   .domain-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -165,10 +170,29 @@ export function renderStyles(): string {
     border-radius: 3px;
     transition: width 0.6s ease;
   }
-  .domain-card .finding-count {
+  .domain-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     margin-top: 10px;
+  }
+  .domain-card-footer .finding-count {
     font-size: 0.82rem;
     color: var(--text-secondary);
+  }
+  .domain-sev-badges {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .sev-mini {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    white-space: nowrap;
   }
 
   /* ── Severity Chart ── */
@@ -298,14 +322,55 @@ export function renderStyles(): string {
     letter-spacing: 0.04em;
   }
 
-  /* ── Domain Section ── */
-  .domain-section {
-    margin-bottom: 40px;
+  /* ── Domain Section (collapsible) ── */
+  details.domain-section {
+    margin-bottom: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    scroll-margin-top: 72px;
   }
-  .domain-section h3 {
-    font-size: 1.05rem;
-    margin-bottom: 14px;
+  details.domain-section > summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 24px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  details.domain-section > summary::-webkit-details-marker { display: none; }
+  details.domain-section > summary:hover { background: var(--bg-card-hover); }
+  .domain-summary-name {
+    font-size: 1rem;
+    font-weight: 700;
+    flex: 1;
     color: var(--text-primary);
+  }
+  .domain-summary-score {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+  .domain-summary-count {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+  }
+  .domain-chevron {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  details.domain-section[open] .domain-chevron { transform: rotate(180deg); }
+  .findings-list { padding: 0 24px 20px; }
+  .no-findings {
+    padding: 16px 24px;
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.88rem;
   }
 
   /* ── Footer ── */
@@ -315,6 +380,59 @@ export function renderStyles(): string {
     border-top: 1px solid var(--border);
     color: var(--text-muted);
     font-size: 0.82rem;
+  }
+
+  /* ── Domain Nav ── */
+  .domain-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg-primary);
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .domain-nav-pill {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    border: 1px solid currentColor;
+    opacity: 0.7;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .domain-nav-pill:hover { opacity: 1; transform: translateY(-1px); }
+
+  /* ── Back to Top ── */
+  .back-to-top {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    z-index: 100;
+  }
+  .back-to-top:hover {
+    background: var(--accent);
+    color: var(--bg-primary);
+    border-color: var(--accent);
   }
 
   /* ── Responsive ── */
