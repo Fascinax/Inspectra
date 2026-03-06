@@ -96,7 +96,7 @@ export function renderTrendMarkdown(trend: TrendData): string {
   lines.push("## Score Trend");
   lines.push("");
   lines.push(`| Metric | Value |`);
-  lines.push(`|--------|-------|`);
+  lines.push(`| -------- | ------- |`);
   lines.push(`| Direction | ${directionIcon} ${capitalize(trend.direction)} |`);
   lines.push(`| Average | ${trend.averageScore}/100 |`);
   lines.push(`| Best | ${trend.bestScore}/100 |`);
@@ -108,7 +108,7 @@ export function renderTrendMarkdown(trend: TrendData): string {
   lines.push("### History");
   lines.push("");
   lines.push("| Date | Score | Grade | Findings |");
-  lines.push("|------|-------|-------|----------|");
+  lines.push("| ------ | ------- | ------- | ---------- |");
 
   for (const entry of trend.entries.slice(-10)) {
     const date = entry.timestamp.split("T")[0] ?? entry.timestamp;

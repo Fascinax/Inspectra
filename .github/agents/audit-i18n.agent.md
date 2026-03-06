@@ -84,7 +84,7 @@ Return a single JSON object conforming to `schemas/domain-report.schema.json`:
 ## Severity Guide
 
 | Severity | Examples |
-|----------|---------|
+| ---------- | --------- |
 | critical | No i18n library at all in a product claiming multi-language support |
 | high | Primary navigation, CTAs, page titles are hardcoded in i18n-active app |
 | medium | Dates/numbers formatted with hardcoded `'en-US'` locale |

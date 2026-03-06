@@ -84,7 +84,7 @@ Return a single JSON object conforming to `schemas/domain-report.schema.json`:
 ## Severity Guide
 
 | Severity | Examples |
-|----------|---------|
+| ---------- | --------- |
 | critical | No global unhandled exception handler in long-running service |
 | high | Swallowed DB/network errors, no health endpoint in containerized service |
 | medium | Uses console.log instead of structured logger, no tracing setup |

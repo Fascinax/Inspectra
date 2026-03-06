@@ -228,7 +228,7 @@ After merging, produce a Markdown report with this structure:
 ## Domain Scores
 
 | Domain | Score | Grade | Findings (tool) | Findings (LLM) |
-|--------|-------|-------|------------------|-----------------|
+| -------- | ------- | ------- | ------------------ | ----------------- |
 | Security | XX/100 | X | X | X |
 | Tests | XX/100 | X | X | X |
 | Architecture | XX/100 | X | X | X |

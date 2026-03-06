@@ -85,7 +85,7 @@ Return a single JSON object conforming to `schemas/domain-report.schema.json`:
 ## Severity Guide
 
 | Severity | WCAG Level | Examples |
-|----------|-----------|---------|
+| ---------- | ----------- | --------- |
 | critical | A | Keyboard trap, missing page `lang`, `aria-hidden` blocks focus |
 | high | A | `<img>` without `alt`, empty `<button>` |
 | medium | AA | Missing form `<label>`, data table without `<caption>` |

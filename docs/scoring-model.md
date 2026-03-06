@@ -14,7 +14,7 @@ domain_score = max(0, 100 - sum(penalties))
 ### Severity Weights
 
 | Severity | Weight | Example Impact |
-|----------|--------|----------------|
+| ---------- | -------- | ---------------- |
 | Critical | 25 | A single critical finding with confidence 1.0 drops the score by 25 points |
 | High | 15 | Two high findings at 0.8 confidence = -24 points |
 | Medium | 8 | |
@@ -38,7 +38,7 @@ overall_score = Σ(domain_score × domain_weight) / Σ(domain_weight)
 ### Domain Weights
 
 | Domain | Weight | Rationale |
-|--------|--------|-----------|
+| -------- | -------- | ----------- |
 | Security | 30% | Vulnerabilities have the highest production impact |
 | Tests | 25% | Test quality predicts reliability |
 | Architecture | 20% | Structural issues compound over time |
@@ -51,7 +51,7 @@ Only domains actually audited contribute to the weighted average. If you run a s
 ## Grades
 
 | Grade | Min Score | Label | Meaning |
-|-------|-----------|-------|---------|
+| ------- | ----------- | ------- | --------- |
 | A | 90 | Excellent | Production-ready with minor or no issues |
 | B | 75 | Good | Solid codebase with some areas to improve |
 | C | 60 | Acceptable | Functional but has notable quality gaps |
@@ -71,7 +71,7 @@ Before scoring, findings are deduplicated to avoid double-counting:
 Findings are filtered by confidence before inclusion:
 
 | Context | Minimum Confidence |
-|---------|-------------------|
+| --------- | ------------------- |
 | Full report | 0.3 |
 | PR comment | 0.7 |
 | Auto-dismiss | < 0.2 |

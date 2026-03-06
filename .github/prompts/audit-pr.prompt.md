@@ -40,7 +40,7 @@ Run a focused audit on the files changed in this pull request only.
 ### Issues Found
 
 | # | Severity | Domain | File | Title |
-|---|----------|--------|------|-------|
+| --- | ---------- | -------- | ------ | ------- |
 | 1 | high | security | src/auth.ts | Hardcoded API key |
 
 ### Details

@@ -24,7 +24,7 @@ node ~/inspectra/bin/init.mjs setup --claude
 This creates two files in your project:
 
 | File | Purpose |
-|------|---------|
+| ------ | --------- |
 | `.mcp.json` | Claude Code MCP server auto-configuration |
 | `CLAUDE.md` | Project context with audit instructions |
 
@@ -50,6 +50,7 @@ Claude Code will start the MCP server as a subprocess and expose all 35 Inspectr
 ### `CLAUDE.md`
 
 Claude Code reads this as project context. It contains:
+
 - Available MCP tools and their purpose
 - How to run audits (full, single-domain, PR)
 - Scoring model and grading scale
@@ -79,11 +80,12 @@ Copies all files into the project (committed with the repo).
 
 Once set up, open your project with Claude Code and ask:
 
-```
+```markdown
 Run a full Inspectra audit on this project.
 ```
 
 Claude Code will:
+
 1. Read `CLAUDE.md` for context
 2. Connect to the Inspectra MCP server via `.mcp.json`
 3. Call domain tools (`inspectra_scan_secrets`, `inspectra_check_deps_vulns`, etc.)
@@ -92,20 +94,20 @@ Claude Code will:
 
 ### Single-Domain Audit
 
-```
+```markdown
 Run an Inspectra security audit on this project.
 ```
 
 ### PR-Scoped Audit
 
-```
+```markdown
 Audit only the files changed in this PR using Inspectra.
 ```
 
 ## Comparison: Copilot vs Claude Code
 
 | Aspect | VS Code + Copilot | Claude Code |
-|--------|------------------|-------------|
+| -------- | ------------------ | ------------- |
 | Setup command | `inspectra setup` | `inspectra setup --claude` |
 | MCP config | `.vscode/mcp.json` (`servers` format) | `.mcp.json` (`mcpServers` format) |
 | Project context | `.github/copilot-instructions.md` | `CLAUDE.md` |
@@ -143,7 +145,7 @@ This checks Node.js version, MCP build, VS Code settings, agent files, policies,
 
 If you want to generate a more detailed `CLAUDE.md` that includes full agent definitions, use the MCP tool directly:
 
-```
+```markdown
 Call inspectra_generate_claude_md with projectDir set to the Inspectra root and write: true.
 ```
 

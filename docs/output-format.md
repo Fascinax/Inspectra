@@ -29,7 +29,7 @@ The atomic unit of audit output. Every issue detected by any tool or agent is ex
 ### Required Fields
 
 | Field | Type | Description |
-|-------|------|-------------|
+| ------- | ------ | ------------- |
 | `id` | string | `DOMAIN_PREFIX-XXX` (e.g., `SEC-001`, `TST-042`) |
 | `severity` | enum | `critical`, `high`, `medium`, `low`, `info` |
 | `title` | string | Concise description (max 200 chars) |
@@ -41,7 +41,7 @@ The atomic unit of audit output. Every issue detected by any tool or agent is ex
 ### Optional Fields
 
 | Field | Type | Description |
-|-------|------|-------------|
+| ------- | ------ | ------------- |
 | `description` | string | Detailed explanation (max 2000 chars) |
 | `recommendation` | string | Actionable fix suggestion |
 | `effort` | enum | `trivial`, `small`, `medium`, `large`, `epic` |
@@ -101,7 +101,7 @@ The final merged report produced by the orchestrator.
 The report engine can output the consolidated report in multiple formats:
 
 | Format | Command Flag | Description |
-|--------|-------------|-------------|
+| -------- | ------------- | ------------- |
 | **Markdown** | `--format=markdown` | Human-readable report with tables, icons, and sections |
 | **JSON** | `--format=json` | Raw consolidated report JSON |
 | **SARIF** | `--format=sarif` | Static Analysis Results Interchange Format for CI integration |

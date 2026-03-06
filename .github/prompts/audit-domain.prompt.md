@@ -36,7 +36,7 @@ Run a targeted audit on the project in the current workspace, covering **only on
 ### Findings
 
 | # | Severity | File | Title |
-|---|----------|------|-------|
+| --- | ---------- | ------ | ------- |
 | 1 | critical | src/config.ts | Hardcoded database password |
 
 ### Details

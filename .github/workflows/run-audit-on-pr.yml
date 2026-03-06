@@ -73,7 +73,7 @@ jobs:
           done <<< "${{ steps.changed.outputs.all_changed_files }}"
 
           echo "| Domain | Relevant Changes |" >> audit-scope.md
-          echo "|--------|-----------------|" >> audit-scope.md
+          echo "| -------- | ----------------- |" >> audit-scope.md
           echo "| Security | $sec_count files |" >> audit-scope.md
           echo "| Tests | $test_count files |" >> audit-scope.md
           echo "| Architecture | $arch_count files |" >> audit-scope.md

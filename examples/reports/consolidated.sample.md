@@ -5,7 +5,7 @@
 ## Executive Summary
 
 | Metric | Value |
-|--------|-------|
+| -------- | ------- |
 | **Overall Score** | 68/100 |
 | **Grade** | C — Acceptable |
 | **Total Findings** | 9 |
@@ -21,7 +21,7 @@ The codebase is functional but has notable quality gaps, particularly in **test 
 ## Domain Scores
 
 | Domain | Score | Grade | Findings |
-|--------|-------|-------|----------|
+| -------- | ------- | ------- | ---------- |
 | Security | 72 | C | 4 |
 | Tests | 65 | C | 3 |
 | Architecture | 82 | B | 2 |
@@ -76,7 +76,7 @@ The codebase is functional but has notable quality gaps, particularly in **test 
 ## Metadata
 
 | Field | Value |
-|-------|-------|
+| ------- | ------- |
 | Target | `/workspace/my-project` |
 | Profile | java-angular-playwright |
 | Agents Invoked | audit-security, audit-tests, audit-architecture, audit-conventions |

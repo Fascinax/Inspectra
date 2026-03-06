@@ -36,7 +36,7 @@ function renderExecutiveSummary(report: ConsolidatedReport): string {
   lines.push("## Executive Summary");
   lines.push("");
   lines.push(`| Metric | Value |`);
-  lines.push(`|--------|-------|`);
+  lines.push(`| -------- | ------- |`);
   lines.push(`| **Overall Score** | **${overall_score}/100** (Grade **${grade}**) |`);
   lines.push(`| Total Findings | ${statistics?.total_findings ?? 0} |`);
   if (sev) {
@@ -56,7 +56,7 @@ function renderDomainScores(report: ConsolidatedReport): string {
   lines.push("## Domain Scores");
   lines.push("");
   lines.push("| Domain | Score | Findings | Summary |");
-  lines.push("|--------|-------|----------|---------|");
+  lines.push("| -------- | ------- | ---------- | --------- |");
 
   for (const dr of report.domain_reports) {
     const findingCount = dr.findings.length;

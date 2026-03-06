@@ -39,7 +39,7 @@ Run a comprehensive code audit on the project in the current workspace, covering
 ### Domain Scores
 
 | Domain | Score | Grade | Findings |
-|--------|-------|-------|----------|
+| -------- | ------- | ------- | ---------- |
 | Security | XX/100 | X | X findings |
 | Tests | XX/100 | X | X findings |
 | Architecture | XX/100 | X | X findings |
@@ -55,7 +55,7 @@ Run a comprehensive code audit on the project in the current workspace, covering
 ### Top Findings
 
 | # | Severity | Domain | File | Title |
-|---|----------|--------|------|-------|
+| --- | ---------- | -------- | ------ | ------- |
 | 1 | critical | security | src/config.ts | Hardcoded database password |
 
 ### Details

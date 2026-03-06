@@ -108,7 +108,7 @@ function renderSummaryTable(result: ComparisonResult): string {
 
   return [
     `| | ${reportA.label} | ${reportB.label} | Delta |`,
-    `|---|---|---|---|`,
+    `| --- | --- | --- | --- |`,
     `| **Score** | ${reportA.score}/100 | ${reportB.score}/100 | ${arrow} ${sign}${overallDelta} |`,
     `| **Grade** | ${reportA.grade} | ${reportB.grade} | |`,
     `| **Findings** | ${reportA.findings} | ${reportB.findings} | ${sign}${reportA.findings - reportB.findings} |`,
@@ -121,7 +121,7 @@ function renderDomainComparisonTable(domains: ReadonlyArray<DomainComparison>): 
     "### Domain Comparison",
     "",
     "| Domain | Score A | Score B | Delta | Findings A | Findings B |",
-    "|--------|---------|---------|-------|------------|------------|",
+    "| -------- | --------- | --------- | ------- | ------------ | ------------ |",
   ];
 
   for (const d of domains) {

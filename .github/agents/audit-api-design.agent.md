@@ -82,7 +82,7 @@ Return a single JSON object conforming to `schemas/domain-report.schema.json`:
 ## Severity Guide
 
 | Severity | Examples |
-|----------|---------|
+| ---------- | --------- |
 | critical | GET mutates state, authentication bypass via route design |
 | high | Error details leaked in 500, wrong method for operation |
 | medium | Verb-based routes, missing versioning, wrong status codes |

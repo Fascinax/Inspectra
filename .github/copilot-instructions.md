@@ -49,7 +49,7 @@ Every finding MUST include:
 Tools are registered in the `inspectra` MCP server. Agents should call them by prefixed name (e.g., `inspectra_scan_secrets`). Available tools:
 
 | Tool | Domain | Purpose |
-|------|--------|---------|
+| ------ | -------- | --------- |
 | `inspectra_scan_secrets` | Security | Detect hardcoded secrets |
 | `inspectra_check_deps_vulns` | Security | npm audit for vulnerabilities |
 | `inspectra_parse_coverage` | Tests | Parse coverage reports |
@@ -115,7 +115,7 @@ Agents MUST NEVER:
 Each domain agent has a strict scope:
 
 | Agent | IN scope | OUT of scope |
-|-------|----------|-------------|
+| ------- | ---------- | ------------- |
 | audit-security | Source code, config files, dependency manifests | Test fixtures, example files, docs |
 | audit-tests | Test files, coverage reports, test configs | Application source logic |
 | audit-architecture | Import graphs, module structure, dependency trees | Individual code quality |
