@@ -145,4 +145,38 @@ describe("generateClaudeMd", () => {
     expect(result.agentCount).toBe(1);
     expect(result.agentFiles).toEqual(["audit-security.agent.md"]);
   });
+
+  it("includes MCP tools table in generated content", async () => {
+    const result = await generateClaudeMd(join(tempDir, "nonexistent"));
+    expect(result.content).toContain("## MCP Tools");
+    expect(result.content).toContain("| Tool | Domain | Purpose |");
+    expect(result.content).toContain("inspectra_scan_secrets");
+    expect(result.content).toContain("inspectra_check_a11y_templates");
+    expect(result.content).toContain("inspectra_check_i18n");
+  });
+
+  it("includes scoring model section", async () => {
+    const result = await generateClaudeMd(join(tempDir, "nonexistent"));
+    expect(result.content).toContain("## Scoring Model");
+    expect(result.content).toContain("security 24%");
+    expect(result.content).toContain("accessibility 8%");
+    expect(result.content).toContain("i18n 5%");
+    expect(result.content).toContain("Grades:");
+  });
+
+  it("includes finding contract section", async () => {
+    const result = await generateClaudeMd(join(tempDir, "nonexistent"));
+    expect(result.content).toContain("## Finding Contract");
+    expect(result.content).toContain("Tool findings: IDs 001-499");
+    expect(result.content).toContain("LLM findings: IDs 501+");
+    expect(result.content).toContain("confidence");
+  });
+
+  it("includes audit workflow instructions", async () => {
+    const result = await generateClaudeMd(join(tempDir, "nonexistent"));
+    expect(result.content).toContain("## How to Run an Audit");
+    expect(result.content).toContain("Full audit");
+    expect(result.content).toContain("Targeted audit");
+    expect(result.content).toContain("PR audit");
+  });
 });

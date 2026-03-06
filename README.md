@@ -48,6 +48,23 @@ Then open **any** project in VS Code → Copilot Chat → type `/audit`.
 
 No files are added to your projects.
 
+### Option A′ — Claude Code Setup
+
+```bash
+cd /path/to/my-project
+inspectra setup --claude
+```
+
+This creates in the current directory:
+
+- `.mcp.json` — Claude Code auto-connects to the Inspectra MCP server
+- `CLAUDE.md` — project context with audit instructions, tool list, scoring model
+- `policies/` + `schemas/` — scoring rules and contracts
+
+Then open the project with Claude Code and ask to run an audit.
+
+See [docs/claude-code-setup.md](docs/claude-code-setup.md) for detailed instructions.
+
 ### Option B — Per-project (symlinks, gitignored)
 
 ```bash

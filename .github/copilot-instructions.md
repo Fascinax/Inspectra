@@ -11,6 +11,7 @@ Inspectra is a multi-agent code audit system. It uses specialized Copilot agents
 - **Schemas** (`schemas/`): JSON Schema contracts for findings and reports.
 - **Policies** (`policies/`): Scoring rules, severity matrix, and stack-specific profiles.
 - **Prompts** (`.github/prompts/`): Reusable entry points for common audit workflows.
+- **Claude Code support**: `CLAUDE.md` + `.mcp.json` at repo root; `inspectra setup --claude` for target projects.
 
 ## Critical Rules
 

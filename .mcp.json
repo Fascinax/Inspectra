@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "inspectra": {
+      "command": "node",
+      "args": ["mcp/dist/index.js"]
+    }
+  }
+}

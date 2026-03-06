@@ -1,19 +1,21 @@
 # Roadmap
 
-## Current State (v0.6.0)
+## Current State (v0.7.0)
 
 Inspectra is a functional multi-agent code audit system with:
 
-- 8 Copilot Custom Agents (orchestrator + 7 domain agents) with enriched Phase 2 prompts (search strategies, examples, confidence calibration, severity rules)
-- 30 MCP tools across 7 domains (+ `inspectra_check_test_quality`, `inspectra_detect_env_example_drift`)
-- JSON Schema contracts for all outputs
-- Scoring engine with weighted domains and grade system
-- Markdown, JSON, HTML, and SARIF report renderers
+- 12 Copilot Custom Agents (orchestrator + 11 domain agents) with enriched Phase 2 prompts
+- 35 MCP tools across 11 domains (security, tests, architecture, conventions, performance, documentation, tech-debt, accessibility, api-design, observability, i18n)
+- JSON Schema contracts for all outputs (11-domain finding validation)
+- Scoring engine with weighted domains (11 domains) and grade system
+- Markdown, JSON, HTML, SARIF, and PDF report renderers
 - Trend tracking and audit comparison via MCP tools
 - 5 stack-specific profiles with per-profile complexity thresholds
 - Context-aware secret detection with placeholder + comment filtering
-- Per-project finding suppression via `.inspectraignore`
-- 455 passing tests across 58 test files
+- Per-project configuration via `.inspectrarc.yml` and finding suppression via `.inspectraignore`
+- Claude Code support: `CLAUDE.md`, `.mcp.json`, `inspectra setup --claude` CLI
+- `inspectra doctor` diagnostic command
+- 503+ passing tests across 64+ test files
 
 ## v0.2.0 - Tool Depth COMPLETE
 
@@ -93,10 +95,14 @@ Goal: Run Inspectra beyond Copilot, expand domain coverage.
 
 ### Claude Code & Codex Support
 
-- [x] Adapter tool: `inspectra_generate_claude_md` — generates `CLAUDE.md` from `.agent.md` sources
+- [x] Adapter tool: `inspectra_generate_claude_md` — generates `CLAUDE.md` from `.agent.md` sources with full audit workflow, MCP tools table, scoring model, and finding contract
 - [ ] Adapter layer: generate Codex-compatible agent prompts — deferred to v0.8.0
 - [x] Shared MCP tools work as-is (MCP protocol is runtime-agnostic)
-- [ ] Document setup instructions per runtime (Copilot, Claude Code, Codex) — deferred to v0.8.0
+- [x] `CLAUDE.md` at repo root for Inspectra development context
+- [x] `.mcp.json` at repo root for Claude Code MCP auto-connection
+- [x] CLI: `inspectra setup --claude` — generates `CLAUDE.md` + `.mcp.json` in the current directory
+- [x] CLI: `inspectra init <project> --claude` — project setup for Claude Code (symlink or copy mode)
+- [x] Setup documentation: `docs/claude-code-setup.md` with comparison table (Copilot vs Claude Code)
 
 ### New Agents
 
