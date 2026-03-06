@@ -96,13 +96,15 @@ Goal: Run Inspectra beyond Copilot, expand domain coverage.
 ### Claude Code & Codex Support
 
 - [x] Adapter tool: `inspectra_generate_claude_md` — generates `CLAUDE.md` from `.agent.md` sources with full audit workflow, MCP tools table, scoring model, and finding contract
-- [ ] Adapter layer: generate Codex-compatible agent prompts — deferred to v0.8.0
+- [x] Adapter tool: `inspectra_generate_codex_agents_md` — generates Codex-compatible `AGENTS.md` from `.agent.md` sources
 - [x] Shared MCP tools work as-is (MCP protocol is runtime-agnostic)
 - [x] `CLAUDE.md` at repo root for Inspectra development context
 - [x] `.mcp.json` at repo root for Claude Code MCP auto-connection
 - [x] CLI: `inspectra setup --claude` — generates `CLAUDE.md` + `.mcp.json` in the current directory
+- [x] CLI: `inspectra setup --codex` — generates `AGENTS.md` + `.codex/config.toml` in the current directory
 - [x] CLI: `inspectra init <project> --claude` — project setup for Claude Code (symlink or copy mode)
-- [x] Setup documentation: `docs/claude-code-setup.md` with comparison table (Copilot vs Claude Code)
+- [x] CLI: `inspectra init <project> --codex` — project setup for OpenAI Codex (symlink or copy mode)
+- [x] Setup documentation: `docs/claude-code-setup.md` and `docs/codex-setup.md` with comparison table
 
 ### New Agents
 

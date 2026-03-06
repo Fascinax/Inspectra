@@ -65,6 +65,23 @@ Then open the project with Claude Code and ask to run an audit.
 
 See [docs/claude-code-setup.md](docs/claude-code-setup.md) for detailed instructions.
 
+### Option A″ — OpenAI Codex Setup
+
+```bash
+cd /path/to/my-project
+inspectra setup --codex
+```
+
+This creates in the current directory:
+
+- `AGENTS.md` — Codex reads this as project instructions (audit workflow, tools, scoring)
+- `.codex/config.toml` — MCP server configuration (Codex auto-connects)
+- `policies/` + `schemas/` — scoring rules and contracts
+
+Then run `codex "Run a full Inspectra audit on this project."`
+
+See [docs/codex-setup.md](docs/codex-setup.md) for detailed instructions.
+
 ### Option B — Per-project (symlinks, gitignored)
 
 ```bash

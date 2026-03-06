@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { generateClaudeMd } from "../tools/adapter.js";
+import { generateClaudeMd, generateCodexAgentsMd } from "../tools/adapter.js";
 
 function makeTempDir(): string {
   const dir = join(tmpdir(), `inspectra-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -178,5 +178,79 @@ describe("generateClaudeMd", () => {
     expect(result.content).toContain("Full audit");
     expect(result.content).toContain("Targeted audit");
     expect(result.content).toContain("PR audit");
+  });
+});
+
+describe("generateCodexAgentsMd", () => {
+  let tempDir: string;
+
+  beforeEach(() => {
+    tempDir = join(tmpdir(), `inspectra-test-codex-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    mkdirSync(tempDir, { recursive: true });
+  });
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  it("returns empty-agent output when directory does not exist", async () => {
+    const result = await generateCodexAgentsMd(join(tempDir, "nonexistent"));
+    expect(result.agentCount).toBe(0);
+    expect(result.agentFiles).toEqual([]);
+    expect(result.content).toContain("Inspectra");
+    expect(result.content).toContain("No agents found.");
+  });
+
+  it("reads agent files and produces Codex AGENTS.md content", async () => {
+    writeFileSync(
+      join(tempDir, "audit-security.agent.md"),
+      "---\nname: audit-security\n---\n# Mission\nAudit security stuff.",
+    );
+
+    const result = await generateCodexAgentsMd(tempDir);
+    expect(result.agentCount).toBe(1);
+    expect(result.agentFiles).toEqual(["audit-security.agent.md"]);
+    expect(result.content).toContain("## Agent: Security");
+    expect(result.content).toContain("Audit security stuff.");
+  });
+
+  it("includes Codex-specific header", async () => {
+    const result = await generateCodexAgentsMd(join(tempDir, "nonexistent"));
+    expect(result.content).toContain("# Inspectra — Codex Project Instructions");
+    expect(result.content).toContain("Auto-generated");
+    expect(result.content).toContain("inspectra_generate_codex_agents_md");
+  });
+
+  it("includes /mcp TUI reference in workflow instructions", async () => {
+    const result = await generateCodexAgentsMd(join(tempDir, "nonexistent"));
+    expect(result.content).toContain("## How to Run an Audit");
+    expect(result.content).toContain("/mcp");
+  });
+
+  it("includes MCP tools table", async () => {
+    const result = await generateCodexAgentsMd(join(tempDir, "nonexistent"));
+    expect(result.content).toContain("## MCP Tools");
+    expect(result.content).toContain("inspectra_scan_secrets");
+    expect(result.content).toContain("inspectra_check_i18n");
+  });
+
+  it("includes scoring model and finding contract", async () => {
+    const result = await generateCodexAgentsMd(join(tempDir, "nonexistent"));
+    expect(result.content).toContain("## Scoring Model");
+    expect(result.content).toContain("security 24%");
+    expect(result.content).toContain("## Finding Contract");
+    expect(result.content).toContain("Tool findings: IDs 001-499");
+  });
+
+  it("reads multiple agent files sorted alphabetically", async () => {
+    writeFileSync(join(tempDir, "audit-tests.agent.md"), "---\nname: tests\n---\nTests content.");
+    writeFileSync(join(tempDir, "audit-security.agent.md"), "---\nname: security\n---\nSecurity content.");
+
+    const result = await generateCodexAgentsMd(tempDir);
+    expect(result.agentCount).toBe(2);
+    expect(result.agentFiles).toEqual([
+      "audit-security.agent.md",
+      "audit-tests.agent.md",
+    ]);
   });
 });

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { jsonResponse, withErrorHandling } from "./response.js";
-import { generateClaudeMd } from "../tools/adapter.js";
+import { generateClaudeMd, generateCodexAgentsMd } from "../tools/adapter.js";
 import { validateProjectDir } from "../utils/paths.js";
 
 /**
@@ -86,5 +86,73 @@ Examples:
         content: result.content,
       });
     }, "inspectra_generate_claude_md"),
+  );
+
+  // ─── Codex AGENTS.md tool ────────────────────────────────────────────────
+
+  server.registerTool(
+    "inspectra_generate_codex_agents_md",
+    {
+      title: "Generate Codex AGENTS.md",
+      description: `Generate an AGENTS.md file that exposes Inspectra agents to OpenAI Codex.
+
+Reads all .agent.md files from the .github/agents/ directory (relative to projectDir) and compiles them into a single AGENTS.md document with audit workflow instructions, MCP tools reference, scoring model, and finding contract — suitable for use as Codex project instructions.
+
+When write is true, the file is written to disk at <projectDir>/AGENTS.md (or outputPath if specified).
+
+Args:
+  - projectDir (string): Absolute path to the project root.
+  - outputPath (string, optional): Where to write AGENTS.md. Defaults to <projectDir>/AGENTS.md when write: true.
+  - write (boolean, optional): Write to disk when true. Default: false.
+
+Returns: JSON object with { content, agentCount, agentFiles, outputPath? }.`,
+      inputSchema: {
+        projectDir: z
+          .string()
+          .describe("Absolute path to the project root directory."),
+        outputPath: z
+          .string()
+          .optional()
+          .describe("Where to write AGENTS.md. Defaults to <projectDir>/AGENTS.md when write: true."),
+        write: z
+          .boolean()
+          .optional()
+          .default(false)
+          .describe("Write the generated content to disk when true."),
+      },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
+    },
+    withErrorHandling(async ({ projectDir, outputPath, write }) => {
+      const safeDir = await validateProjectDir(projectDir);
+      const agentsDir = join(safeDir, ".github", "agents");
+
+      const result = await generateCodexAgentsMd(agentsDir);
+
+      const resolvedOutputPath = outputPath
+        ? resolve(outputPath)
+        : write
+          ? join(safeDir, "AGENTS.md")
+          : null;
+
+      if (resolvedOutputPath) {
+        await writeFile(resolvedOutputPath, result.content, "utf-8");
+        return jsonResponse({
+          agentCount: result.agentCount,
+          agentFiles: result.agentFiles,
+          outputPath: resolvedOutputPath,
+          message: `AGENTS.md written to ${resolvedOutputPath} (${result.agentCount} agent(s) included).`,
+        });
+      }
+
+      return jsonResponse({
+        agentCount: result.agentCount,
+        agentFiles: result.agentFiles,
+        content: result.content,
+      });
+    }, "inspectra_generate_codex_agents_md"),
   );
 }

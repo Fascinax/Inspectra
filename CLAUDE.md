@@ -24,7 +24,7 @@ npm run lint       # tsc --noEmit + ESLint
   - `utils/` — shared utilities (files, paths, project-config)
 - `schemas/` — JSON Schema 2020-12 contracts (finding, domain-report, consolidated-report)
 - `policies/` — scoring-rules.yml, severity-matrix.yml, profiles/
-- `bin/init.mjs` — CLI entry point (`inspectra setup`, `inspectra setup --claude`, `inspectra init`, `inspectra doctor`)
+- `bin/init.mjs` — CLI entry point (`inspectra setup`, `inspectra setup --claude`, `inspectra setup --codex`, `inspectra init`, `inspectra doctor`)
 
 ## Architecture Rules
 
@@ -47,7 +47,7 @@ Weights (re-normalized at runtime): security 24%, tests 20%, architecture 16%, c
 - No mocking of file system — use real temp dirs
 - Run `npx tsc --noEmit --project mcp/tsconfig.src.json` before committing
 
-## MCP Tools (35 total)
+## MCP Tools (36 total)
 
 Security: `scan_secrets`, `check_deps_vulns`, `run_semgrep`, `check_maven_deps`
 Tests: `parse_coverage`, `parse_test_results`, `detect_missing_tests`, `parse_playwright_report`, `detect_flaky_tests`, `check_test_quality`
@@ -63,7 +63,7 @@ i18n: `check_i18n`
 Orchestrator: `merge_domain_reports`, `score_findings`
 Report: `render_html`, `render_pdf`, `render_trend`, `compare_reports`
 Governance: `log_activity`, `read_activity_log`
-Adapter: `generate_claude_md`
+Adapter: `generate_claude_md`, `generate_codex_agents_md`
 
 ## Do NOT
 

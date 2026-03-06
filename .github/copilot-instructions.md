@@ -12,6 +12,7 @@ Inspectra is a multi-agent code audit system. It uses specialized Copilot agents
 - **Policies** (`policies/`): Scoring rules, severity matrix, and stack-specific profiles.
 - **Prompts** (`.github/prompts/`): Reusable entry points for common audit workflows.
 - **Claude Code support**: `CLAUDE.md` + `.mcp.json` at repo root; `inspectra setup --claude` for target projects.
+- **Codex support**: `AGENTS.md` + `.codex/config.toml`; `inspectra setup --codex` for target projects.
 
 ## Critical Rules
 
@@ -72,6 +73,7 @@ Tools are registered in the `inspectra` MCP server. Agents should call them by p
 | `inspectra_check_observability` | Observability | Detect missing logging, tracing, health endpoints |
 | `inspectra_check_i18n` | i18n | Detect hardcoded strings and missing i18n setup |
 | `inspectra_generate_claude_md` | Adapter | Generate CLAUDE.md from agent definitions |
+| `inspectra_generate_codex_agents_md` | Adapter | Generate Codex AGENTS.md from agent definitions |
 
 ### Technology Stack
 
