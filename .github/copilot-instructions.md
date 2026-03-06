@@ -60,6 +60,9 @@ Tools are registered in the `inspectra` MCP server. Agents should call them by p
 | `inspectra_check_naming` | Conventions | Verify naming patterns |
 | `inspectra_check_file_lengths` | Conventions | Flag long files |
 | `inspectra_check_todos` | Conventions | Find TODO/FIXME markers |
+| `inspectra_check_function_lengths` | Conventions | Flag long functions/methods |
+| `inspectra_check_param_counts` | Conventions | Flag functions with too many parameters |
+| `inspectra_check_magic_numbers` | Conventions | Detect unnamed numeric constants |
 | `inspectra_merge_domain_reports` | Orchestrator | Merge and score reports |
 | `inspectra_score_findings` | Orchestrator | Compute a domain score |
 | `inspectra_render_html` | Report Engine | Render HTML report (Obsidian dark theme) |
