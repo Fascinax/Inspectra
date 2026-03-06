@@ -194,6 +194,26 @@ export function renderStyles(): string {
     font-family: var(--font-mono);
     white-space: nowrap;
   }
+  .domain-card-icon, .domain-icon {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 6px;
+    flex-shrink: 0;
+  }
+  .lucide {
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+  .lucide-sm {
+    width: 14px;
+    height: 14px;
+    margin-right: 2px;
+  }
+  .domain-card-header {
+    display: flex;
+    align-items: center;
+  }
 
   /* ── Severity Chart ── */
   .severity-chart {
@@ -382,33 +402,6 @@ export function renderStyles(): string {
     font-size: 0.82rem;
   }
 
-  /* ── Domain Nav ── */
-  .domain-nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 24px;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: var(--bg-primary);
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .domain-nav-pill {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.76rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    text-decoration: none;
-    border: 1px solid currentColor;
-    opacity: 0.7;
-    transition: opacity 0.15s, transform 0.1s;
-  }
-  .domain-nav-pill:hover { opacity: 1; transform: translateY(-1px); }
 
   /* ── Back to Top ── */
   .back-to-top {

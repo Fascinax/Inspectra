@@ -15,10 +15,10 @@ export const FINDING_PARTIAL = `<div class="finding" style="border-left-color:{{
   <div class="finding-meta">
     <span>Confidence: {{confidencePercent}}%</span>
     {{#if hasEffort}}<span>Effort: {{effort}}</span>{{/if}}
-    {{#if hasLocation}}<span>\u{1F4CD} <code>{{location}}</code></span>{{/if}}
+    {{#if hasLocation}}<span><svg class="lucide lucide-sm" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> <code>{{location}}</code></span>{{/if}}
   </div>
   {{#if hasDescription}}<div class="finding-desc">{{description}}</div>{{/if}}
-  {{#if hasRecommendation}}<div class="finding-fix">\u{1F4A1} {{recommendation}}</div>{{/if}}
+  {{#if hasRecommendation}}<div class="finding-fix"><svg class="lucide lucide-sm" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg> {{recommendation}}</div>{{/if}}
 </div>`;
 
 export const REPORT_TEMPLATE = `<!DOCTYPE html>
@@ -73,18 +73,11 @@ export const REPORT_TEMPLATE = `<!DOCTYPE html>
       </div>
     </div>
 
-    {{!-- Domain Nav --}}
-    <nav class="domain-nav" aria-label="Jump to domain">
-      {{#each domainReportsView}}
-      <a href="#domain-{{domainId}}" class="domain-nav-pill" style="border-color:{{scoreColor}};color:{{scoreColor}}">{{domainName}}</a>
-      {{/each}}
-    </nav>
-
     {{!-- Domain Grid --}}
     <div class="domain-grid">
       {{#each domainReportsView}}
       <a class="domain-card" href="#domain-{{domainId}}">
-        <div class="domain-name">{{domain}}</div>
+        <div class="domain-card-header"><span class="domain-card-icon">{{{domainIcon}}}</span><span class="domain-name">{{domain}}</span></div>
         <div class="domain-score" style="color:{{scoreColor}}">{{score}}<span style="font-size:0.9rem;color:var(--text-muted)">/100</span></div>
         <div class="progress-bar">
           <div class="progress-fill" style="width:{{score}}%;background:{{scoreColor}}"></div>
@@ -127,8 +120,9 @@ export const REPORT_TEMPLATE = `<!DOCTYPE html>
 
     {{!-- Domain Sections --}}
     {{#each domainReportsView}}
-    <details class="domain-section" id="domain-{{domainId}}" open>
+    <details class="domain-section" id="domain-{{domainId}}">
       <summary class="domain-summary">
+        <span class="domain-icon">{{{domainIcon}}}</span>
         <span class="domain-summary-name">{{domainName}}</span>
         <span class="domain-summary-score" style="color:{{scoreColor}}">{{score}}/100</span>
         {{#if hasFindings}}<span class="domain-summary-count">{{findingCount}} finding{{findingPlural}}</span>{{/if}}
