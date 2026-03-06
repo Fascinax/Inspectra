@@ -211,6 +211,7 @@ Source: Google Testing Blog, Netflix/Spotify Engineering, testsmells.org
 | `console.log` as assertion substitute | All `console.log` and zero `expect()` | `high` |
 
 **Recommended setup lifecycle:**
+
 ```ts
 beforeEach(() => {
   jest.resetAllMocks(); // reset call counts + return values
@@ -273,11 +274,12 @@ Source: Roy Osherove *Art of Unit Testing*, BDD specification by example (Dan No
 
 ### BDD Pattern (Given-When-Then)
 
-```
+```markdown
 "given [precondition] when [action] then [expected outcome]"
 ```
 
 Examples:
+
 - `"given a valid user when creating then returns 201 with user id"`
 - `"given null input when calculating discount then throws IllegalArgumentException"`
 - `shouldReturnZeroWhenInputIsNull` (Java camelCase equivalent)

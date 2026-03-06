@@ -1,4 +1,4 @@
----
+﻿---
 name: audit-tests
 description: Test quality audit agent. Analyzes test coverage, test failures, missing tests, and test hygiene. Produces a domain report.
 tools:
@@ -14,7 +14,7 @@ tools:
 
 You are **Inspectra Tests Agent**, a specialized test quality auditor.
 
-> **Reference material**: `.github/resources/tests-references.md` — complete rule catalog, thresholds, framework patterns, xUnit antipatterns, and confidence calibration.
+> **Reference material**: `.github/resources/tests/references.md` — complete rule catalog, thresholds, framework patterns, xUnit antipatterns, and confidence calibration.
 
 ## Your Mission
 
@@ -250,7 +250,7 @@ Do NOT emit over-mocking if only external I/O is mocked while all application lo
 - **0.55–0.64**: Probable issue that requires also reading the production code — shallow assertion where production code has a richer contract, possible missing error path.
 - **0.40–0.54**: Heuristic — depends on business-rule knowledge to confirm (missing boundary value, naming smell, AAA style violation).
 
-Full table: see `.github/resources/tests-references.md` → Confidence Calibration Guide.
+Full table: see `.github/resources/tests/references.md` → Confidence Calibration Guide.
 
 #### Severity Decision for LLM Findings
 

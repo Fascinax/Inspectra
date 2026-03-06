@@ -1,4 +1,4 @@
-﻿# Documentation Audit — Reference Material
+# Documentation Audit — Reference Material
 
 > This file is the authoritative reference companion for the `audit-documentation` agent.
 > It covers all three pillars of documentation quality used by the agent:
@@ -236,14 +236,14 @@ Y-Statements are ultra-compact, single-sentence ADRs suitable for quick decision
 
 #### Short Form
 
-```
+```markdown
 In the context of <use case/user story>, facing <concern>, we decided for
 <option> to achieve <quality>, accepting <downside>.
 ```
 
 #### Long Form (with "because")
 
-```
+```markdown
 In the context of <use case/user story>, facing <concern>, we decided for
 <option> and neglected <other options>, to achieve <system qualities/desired
 consequences>, accepting <downside/undesired consequences>, because
@@ -252,7 +252,7 @@ consequences>, accepting <downside/undesired consequences>, because
 
 #### Example
 
-```
+```markdown
 In the context of the mobile API, facing high read traffic and sub-100ms latency
 requirements, we decided for Redis as a caching layer and neglected Memcached and
 in-process caching, to achieve consistent low latency at scale, accepting the
@@ -392,7 +392,7 @@ Even small decisions that go unrecorded compound over time into future migration
 
 ### Transition Diagram
 
-```
+```markdown
                         ┌──────────────────────┐
                         │                      │
    [drafted]  ──────►  proposed  ──────────►  accepted
@@ -423,6 +423,7 @@ Initiating → Researching → Evaluating → Implementing → Maintaining → S
 ```
 
 Each phase requires:
+
 1. Completed research + evaluation
 2. Published proposal with stakeholder request-for-comments + timebox (e.g., 1 week)
 3. All stakeholder comments addressed
@@ -444,6 +445,7 @@ These are heuristic thresholds for the `audit-documentation` agent to flag proje
 | > 18 months | 15+ | Mature system; significant ADR log expected |
 
 Additional signals:
+
 - **0 ADRs in a project with `docs/` or `doc/` directory** → strong signal (a `docs/` dir suggests documentation intent)
 - **0 ADRs in a project with multiple major dependencies** → strong signal
 - **0 ADRs in a project with > 5 contributors** → strong signal (team decisions need documentation)
@@ -484,7 +486,7 @@ An ADR is **stale** when the decision it documents has effectively changed but t
 
 The following file/pattern signatures in a codebase, with no corresponding ADR text that matches, are strong audit signals:
 
-```
+```markdown
 package.json / package-lock.json      → framework/runtime choices undocumented
 pom.xml / build.gradle                → Java dependency choices undocumented
 go.mod                                → Go module choices undocumented
@@ -505,7 +507,7 @@ src/**/__tests__/ or spec/            → test strategy undocumented
 
 For `audit-documentation`, the following scoring heuristic applies:
 
-```
+```markdown
 adr_count       = number of ADRs in docs/adr/ or doc/arch/ or docs/decisions/
 expected_adrs   = f(project_age_months, contributor_count, major_dep_count)
 coverage_ratio  = adr_count / expected_adrs
@@ -558,6 +560,7 @@ Available ports: C#, Go, Java (`adr-j`), Node.js (ESM), PowerShell, Python, Rust
 > <https://github.com/thomvaill/log4brains>
 
 Supports MADR 2.1.2. Dual functionality:
+
 - **CLI**: creates and manages ADRs in Markdown
 - **Web UI**: renders ADRs as a searchable static website (serves as a knowledge base portal)
 
@@ -630,9 +633,10 @@ The `audit-documentation` agent should scan for ADRs in the following standard l
 | 8 | Any `*.md` matching `/adr-\d{3,4}-/` or `/\d{4}-.*\.md/` | MADR naming pattern |
 
 ADR file detection patterns:
+
 - `adr-NNN-*.md` (Nygard/adr-tools pattern)
 - `NNNN-title-with-dashes.md` (MADR pattern)
-- Any `*.md` file whose first H1 is `# ADR NNN:` or `# NNNN `
+- Any `*.md` file whose first H1 is `# ADR NNN:` or `# NNNN`
 - Any `*.md` file containing the literal section headers `## Status` and `## Context`
 
 ---
@@ -757,7 +761,7 @@ Full comparison from Diátaxis canonical map:
 
 #### Good tutorial language patterns
 
-```
+```markdown
 "We …"                       → first-person plural affirms the teacher/student bond
 "In this tutorial, we will …"  → state what will be accomplished (not "you will learn")
 "First, do x. Now, do y."    → unambiguous, sequential directives
@@ -810,7 +814,7 @@ Full comparison from Diátaxis canonical map:
 
 #### Good how-to guide language patterns
 
-```
+```markdown
 "This guide shows you how to …"  → explicit problem/task declaration
 "If you want x, do y."          → conditional imperative
 "Refer to the x reference guide for a full list of options." → defer to reference
@@ -857,7 +861,7 @@ Full comparison from Diátaxis canonical map:
 
 #### Good reference language patterns
 
-```
+```markdown
 "Django's default logging configuration inherits Python's defaults."  → state facts
 "Sub-commands are: a, b, c, d, e, f."                               → enumerate
 "You must use a. You must not apply b unless c. Never d."            → state rules/warnings
@@ -899,7 +903,7 @@ Full comparison from Diátaxis canonical map:
 
 #### Good explanation language patterns
 
-```
+```markdown
 "The reason for x is because historically, y …"    → explain causes
 "W is better than z, because …"                    → offer judgements
 "An x in system y is analogous to a w in system z." → provide context
@@ -910,6 +914,7 @@ Full comparison from Diátaxis canonical map:
 #### The naming test
 
 Explanation titles should tolerate a prepended *"About"*:
+
 - ✅ *About user authentication*
 - ✅ *About database connection policies*
 - ❌ *How to authenticate users* (that's a how-to guide)
@@ -1300,6 +1305,7 @@ One paragraph description
 ```
 
 **Key PurpleBooth principles:**
+
 - Every section with sub-steps includes a code block
 - Installation section ends with a working demo, not just a command
 - Deployment is explicitly a first-class section (not buried in docs)

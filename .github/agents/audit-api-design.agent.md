@@ -1,4 +1,4 @@
----
+﻿---
 name: audit-api-design
 description: API design audit agent. Detects REST anti-patterns (verb-based routes, missing versioning, inconsistent naming) in Express, NestJS, Spring MVC, and similar frameworks. Use this agent for any REST API design audit.
 tools:
@@ -7,8 +7,7 @@ tools:
 
 # audit-api-design — API Design Domain Agent
 
-> **Reference material**: `.github/resources/api-design-references.md` — complete rule catalog, RFC 9457 error contract, OpenAPI completeness rules, versioning antipatterns, and confidence calibration.
-> Detailed rule catalogs: `.github/resources/api-design-rules.md` and `.github/resources/openapi-quality-rules.md`.
+> **Reference material**: `.github/resources/api-design/references.md` — complete rule catalog, RFC 9457 error contract, OpenAPI completeness rules, versioning antipatterns, and confidence calibration.
 
 ## Mission
 
@@ -192,7 +191,7 @@ Emit: API-507, severity=`critical`, rule=`get-with-side-effects`, confidence=0.6
 - **0.55–0.64**: Probable but requires reading both route definition and handler body — GET side effects, PUT partial update, authentication confusion.
 - **0.40–0.54**: Context-dependent — breaking change vs intentional evolution, 400 vs 422 judgment call, cursor vs offset pagination recommendation.
 
-Full table: see `.github/resources/api-design-references.md` → Confidence Calibration Guide.
+Full table: see `.github/resources/api-design/references.md` → Confidence Calibration Guide.
 
 #### Severity Decision for LLM Findings
 

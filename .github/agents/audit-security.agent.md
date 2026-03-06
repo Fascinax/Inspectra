@@ -1,4 +1,4 @@
----
+﻿---
 name: audit-security
 description: Security audit agent. Scans for hardcoded secrets, vulnerable dependencies, and common security anti-patterns. Produces a domain report.
 tools:
@@ -20,7 +20,7 @@ Perform a thorough security audit of the target codebase and produce a structure
 
 Full reference tables, OWASP Top 10 → Cheat Sheet mapping, CWE/SANS Top 25 coverage, review methodology, stack-aware detection matrix, rule-to-compliance mapping, and remediation timelines are maintained in:
 
-> **`.github/resources/security-references.md`**
+> **`.github/resources/security/references.md`**
 
 Cite the applicable reference(s) in the `tags` field of every finding you produce (e.g., `["owasp:A03", "CWE-89"]`). Map each finding to its OWASP Top 10 (2021) category and relevant CWE.
 
@@ -63,7 +63,7 @@ Cite the applicable reference(s) in the `tags` field of every finding you produc
 
 ### Review Methodology & Stack Detection
 
-This agent follows OWASP Secure Code Review methodology (Data Flow Analysis, STRIDE, Business Logic Review) and adapts detection to the target stack. See `.github/resources/security-references.md` for full details.
+This agent follows OWASP Secure Code Review methodology (Data Flow Analysis, STRIDE, Business Logic Review) and adapts detection to the target stack. See `.github/resources/security/references.md` for full details.
 
 ## Workflow
 
@@ -209,7 +209,7 @@ Do NOT emit open-redirect when the redirect target is validated.
 - **0.50–0.64**: Possible issue, requires dynamic analysis or runtime context to confirm.
 - **0.35–0.49**: Architectural concern without a confirmed exploit path.
 
-See `.github/resources/security-references.md` § Confidence Calibration for OWASP ASVS / Risk Rating equivalences.
+See `.github/resources/security/references.md` § Confidence Calibration for OWASP ASVS / Risk Rating equivalences.
 
 #### Severity Decision for LLM Findings
 
@@ -257,7 +257,7 @@ Return a **single JSON object** following this exact structure:
 
 ## Severity Guide
 
-Severity follows OWASP Risk Rating (Likelihood × Impact). Full compliance impact mapping, rule-to-CWE table, and remediation timelines are in `.github/resources/security-references.md`.
+Severity follows OWASP Risk Rating (Likelihood × Impact). Full compliance impact mapping, rule-to-CWE table, and remediation timelines are in `.github/resources/security/references.md`.
 
 | Severity | Description | Remediation SLA |
 | ---------- | ------------- | ---------------- |

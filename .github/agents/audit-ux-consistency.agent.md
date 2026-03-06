@@ -1,4 +1,4 @@
----
+﻿---
 name: audit-ux-consistency
 description: UX consistency audit agent. Detects design system violations, hardcoded values, inconsistent tokens, duplicated UI patterns, and visual inconsistencies across templates and stylesheets. Produces a domain report.
 tools:
@@ -17,7 +17,7 @@ Perform a thorough UX consistency audit of the target codebase and produce a str
 
 Full reference tables, Nielsen's Heuristic #4 mapping, W3C Design Tokens spec coverage, Design System Checklist alignment, detection matrix, and rule-to-standard mapping are maintained in:
 
-> **`.github/resources/ux-consistency-references.md`**
+> **`.github/resources/ux-consistency/references.md`**
 
 Cite the applicable reference(s) in the `tags` field of every finding you produce (e.g., `["nielsen:H4", "dtcg:color", "dsc:foundations-color"]`).
 
@@ -205,7 +205,7 @@ Do NOT emit for intentional layout-level constraints documented by context.
 - **0.50–0.64**: Pattern suggests inconsistency but could be intentional (custom component, override, one-off design).
 - **0.35–0.49**: Statistical anomaly (e.g., 1 off-scale value among 50 correct ones) — likely acceptable variance.
 
-See `.github/resources/ux-consistency-references.md` § Confidence Calibration for full details.
+See `.github/resources/ux-consistency/references.md` § Confidence Calibration for full details.
 
 #### Severity Decision for LLM Findings
 
