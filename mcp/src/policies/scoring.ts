@@ -16,6 +16,7 @@ export const DEFAULT_SCORING: ScoringConfig = {
     "api-design": 0.07,
     observability: 0.06,
     i18n: 0.05,
+    "ux-consistency": 0.06,
   },
 };
 

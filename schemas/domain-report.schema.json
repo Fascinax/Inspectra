@@ -8,7 +8,7 @@
   "properties": {
     "domain": {
       "type": "string",
-      "enum": ["security", "tests", "architecture", "conventions", "performance", "documentation", "tech-debt", "accessibility", "api-design", "observability", "i18n"],
+      "enum": ["security", "tests", "architecture", "conventions", "performance", "documentation", "tech-debt", "accessibility", "api-design", "observability", "i18n", "ux-consistency"],
       "description": "Audit domain."
     },
     "score": {

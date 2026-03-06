@@ -24,7 +24,7 @@ node ~/inspectra/bin/init.mjs setup --codex
 This creates:
 
 | File | Purpose |
-|------|---------|
+| ------ | --------- |
 | `.codex/config.toml` | MCP server configuration (Codex reads this at startup) |
 | `AGENTS.md` | Project instructions with audit workflow and tool reference |
 | `policies/` | Scoring rules and severity matrix |
@@ -47,7 +47,8 @@ You can verify the connection in the Codex TUI with the `/mcp` command.
 ### `AGENTS.md`
 
 Codex reads this file as project instructions before every task. It contains:
-- Available MCP tools and their purpose (35 tools across 11 domains)
+
+- Available MCP tools and their purpose (36 tools across 12 domains)
 - How to run audits (full, single-domain, PR)
 - Scoring model and grading scale
 - Finding format specification
@@ -115,7 +116,7 @@ codex exec "Run inspectra_scan_secrets on /path/to/project and report findings."
 ## Comparison: Copilot vs Claude Code vs Codex
 
 | Aspect | VS Code + Copilot | Claude Code | OpenAI Codex |
-|--------|------------------|-------------|--------------|
+| -------- | ------------------ | ------------- | -------------- |
 | Setup command | `inspectra setup` | `inspectra setup --claude` | `inspectra setup --codex` |
 | MCP config | `.vscode/mcp.json` | `.mcp.json` (JSON) | `.codex/config.toml` (TOML) |
 | Project context | `.github/copilot-instructions.md` | `CLAUDE.md` | `AGENTS.md` |
@@ -143,6 +144,7 @@ In the Codex TUI, type `/mcp` to see active MCP servers. You should see `inspect
 ### AGENTS.md not loaded
 
 Codex discovers `AGENTS.md` from the project root (Git root) down to the current directory. Make sure:
+
 - You're in the right project directory
 - `AGENTS.md` is not empty
 - The file hasn't exceeded `project_doc_max_bytes` (32 KiB default)

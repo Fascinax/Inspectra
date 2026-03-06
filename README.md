@@ -109,7 +109,7 @@ Same as Option B but files are real copies committed with the repo. Useful for C
 
 Open the target project in VS Code, open Copilot Chat, and type:
 
-- `/audit` : full audit (all 11 domains, agent selected automatically)
+- `/audit` : full audit (all 12 domains, agent selected automatically)
 - `/audit-pr` : audit scoped to changed files
 
 ---

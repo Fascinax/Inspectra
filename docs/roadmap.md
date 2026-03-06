@@ -4,10 +4,10 @@
 
 Inspectra is a functional multi-agent code audit system with:
 
-- 12 Copilot Custom Agents (orchestrator + 11 domain agents) with enriched Phase 2 prompts
-- 35 MCP tools across 11 domains (security, tests, architecture, conventions, performance, documentation, tech-debt, accessibility, api-design, observability, i18n)
+- 13 Copilot Custom Agents (orchestrator + 12 domain agents) with enriched Phase 2 prompts
+- 36 MCP tools across 12 domains (security, tests, architecture, conventions, performance, documentation, tech-debt, accessibility, api-design, observability, i18n, ux-consistency)
 - JSON Schema contracts for all outputs (11-domain finding validation)
-- Scoring engine with weighted domains (11 domains) and grade system
+- Scoring engine with weighted domains (12 domains) and grade system
 - Markdown, JSON, HTML, SARIF, and PDF report renderers
 - Trend tracking and audit comparison via MCP tools
 - 5 stack-specific profiles with per-profile complexity thresholds

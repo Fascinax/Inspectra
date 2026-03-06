@@ -3,7 +3,7 @@ description: "Run a full multi-domain audit on the target project"
 agent: audit-orchestrator
 ---
 
-Run a comprehensive code audit on the project in the current workspace, covering all 11 domains.
+Run a comprehensive code audit on the project in the current workspace, covering all 12 domains.
 
 ## Workflow
 
@@ -19,6 +19,7 @@ Run a comprehensive code audit on the project in the current workspace, covering
    - `audit-api-design` — REST naming, versioning, consistency
    - `audit-observability` — logging, tracing, health endpoints
    - `audit-i18n` — hardcoded strings, missing i18n setup
+   - `audit-ux-consistency` — design system violations, visual inconsistencies
 2. Collect all domain reports (each conforming to `schemas/domain-report.schema.json`)
 3. Call `inspectra_merge_domain_reports` with the collected domain reports
 4. Produce a consolidated Markdown report
@@ -26,7 +27,7 @@ Run a comprehensive code audit on the project in the current workspace, covering
 ## Scoring
 
 - Domain scores: 0–100 (100 = no issues), penalties = severity_weight × confidence
-- Overall score: weighted average — security 24%, tests 20%, architecture 16%, conventions 12%, performance 10%, documentation 8%, tech-debt 10%, accessibility 8%, api-design 7%, observability 6%, i18n 5% (re-normalized at runtime based on audited domains)
+- Overall score: weighted average — security 24%, tests 20%, architecture 16%, conventions 12%, performance 10%, documentation 8%, tech-debt 10%, accessibility 8%, api-design 7%, observability 6%, i18n 5%, ux-consistency 6% (re-normalized at runtime based on audited domains)
 - Grades: A (90+), B (75+), C (60+), D (40+), F (<40)
 
 ## Output Format

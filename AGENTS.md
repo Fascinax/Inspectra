@@ -18,6 +18,7 @@ Inspectra uses GitHub Copilot Custom Agents to perform structured code audits.
 | [audit-api-design](.github/agents/audit-api-design.agent.md) | API Design | `inspectra_check_rest_conventions` | `API-` |
 | [audit-observability](.github/agents/audit-observability.agent.md) | Observability | `inspectra_check_observability` | `OBS-` |
 | [audit-i18n](.github/agents/audit-i18n.agent.md) | i18n | `inspectra_check_i18n` | `INT-` |
+| [audit-ux-consistency](.github/agents/audit-ux-consistency.agent.md) | UX Consistency | `inspectra_check_ux_consistency` | `UX-` |
 
 ## How It Works
 
@@ -33,7 +34,7 @@ User prompt -> Orchestrator -> domain agents (tool scan + LLM exploration) -> me
 
 ## Orchestrator
 
-- Full audit (`/audit`): invokes all 11 domain agents.
+- Full audit (`/audit`): invokes all 12 domain agents.
 - PR audit (`/audit-pr`): invokes only agents relevant to changed files.
 - Targeted audit: invokes only the requested domain.
 

@@ -196,7 +196,7 @@ After collecting each domain report, check ALL of these. If any check fails, app
 
 ## Delegation Rules
 
-- **Full audit**: invoke all 11 domain agents (7 core + 4 extended: accessibility, api-design, observability, i18n).
+- **Full audit**: invoke all 12 domain agents (7 core + 5 extended: accessibility, api-design, observability, i18n, ux-consistency).
 - **PR audit**: invoke only agents relevant to the changed files.
 - **Targeted audit**: invoke only the requested domain agent.
 - Always pass the target project path to each agent.
@@ -208,7 +208,7 @@ Reference `policies/scoring-rules.yml` for authoritative values. Do NOT hardcode
 - Domain scores: 0–100 (100 = no issues), penalty per finding = severity_weight × confidence (critical=25, high=15, medium=8, low=3, info=0)
 - Overall score: weighted average of all audited domain scores:
   - Core domains: security: **24%**, tests: **20%**, architecture: **16%**, conventions: **12%**, performance: **10%**, documentation: **8%**, tech-debt: **10%**
-  - Extended domains (v0.7+): accessibility: **8%**, api-design: **7%**, observability: **6%**, i18n: **5%** (weights are re-normalized at runtime based on which domains were audited)
+  - Extended domains (v0.7+): accessibility: **8%**, api-design: **7%**, observability: **6%**, i18n: **5%**, ux-consistency: **6%** (weights are re-normalized at runtime based on which domains were audited)
 - Only domains actually audited contribute to the weighted average.
 - Grades: A (90+), B (75+), C (60+), D (40+), F (<40)
 - Deduplication is applied before scoring per `policies/deduplication-rules.yml`. Cross-domain duplicates (e.g., hardcoded-secret found by both security and tech-debt) are resolved automatically by the merge tool.

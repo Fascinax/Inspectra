@@ -24,6 +24,7 @@ export const DOMAINS = [
   "api-design",
   "observability",
   "i18n",
+  "ux-consistency",
 ] as const;
 export type Domain = (typeof DOMAINS)[number];
 

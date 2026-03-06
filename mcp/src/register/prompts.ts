@@ -17,7 +17,7 @@ export function registerPrompts(server: McpServer, promptsDir: string): void {
     {
       title: "Full Multi-Domain Audit",
       description:
-        "Run a comprehensive code audit covering all 11 domains (security, tests, architecture, conventions, performance, documentation, tech-debt, accessibility, api-design, observability, i18n). Returns a structured workflow with scoring and output format instructions.",
+        "Run a comprehensive code audit covering all 12 domains (security, tests, architecture, conventions, performance, documentation, tech-debt, accessibility, api-design, observability, i18n, ux-consistency). Returns a structured workflow with scoring and output format instructions.",
       argsSchema: {
         projectDir: z
           .string()
