@@ -1,4 +1,4 @@
-﻿---
+--
 name: audit-api-design
 description: API design audit agent. Detects REST anti-patterns (verb-based routes, missing versioning, inconsistent naming) in Express, NestJS, Spring MVC, and similar frameworks. Use this agent for any REST API design audit.
 tools:

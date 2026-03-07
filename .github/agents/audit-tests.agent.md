@@ -1,4 +1,4 @@
-﻿---
+--
 name: audit-tests
 description: Test quality audit agent. Analyzes test coverage, test failures, missing tests, and test hygiene. Produces a domain report.
 tools:

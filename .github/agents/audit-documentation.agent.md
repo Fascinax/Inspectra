@@ -1,4 +1,4 @@
-﻿---
+--
 name: audit-documentation
 description: Documentation audit agent. Validates README quality, ADR presence, Diátaxis coverage, and documentation/code drift.
 tools:
