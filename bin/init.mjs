@@ -156,6 +156,10 @@ function getVSCodeSettingsPath() {
   return join(getVSCodeUserDir(), "settings.json");
 }
 
+function getVSCodeMcpConfigPath() {
+  return join(getVSCodeUserDir(), "mcp.json");
+}
+
 function writeMcpJson(targetDir) {
   const vscodeMcpPath = join(targetDir, ".vscode", "mcp.json");
   mkdirSync(join(targetDir, ".vscode"), { recursive: true });
@@ -331,26 +335,23 @@ function cmdSetup({ claude = false, codex = false } = {}) {
   console.log("║     INSPECTRA — Global Setup         ║");
   console.log("╚══════════════════════════════════════╝\n");
 
-  // 1. Register MCP server in VS Code user settings
-  const settingsPath = getVSCodeSettingsPath();
-  mkdirSync(dirname(settingsPath), { recursive: true });
+  // 1. Register MCP server in dedicated VS Code mcp.json
+  const mcpConfigPath = getVSCodeMcpConfigPath();
+  mkdirSync(dirname(mcpConfigPath), { recursive: true });
 
-  let settings = {};
-  if (existsSync(settingsPath)) {
-    try { settings = JSON.parse(readFileSync(settingsPath, "utf-8")); } catch { /* keep empty */ }
+  let mcpConfig = { servers: {} };
+  if (existsSync(mcpConfigPath)) {
+    try { mcpConfig = JSON.parse(readFileSync(mcpConfigPath, "utf-8")); } catch { /* keep empty */ }
   }
-
-  settings.mcp ??= {};
-  settings.mcp.servers ??= {};
-  settings.mcp.servers.inspectra = {
+  mcpConfig.servers ??= {};
+  mcpConfig.servers.inspectra = {
     type: "stdio",
     command: "node",
     args: [MCP_SERVER_PATH],
   };
-
-  writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + "\n", "utf-8");
-  console.log(`  ✓ MCP server registered in VS Code user settings`);
-  console.log(`    ${settingsPath}`);
+  writeFileSync(mcpConfigPath, JSON.stringify(mcpConfig, null, 2) + "\n", "utf-8");
+  console.log(`  ✓ MCP server registered in VS Code MCP config`);
+  console.log(`    ${mcpConfigPath}`);
 
   // 2. Copy agents + prompts to VS Code user prompts directory
   const userPromptsDir = join(getVSCodeUserDir(), "prompts");
@@ -572,17 +573,17 @@ function cmdDoctor() {
     "Run: npm run build",
   );
 
-  // 3. VS Code user settings — MCP server registered
-  const settingsPath = getVSCodeSettingsPath();
+  // 3. VS Code dedicated mcp.json — MCP server registered
+  const mcpConfigPath = getVSCodeMcpConfigPath();
   let vsCodeOk = false;
-  if (existsSync(settingsPath)) {
+  if (existsSync(mcpConfigPath)) {
     try {
-      const settings = JSON.parse(readFileSync(settingsPath, "utf-8"));
-      vsCodeOk = !!(settings?.mcp?.servers?.inspectra);
+      const mcpConfig = JSON.parse(readFileSync(mcpConfigPath, "utf-8"));
+      vsCodeOk = !!(mcpConfig?.servers?.inspectra);
     } catch { /* ignore */ }
   }
   check(
-    "VS Code MCP entry  (mcp.servers.inspectra)",
+    `VS Code MCP config  (${mcpConfigPath})`,
     vsCodeOk,
     "Run: inspectra setup",
   );
