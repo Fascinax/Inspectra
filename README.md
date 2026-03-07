@@ -137,6 +137,96 @@ Open the target project in VS Code, open Copilot Chat, and type:
 
 ---
 
+## Usage
+
+### Running Audits
+
+**Full audit** (all 12 domains):
+```
+/audit
+```
+
+**PR audit** (only changed files):
+```
+/audit-pr
+```
+
+**Domain-specific audit**:
+
+```
+@audit-security Audit security vulnerabilities in this project
+@audit-tests Analyze test coverage and quality
+@audit-architecture Review project architecture and dependencies
+@audit-conventions Check code conventions and style
+@audit-performance Analyze bundle sizes and performance
+@audit-documentation Review documentation completeness
+@audit-tech-debt Identify technical debt hotspots
+@audit-accessibility Check WCAG compliance and ARIA attributes
+@audit-api-design Review REST API conventions
+@audit-observability Check logging, tracing, and health endpoints
+@audit-i18n Verify internationalization setup
+```
+
+### Working with Reports
+
+**Generate HTML report**:
+```bash
+inspectra render report.json --html
+```
+
+**Export to PDF**:
+```bash
+inspectra render report.json --pdf
+```
+
+**Compare reports**:
+```bash
+inspectra compare baseline.json current.json
+```
+
+**View trends**:
+```bash
+inspectra trend report1.json report2.json report3.json
+```
+
+### CLI Commands
+
+| Command | Description |
+| --------- | ------------- |
+| `inspectra setup` | Global setup (VS Code user settings) |
+| `inspectra setup --claude` | Claude Code setup (current directory) |
+| `inspectra setup --codex` | OpenAI Codex setup (current directory) |
+| `inspectra init <path>` | Per-project setup with symlinks |
+| `inspectra init <path> --copy` | Per-project setup with copies |
+| `inspectra doctor` | Diagnose installation issues |
+
+### Environment Variables
+
+| Variable | Default | Description |
+| ---------- | --------- | ------------- |
+| `INSPECTRA_LOG_LEVEL` | `info` | Log verbosity (`debug`, `info`, `warn`, `error`) |
+| `INSPECTRA_PROFILE` | `generic` | Active policy profile |
+| `NODE_ENV` | `production` | Runtime environment |
+
+### Profile Selection
+
+Profiles are auto-detected based on package.json and pom.xml. Explicit override:
+
+```json
+{
+  "inspectra": {
+    "profile": "java-angular-playwright"
+  }
+}
+```
+
+Or via environment:
+```bash
+export INSPECTRA_PROFILE=java-backend
+```
+
+---
+
 ## Project Structure
 
 ```markdown

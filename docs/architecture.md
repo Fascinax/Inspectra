@@ -77,12 +77,27 @@ All inter-agent communication uses JSON validated against `schemas/`. This preve
 
 ### Weighted Scoring Model
 
-Domain scores are weighted to reflect risk priority:
-- Security: 30% (highest weight — vulnerabilities have the most impact)
-- Tests: 25% (test quality is a strong predictor of reliability)
-- Architecture: 20% (structural issues compound over time)
-- Conventions: 15% (consistency aids maintainability)
-- Other: 10% (reserved for future domains)
+Domain scores are weighted to reflect risk priority (weights from `policies/scoring-rules.yml`):
+
+**Core domains:**
+- Security: 24%
+- Tests: 20%
+- Architecture: 16%
+- Conventions: 12%
+- Performance: 10%
+- Documentation: 8%
+- Tech-debt: 10%
+
+**Extended domains (v0.7+):**
+- Accessibility: 8%
+- API-design: 7%
+- Observability: 6%
+- i18n: 5%
+
+**Extended domains (v0.8+):**
+- UX-consistency: 6%
+
+Weights are re-normalized at runtime based on which domains were actually audited.
 
 ### Stack-Specific Profiles
 

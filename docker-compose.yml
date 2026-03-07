@@ -13,5 +13,6 @@ services:
     stdin_open: true
     environment:
       - NODE_ENV=development
+      - INSPECTRA_LOG_LEVEL=info
 
 

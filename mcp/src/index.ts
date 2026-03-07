@@ -63,6 +63,18 @@ registerResources(server, POLICIES_DIR, SCHEMAS_DIR);
 
 registerPrompts(server, PROMPTS_DIR);
 
+// ─── Global Error Handlers ────────────────────────────────────────────────────
+
+process.on("uncaughtException", (error) => {
+  logger.error("Uncaught exception", { error: String(error), stack: error.stack });
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason) => {
+  logger.error("Unhandled promise rejection", { reason: String(reason) });
+  process.exit(1);
+});
+
 // ─── Start Server ─────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
