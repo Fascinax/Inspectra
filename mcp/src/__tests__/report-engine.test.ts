@@ -119,10 +119,10 @@ describe("renderHtml", () => {
     expect(html).toContain("Hardcoded API key");
   });
 
-  it("renders finding recommendation with lightbulb", () => {
+  it("renders finding recommendation with lightbulb icon", () => {
     const html = renderHtml(makeReport());
 
-    expect(html).toContain("💡");
+    expect(html).toContain("finding-fix");
     expect(html).toContain("Use env vars");
   });
 

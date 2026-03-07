@@ -1,8 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { findingsResponse, withErrorHandling } from "./response.js";
-import { STANDARD_INPUT_SCHEMA, FINDINGS_TOOL_META, FINDINGS_OPEN_WORLD_META, ProfileField, ResponseFormatField, LimitField, OffsetField } from "./schemas.js";
-import { scanSecrets, checkDependencyVulnerabilities, runSemgrep, checkMavenDependencies } from "../tools/security.js";
+import { STANDARD_INPUT_SCHEMA, FINDINGS_TOOL_META, FINDINGS_OPEN_WORLD_META, ProfileField, ResponseFormatField, LimitField, OffsetField, ProjectDirField } from "./schemas.js";
+import { scanSecrets, scanSecretsInDir, checkDependencyVulnerabilities, runSemgrep, checkMavenDependencies } from "../tools/security.js";
 import { loadProfile } from "../policies/loader.js";
 import { validateProjectDir, validateFilePathsCsv } from "../utils/paths.js";
 
@@ -22,24 +22,30 @@ export function registerSecurityTools(server: McpServer, policiesDir: string): v
 Detects: hardcoded passwords, API keys, private RSA/EC/DSA keys, JWTs, connection strings (JDBC, MongoDB, PostgreSQL, MySQL, Redis), and custom patterns from the selected profile.
 
 Args:
-  - filePathsCsv (string): Comma-separated absolute file paths to scan. Each path must exist and be a regular file.
+  - projectDir (string, recommended): Absolute path to the project root. Scans all source files (.ts/.js/.java/.py/.go/.yaml/.json/.env etc.) automatically.
+  - filePathsCsv (string, alternative): Comma-separated absolute file paths to scan explicitly. Use when you only want to scan specific files.
   - profile (string, optional): Policy profile name for additional secret patterns (e.g., "java-angular-playwright").
+
+Note: Provide either projectDir or filePathsCsv — if both are given, projectDir takes precedence.
 
 Returns: Array of Finding objects (domain: "security", prefix: SEC-). Each finding includes the file path, line number, a redacted snippet, and the matched rule.
 
 Error handling:
-  - Throws if any file path is invalid, non-existent, or a directory.
-  - Throws if paths contain shell metacharacters.
+  - Throws if neither projectDir nor filePathsCsv is provided.
+  - Throws if filePathsCsv paths contain shell metacharacters.
 
 Examples:
-  1. Scan two files for secrets:
+  1. Scan entire project (recommended):
+     { "projectDir": "/app/my-project" }
+  2. Scan specific files:
      { "filePathsCsv": "/app/src/config.ts,/app/src/auth.ts" }
-  2. Scan with a Java-specific profile for extra patterns:
-     { "filePathsCsv": "/app/src/Main.java", "profile": "java-backend" }
-  3. Paginate results (first 10):
-     { "filePathsCsv": "/app/src/config.ts", "limit": 10, "offset": 0 }`,
+  3. Scan with a Java-specific profile:
+     { "projectDir": "/app/my-project", "profile": "java-backend" }
+  4. Paginate results (first 10):
+     { "projectDir": "/app/my-project", "limit": 10, "offset": 0 }`,
       inputSchema: {
-        filePathsCsv: z.string({ required_error: "filePathsCsv is required" }).min(1, "filePathsCsv cannot be empty — provide comma-separated absolute file paths").describe("Comma-separated absolute paths to files to scan"),
+        projectDir: ProjectDirField.optional().describe("Absolute path to the project root. Recommended: scans all source files automatically"),
+        filePathsCsv: z.string().min(1).optional().describe("Comma-separated absolute paths to specific files to scan (alternative to projectDir)"),
         profile: ProfileField,
         responseFormat: ResponseFormatField,
         limit: LimitField,
@@ -47,10 +53,18 @@ Examples:
       },
       ...FINDINGS_TOOL_META,
     },
-    withErrorHandling(async ({ filePathsCsv, profile, responseFormat, limit, offset }) => {
-      const filePaths = await validateFilePathsCsv(filePathsCsv);
+    withErrorHandling(async ({ projectDir, filePathsCsv, profile, responseFormat, limit, offset }) => {
       const profileConfig = profile ? await loadProfile(policiesDir, profile) : undefined;
-      const findings = await scanSecrets(filePaths, profileConfig?.security?.additional_patterns);
+      let findings;
+      if (projectDir) {
+        const safeDir = await validateProjectDir(projectDir);
+        findings = await scanSecretsInDir(safeDir, profileConfig?.security?.additional_patterns);
+      } else if (filePathsCsv) {
+        const filePaths = await validateFilePathsCsv(filePathsCsv);
+        findings = await scanSecrets(filePaths, profileConfig?.security?.additional_patterns);
+      } else {
+        throw new Error("Either projectDir or filePathsCsv must be provided");
+      }
       return findingsResponse(findings, responseFormat, { limit, offset });
     }, "inspectra_scan_secrets"),
   );

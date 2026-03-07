@@ -6,8 +6,10 @@ function makeDomainReport(overrides: Partial<DomainReport> = {}): DomainReport {
   return {
     domain: "security",
     score: 85,
+    summary: "Test domain summary",
     findings: [],
     metadata: {
+      agent: "test-agent",
       timestamp: "2024-01-01T00:00:00Z",
       tools_used: [],
     },
@@ -19,12 +21,13 @@ function makeReport(overrides: Partial<ConsolidatedReport> = {}): ConsolidatedRe
   return {
     overall_score: 85,
     grade: "B",
+    summary: "Test consolidated summary",
     domain_reports: [makeDomainReport()],
+    top_findings: [],
     metadata: {
       timestamp: "2024-01-01T00:00:00Z",
       target: "test-project",
       profile: "generic",
-      scan_context: "full",
     },
     ...overrides,
   };
@@ -91,7 +94,7 @@ describe("compareReports", () => {
     expect(testsDomain?.scoreB).toBe(80);
   });
 
-  it("identifies added findings", () => {
+  it("identifies added findings (unique to reportA)", () => {
     const reportA = makeReport({
       domain_reports: [
         makeDomainReport({
@@ -105,6 +108,20 @@ describe("compareReports", () => {
               rule: "test-rule",
               confidence: 0.9,
               evidence: [{ file: "test.ts" }],
+              recommendation: "Fix it",
+              effort: "small",
+              tags: [],
+              source: "tool",
+            },
+            {
+              id: "SEC-002",
+              severity: "medium",
+              title: "Extra finding in A",
+              description: "Test",
+              domain: "security",
+              rule: "extra-rule",
+              confidence: 0.8,
+              evidence: [{ file: "a.ts" }],
               recommendation: "Fix it",
               effort: "small",
               tags: [],
@@ -132,20 +149,6 @@ describe("compareReports", () => {
               tags: [],
               source: "tool",
             },
-            {
-              id: "SEC-002",
-              severity: "medium",
-              title: "New finding",
-              description: "Test",
-              domain: "security",
-              rule: "new-rule",
-              confidence: 0.8,
-              evidence: [{ file: "new.ts" }],
-              recommendation: "Fix it",
-              effort: "small",
-              tags: [],
-              source: "tool",
-            },
           ],
         }),
       ],
@@ -157,8 +160,30 @@ describe("compareReports", () => {
     expect(result.unchanged).toHaveLength(1);
   });
 
-  it("identifies removed findings", () => {
+  it("identifies removed findings (unique to reportB)", () => {
     const reportA = makeReport({
+      domain_reports: [
+        makeDomainReport({
+          findings: [
+            {
+              id: "SEC-001",
+              severity: "high",
+              title: "Old finding",
+              description: "Test",
+              domain: "security",
+              rule: "test-rule",
+              confidence: 0.9,
+              evidence: [{ file: "test.ts" }],
+              recommendation: "Fix it",
+              effort: "small",
+              tags: [],
+              source: "tool",
+            },
+          ],
+        }),
+      ],
+    });
+    const reportB = makeReport({
       domain_reports: [
         makeDomainReport({
           findings: [
@@ -185,28 +210,6 @@ describe("compareReports", () => {
               rule: "old-rule",
               confidence: 0.8,
               evidence: [{ file: "old.ts" }],
-              recommendation: "Fix it",
-              effort: "small",
-              tags: [],
-              source: "tool",
-            },
-          ],
-        }),
-      ],
-    });
-    const reportB = makeReport({
-      domain_reports: [
-        makeDomainReport({
-          findings: [
-            {
-              id: "SEC-001",
-              severity: "high",
-              title: "Old finding",
-              description: "Test",
-              domain: "security",
-              rule: "test-rule",
-              confidence: 0.9,
-              evidence: [{ file: "test.ts" }],
               recommendation: "Fix it",
               effort: "small",
               tags: [],

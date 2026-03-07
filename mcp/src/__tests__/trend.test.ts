@@ -6,8 +6,10 @@ function makeDomainReport(overrides: Partial<DomainReport> = {}): DomainReport {
   return {
     domain: "security",
     score: 85,
+    summary: "Test domain summary",
     findings: [],
     metadata: {
+      agent: "test-agent",
       timestamp: "2024-01-01T00:00:00Z",
       tools_used: [],
     },
@@ -19,18 +21,18 @@ function makeReport(overrides: Partial<ConsolidatedReport> = {}): ConsolidatedRe
   return {
     overall_score: 85,
     grade: "B",
+    summary: "Test consolidated summary",
     domain_reports: [makeDomainReport()],
+    top_findings: [],
     metadata: {
       timestamp: "2024-01-01T00:00:00Z",
       target: "test-project",
       profile: "generic",
-      scan_context: "full",
     },
     statistics: {
       total_findings: 5,
       by_severity: { critical: 0, high: 1, medium: 2, low: 2, info: 0 },
       by_domain: { security: 5 },
-      by_confidence: { tool: 3, llm: 2 },
     },
     ...overrides,
   };

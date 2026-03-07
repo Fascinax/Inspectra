@@ -1,11 +1,13 @@
 /**
  * Maximum character count for a single tool response text payload.
  *
- * Rationale: 100k chars ≈ 25k tokens, which fits comfortably within the context
- * window of most LLMs (Claude ~200k tokens, GPT-4 ~128k tokens) while leaving
- * room for the LLM's own reasoning. Override via INSPECTRA_CHARACTER_LIMIT env var.
+ * Rationale: ~10k chars keeps responses under the inline threshold of hosted LLM
+ * tool-call panels (e.g. VS Code Copilot MCP panel stores responses >~8KB to disk,
+ * making them inaccessible to the orchestrator). 10k chars ≈ 2.5k tokens, which
+ * captures the top ~12 findings per tool — enough for triage without overflowing.
+ * Override via INSPECTRA_CHARACTER_LIMIT env var to raise for CLI or batch usage.
  */
-export const CHARACTER_LIMIT = Number(process.env.INSPECTRA_CHARACTER_LIMIT) || 100_000;
+export const CHARACTER_LIMIT = Number(process.env.INSPECTRA_CHARACTER_LIMIT) || 10_000;
 
 /** MCP server name used at registration. */
 export const SERVER_NAME = "inspectra";
@@ -16,8 +18,9 @@ export const DEFAULT_PROFILE = "generic";
 /**
  * Default page size for findings pagination.
  *
- * Rationale: a typical audit produces 10–30 findings per domain. A limit of 50
- * captures most single-domain results in one page while keeping response size
- * manageable. Override via INSPECTRA_DEFAULT_PAGE_SIZE env var.
+ * Rationale: combined with CHARACTER_LIMIT, 20 findings per page keeps the
+ * serialised payload under ~8KB for typical findings (each ~400 chars). Agents
+ * can paginate via the `offset` parameter for larger result sets.
+ * Override via INSPECTRA_DEFAULT_PAGE_SIZE env var.
  */
-export const DEFAULT_PAGE_SIZE = Number(process.env.INSPECTRA_DEFAULT_PAGE_SIZE) || 50;
+export const DEFAULT_PAGE_SIZE = Number(process.env.INSPECTRA_DEFAULT_PAGE_SIZE) || 20;

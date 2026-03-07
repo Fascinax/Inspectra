@@ -95,12 +95,21 @@ export function computeCyclomaticComplexity(source: string, fileExt = ".ts"): nu
 }
 
 function extractSpecifiersFallback(source: string): string[] {
-  const regex = /(?:import|from)\s+['"]([^'"]+)['"]/g;
   const results: string[] = [];
   let match: RegExpExecArray | null;
-  while ((match = regex.exec(source)) !== null) {
+
+  // JS/Python/Go: import 'module' or from 'module'
+  const quotedRegex = /(?:import|from)\s+['"]([^'"]+)['"]/g;
+  while ((match = quotedRegex.exec(source)) !== null) {
     results.push(match[1] ?? "");
   }
+
+  // Java/Kotlin: import java.util.List; or import static com.example.Utils.*;
+  const javaRegex = /^\s*import\s+(?:static\s+)?([\w.]+)(?:\.\*)?;/gm;
+  while ((match = javaRegex.exec(source)) !== null) {
+    results.push(match[1] ?? "");
+  }
+
   return results;
 }
 

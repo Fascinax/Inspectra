@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import { CHARACTER_LIMIT, SERVER_NAME, DEFAULT_PROFILE, DEFAULT_PAGE_SIZE } from "../constants.js";
 
 describe("constants", () => {
-  it("CHARACTER_LIMIT defaults to 100_000", () => {
-    expect(CHARACTER_LIMIT).toBe(100_000);
+  it("CHARACTER_LIMIT defaults to 10_000", () => {
+    expect(CHARACTER_LIMIT).toBe(10_000);
   });
 
   it("SERVER_NAME is inspectra", () => {
@@ -14,8 +14,8 @@ describe("constants", () => {
     expect(DEFAULT_PROFILE).toBe("generic");
   });
 
-  it("DEFAULT_PAGE_SIZE defaults to 50", () => {
-    expect(DEFAULT_PAGE_SIZE).toBe(50);
+  it("DEFAULT_PAGE_SIZE defaults to 20", () => {
+    expect(DEFAULT_PAGE_SIZE).toBe(20);
   });
 
   it("all constants are truthy", () => {

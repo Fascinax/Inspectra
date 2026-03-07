@@ -6,7 +6,7 @@ import type { Finding } from "../types.js";
 import { createIdSequence } from "../utils/id.js";
 import { logger } from "../logger.js";
 
-export { scanSecrets, SECRET_PATTERNS } from "./security-secrets.js";
+export { scanSecrets, scanSecretsInDir, SECRET_PATTERNS } from "./security-secrets.js";
 
 const execFileAsync = promisify(execFile);
 

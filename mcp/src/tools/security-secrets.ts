@@ -1,7 +1,15 @@
 import { readFile } from "node:fs/promises";
+import { extname } from "node:path";
 import type { Finding } from "../types.js";
+import { collectAllFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
 import { logger } from "../logger.js";
+
+/** Extensions scanned by scanSecretsInDir. */
+const SCANNABLE_EXTENSIONS = new Set([
+  ".ts", ".js", ".java", ".py", ".go", ".kt",
+  ".env", ".yaml", ".yml", ".json", ".xml", ".properties",
+]);
 
 const MAX_SNIPPET_LENGTH = 120;
 
@@ -89,12 +97,29 @@ export async function scanSecrets(
   return findings;
 }
 
-type SecretPattern = {
+/** Secret pattern descriptor used for matching and finding construction. */
+export interface SecretPattern {
   rule: string;
   pattern: RegExp;
   severity: Finding["severity"];
   confidence: number;
-};
+}
+
+/**
+ * Scans all scannable source files under `projectDir` for hardcoded secrets.
+ * Collects `.ts`, `.js`, `.java`, `.py`, `.go`, `.yaml`, `.yml`, `.json`,
+ * `.xml`, `.properties`, and committed `.env` files.
+ *
+ * This is the preferred input mode when no explicit file list is available.
+ */
+export async function scanSecretsInDir(
+  projectDir: string,
+  additionalPatterns?: Array<{ rule: string; pattern: string; severity: string }>,
+): Promise<Finding[]> {
+  const allFiles = await collectAllFiles(projectDir);
+  const filePaths = allFiles.filter((f) => SCANNABLE_EXTENSIONS.has(extname(f)));
+  return scanSecrets(filePaths, additionalPatterns);
+}
 
 async function scanSingleFile(
   filePath: string,
