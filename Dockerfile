@@ -12,4 +12,6 @@ RUN npm run build
 
 USER node
 
+HEALTHCHECK --interval=30s --timeout=5s CMD pgrep -f 'node mcp/dist/index.js' || exit 1
+
 CMD ["node", "mcp/dist/index.js"]

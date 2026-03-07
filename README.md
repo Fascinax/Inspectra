@@ -142,18 +142,20 @@ Open the target project in VS Code, open Copilot Chat, and type:
 ### Running Audits
 
 **Full audit** (all 12 domains):
-```
+
+```markdown
 /audit
 ```
 
 **PR audit** (only changed files):
-```
+
+```markdown
 /audit-pr
 ```
 
 **Domain-specific audit**:
 
-```
+```markdown
 @audit-security Audit security vulnerabilities in this project
 @audit-tests Analyze test coverage and quality
 @audit-architecture Review project architecture and dependencies
@@ -170,21 +172,25 @@ Open the target project in VS Code, open Copilot Chat, and type:
 ### Working with Reports
 
 **Generate HTML report**:
+
 ```bash
 inspectra render report.json --html
 ```
 
 **Export to PDF**:
+
 ```bash
 inspectra render report.json --pdf
 ```
 
 **Compare reports**:
+
 ```bash
 inspectra compare baseline.json current.json
 ```
 
 **View trends**:
+
 ```bash
 inspectra trend report1.json report2.json report3.json
 ```
@@ -221,6 +227,7 @@ Profiles are auto-detected based on package.json and pom.xml. Explicit override:
 ```
 
 Or via environment:
+
 ```bash
 export INSPECTRA_PROFILE=java-backend
 ```

@@ -45,11 +45,12 @@ async function loadPuppeteer(): Promise<PuppeteerLike> {
 
     const mod = (await import("puppeteer")) as { default: PuppeteerLike };
     return mod.default;
-  } catch {
+  } catch (error) {
     throw new Error(
       "puppeteer is not installed.\n" +
         "Run: npm install puppeteer --prefix mcp\n" +
-        "Note: puppeteer downloads Chromium (~300 MB). Ensure you have sufficient disk space.",
+        "Note: puppeteer downloads Chromium (~300 MB). Ensure you have sufficient disk space.\n" +
+        `Original error: ${String(error)}`,
     );
   }
 }
