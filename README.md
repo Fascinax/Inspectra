@@ -2,13 +2,15 @@
   <img src="banner.png" alt="Inspectra Banner" width="100%"/>
 </p>
 
-# Inspectra
+<h1 align="center">Inspectra</h1>
+
+![GitHub Copilot](https://img.shields.io/badge/GitHub_Copilot-000000?style=for-the-badge&logo=github&logoColor=white)
+![Claude Code](https://img.shields.io/badge/Claude_Code-D97757?style=for-the-badge&logo=anthropic&logoColor=white)
+![OpenAI Codex](https://img.shields.io/badge/OpenAI_Codex-412991?style=for-the-badge&logo=openai&logoColor=white)
 
 **Multi-agent code audit system** powered by GitHub Copilot Custom Agents and MCP.
 
 Inspectra coordinates specialized audit agents — security, tests, architecture, conventions, performance, documentation, tech-debt, accessibility, api-design, observability, and i18n — to produce structured, scored, and actionable code quality reports.
-
----
 
 ## Supported Languages
 
@@ -30,6 +32,7 @@ Inspectra coordinates specialized audit agents — security, tests, architecture
 
 > **Full support** = deterministic MCP tool scans (naming, file lengths, complexity, DRY, etc.) + LLM code exploration.
 > **Partial support** = LLM exploration only — no tool-detected findings. More languages on the [roadmap](docs/roadmap.md).
+
 
 ---
 
