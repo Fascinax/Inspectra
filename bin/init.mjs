@@ -197,7 +197,7 @@ function writeTargetClaudeMd(targetDir) {
 ## Inspectra MCP Tools
 
 This project is configured to use Inspectra, a multi-agent code audit system.
-The MCP server is registered in \`.mcp.json\` and exposes 35 audit tools.
+The MCP server is registered in \`.mcp.json\` and exposes 42 audit tools.
 
 ## How to Run an Audit
 
@@ -217,6 +217,7 @@ The MCP server is registered in \`.mcp.json\` and exposes 35 audit tools.
    - API Design: \`inspectra_check_rest_conventions\`
    - Observability: \`inspectra_check_observability\`
    - i18n: \`inspectra_check_i18n\`
+   - UX Consistency: \`inspectra_check_ux_consistency\`
 
 3. **Score findings** — Call \`inspectra_score_findings\` with any list of findings.
 
@@ -224,7 +225,7 @@ The MCP server is registered in \`.mcp.json\` and exposes 35 audit tools.
 
 ## Scoring
 
-Domain weights: security 24%, tests 20%, architecture 16%, conventions 12%, performance 10%, documentation 8%, tech-debt 10%, accessibility 8%, api-design 7%, observability 6%, i18n 5%.
+Domain weights: security 24%, tests 20%, architecture 16%, conventions 12%, performance 10%, documentation 8%, tech-debt 10%, accessibility 8%, api-design 7%, observability 6%, i18n 5%, ux-consistency 6%.
 Grades: A (90+), B (75+), C (60+), D (40+), F (<40).
 
 ## Finding Format
@@ -264,7 +265,7 @@ function writeTargetAgentsMd(targetDir) {
 ## Inspectra MCP Tools
 
 This project is configured to use Inspectra, a multi-agent code audit system.
-The MCP server is registered in \`.codex/config.toml\` and exposes 35 audit tools.
+The MCP server is registered in \`.codex/config.toml\` and exposes 42 audit tools.
 All tool names are prefixed \`inspectra_\`.
 
 ## How to Run an Audit
@@ -285,6 +286,7 @@ All tool names are prefixed \`inspectra_\`.
    - API Design: \`inspectra_check_rest_conventions\`
    - Observability: \`inspectra_check_observability\`
    - i18n: \`inspectra_check_i18n\`
+   - UX Consistency: \`inspectra_check_ux_consistency\`
 
 3. **Score findings** — Call \`inspectra_score_findings\` with any list of findings.
 
@@ -292,7 +294,7 @@ All tool names are prefixed \`inspectra_\`.
 
 ## Scoring
 
-Domain weights (re-normalized at runtime): security 24%, tests 20%, architecture 16%, conventions 12%, performance 10%, documentation 8%, tech-debt 10%, accessibility 8%, api-design 7%, observability 6%, i18n 5%.
+Domain weights (re-normalized at runtime): security 24%, tests 20%, architecture 16%, conventions 12%, performance 10%, documentation 8%, tech-debt 10%, accessibility 8%, api-design 7%, observability 6%, i18n 5%, ux-consistency 6%.
 Grades: A (90+), B (75+), C (60+), D (40+), F (<40).
 
 ## Finding Format
@@ -611,6 +613,32 @@ function cmdDoctor() {
     existsSync(schemasDir),
     "Schemas directory is missing. Re-clone the repository.",
   );
+
+  // 7. Claude Code — .mcp.json in current dir (optional, only warn if present but broken)
+  const claudeMcpPath = join(process.cwd(), ".mcp.json");
+  if (existsSync(claudeMcpPath)) {
+    let claudeOk = false;
+    try {
+      const parsed = JSON.parse(readFileSync(claudeMcpPath, "utf-8"));
+      claudeOk = !!(parsed?.mcpServers?.inspectra);
+    } catch { /* invalid JSON */ }
+    check(
+      `Claude Code .mcp.json  (mcpServers.inspectra)`,
+      claudeOk,
+      "Run: inspectra setup --claude  to regenerate .mcp.json",
+    );
+  }
+
+  // 8. Codex — .codex/config.toml in current dir (optional, only warn if present but broken)
+  const codexConfigPath = join(process.cwd(), ".codex", "config.toml");
+  if (existsSync(codexConfigPath)) {
+    const tomlContent = readFileSync(codexConfigPath, "utf-8");
+    check(
+      `Codex .codex/config.toml  (mcp_servers.inspectra)`,
+      tomlContent.includes("[mcp_servers.inspectra]"),
+      "Run: inspectra setup --codex  to regenerate .codex/config.toml",
+    );
+  }
 
   console.log("");
   if (allOk) {
