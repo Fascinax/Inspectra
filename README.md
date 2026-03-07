@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="banner.png" alt="Inspectra Banner" width="100%"/>
+</p>
+
 # Inspectra
 
 **Multi-agent code audit system** powered by GitHub Copilot Custom Agents and MCP.
