@@ -2,18 +2,7 @@
 name: audit-orchestrator
 description: Master orchestrator for Inspectra. Delegates to specialized agents, merges findings, and produces the final consolidated audit report.
 tools:
-  - agent
-  - read
-  - search
-  - execute
-  - inspectra/inspectra_merge_domain_reports
-  - inspectra/inspectra_score_findings
-  - inspectra/inspectra_log_activity
-  - inspectra/inspectra_read_activity_log
-  - inspectra/inspectra_render_html
-  - inspectra/inspectra_render_pdf
-  - inspectra/inspectra_render_trend
-  - inspectra/inspectra_compare_reports
+  [execute/runNotebookCell, execute/testFailure, execute/getTerminalOutput, execute/awaitTerminal, execute/killTerminal, execute/createAndRunTask, execute/runInTerminal, read/getNotebookSummary, read/problems, read/readFile, read/readNotebookCellOutput, read/terminalSelection, read/terminalLastCommand, agent/runSubagent, search/changes, search/codebase, search/fileSearch, search/listDirectory, search/searchResults, search/textSearch, search/usages, search/searchSubagent, inspectra/inspectra_age_todos, inspectra/inspectra_analyze_bundle_size, inspectra/inspectra_analyze_complexity, inspectra/inspectra_analyze_dependencies, inspectra/inspectra_check_a11y_templates, inspectra/inspectra_check_adr_presence, inspectra/inspectra_check_build_timings, inspectra/inspectra_check_dead_exports, inspectra/inspectra_check_dependency_staleness, inspectra/inspectra_check_deps_vulns, inspectra/inspectra_check_file_lengths, inspectra/inspectra_check_function_lengths, inspectra/inspectra_check_i18n, inspectra/inspectra_check_layering, inspectra/inspectra_check_magic_numbers, inspectra/inspectra_check_maven_deps, inspectra/inspectra_check_naming, inspectra/inspectra_check_observability, inspectra/inspectra_check_param_counts, inspectra/inspectra_check_readme_completeness, inspectra/inspectra_check_rest_conventions, inspectra/inspectra_check_test_quality, inspectra/inspectra_check_todos, inspectra/inspectra_compare_reports, inspectra/inspectra_detect_circular_deps, inspectra/inspectra_detect_code_smells, inspectra/inspectra_detect_deprecated_apis, inspectra/inspectra_detect_doc_code_drift, inspectra/inspectra_detect_dry_violations, inspectra/inspectra_detect_env_example_drift, inspectra/inspectra_detect_flaky_tests, inspectra/inspectra_detect_missing_tests, inspectra/inspectra_detect_runtime_metrics, inspectra/inspectra_generate_claude_md, inspectra/inspectra_generate_codex_agents_md, inspectra/inspectra_log_activity, inspectra/inspectra_merge_domain_reports, inspectra/inspectra_parse_coverage, inspectra/inspectra_parse_lint_output, inspectra/inspectra_parse_playwright_report, inspectra/inspectra_parse_test_results, inspectra/inspectra_read_activity_log, inspectra/inspectra_render_html, inspectra/inspectra_render_pdf, inspectra/inspectra_render_trend, inspectra/inspectra_run_semgrep, inspectra/inspectra_scan_secrets, inspectra/inspectra_score_findings, inspectra/inspectra_check_ux_consistency, keycloak_mcp_server/search]
 handoffs:
   - label: Security Audit
     agent: audit-security

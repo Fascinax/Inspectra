@@ -15,3 +15,6 @@ export function createIdSequence(prefix: string, start = 1): () => string {
   let counter = start;
   return () => `${prefix}-${String(counter++).padStart(3, "0")}`;
 }
+
+/** Convenience alias for the closure returned by {@link createIdSequence}. */
+export type IdGenerator = () => string;

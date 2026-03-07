@@ -1,3 +1,17 @@
+// Thin orchestrator — implementation lives in focused submodules.
+// Each module maps to a distinct Clean Code rule category:
+//   conventions-cleancode-functions.ts  → F1, G30, G34 (function length)
+//   conventions-cleancode-params.ts     → F1 (too many arguments)
+//   conventions-cleancode-magic.ts      → G25 (magic numbers)
+
+export { checkFunctionLengths } from "./conventions-cleancode-functions.js";
+export { checkParamCounts } from "./conventions-cleancode-params.js";
+export { checkMagicNumbers } from "./conventions-cleancode-magic.js";
+
+// The implementations below are dead code kept to avoid a large diff during the
+// transition sprint. They will be deleted once the specialist modules are stable.
+// TODO: remove dead code after next test pass (sprint cleanup).
+/* eslint-disable */
 import { readFile } from "node:fs/promises";
 import { relative, extname } from "node:path";
 import type { Finding } from "../types.js";
@@ -8,6 +22,8 @@ import { createIdSequence } from "../utils/id.js";
 const SUPPORTED_EXTENSIONS = new Set([".ts", ".js", ".java", ".py", ".go", ".kt"]);
 const TEST_INFRA_PATH = /(?:^|[/\\])(?:__tests__|test__|tests|fixtures|__mocks__|e2e|spec)(?:[/\\]|$)/;
 const MAX_SNIPPET_LENGTH = 120;
+
+
 
 /* ------------------------------------------------------------------ */
 /*  checkFunctionLengths                                               */
@@ -122,7 +138,7 @@ function measurePythonBody(lines: string[], defIndex: number): number {
  * Flags functions/methods exceeding configurable line-length thresholds.
  * Maps to Clean Code rules F1, G30, G34.
  */
-export async function checkFunctionLengths(projectDir: string, profile?: ProfileConfig): Promise<Finding[]> {
+async function _checkFunctionLengths(projectDir: string, profile?: ProfileConfig): Promise<Finding[]> {
   const findings: Finding[] = [];
   const nextId = createIdSequence("CNV", 300);
 
@@ -268,7 +284,7 @@ function splitParams(raw: string): string[] {
  * Flags functions with too many parameters.
  * Maps to Clean Code rule F1 (Too Many Arguments).
  */
-export async function checkParamCounts(projectDir: string, profile?: ProfileConfig): Promise<Finding[]> {
+async function _checkParamCounts(projectDir: string, profile?: ProfileConfig): Promise<Finding[]> {
   const findings: Finding[] = [];
   const nextId = createIdSequence("CNV", 350);
 
@@ -407,7 +423,7 @@ function findMagicNumbers(content: string): MagicNumberHit[] {
  * Detects unnamed numeric constants (magic numbers) in source files.
  * Maps to Clean Code rule G25 (Replace Magic Numbers with Named Constants).
  */
-export async function checkMagicNumbers(projectDir: string): Promise<Finding[]> {
+async function _checkMagicNumbers(projectDir: string): Promise<Finding[]> {
   const findings: Finding[] = [];
   const nextId = createIdSequence("CNV", 400);
   const MAX_FINDINGS_PER_FILE = 5;

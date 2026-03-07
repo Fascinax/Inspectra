@@ -3,6 +3,8 @@ import { relative, extname } from "node:path";
 import type { Finding } from "../types.js";
 import { collectAllFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
+import { detectGodClasses } from "./tech-debt-god-class.js";
+import { detectDeepNesting } from "./tech-debt-deep-nesting.js";
 
 const SUPPORTED_EXTENSIONS = new Set([".ts", ".js", ".java", ".py", ".go", ".kt"]);
 const TEST_INFRA_PATH = /(?:^|[/\\])(?:__tests__|test__|tests|fixtures|__mocks__|e2e|spec)(?:[/\\]|$)/;
@@ -348,85 +350,9 @@ function findDeepNesting(content: string): { line: number; depth: number; snippe
  *   that should be flattened with early returns or extraction.
  */
 export async function detectCodeSmells(projectDir: string): Promise<Finding[]> {
-  const findings: Finding[] = [];
-  const nextId = createIdSequence("DEBT", 400);
-
-  const files = await collectAllFiles(projectDir);
-
-  for (const filePath of files) {
-    if (!SUPPORTED_EXTENSIONS.has(extname(filePath))) continue;
-    if (TEST_INFRA_PATH.test(relative(projectDir, filePath))) continue;
-
-    try {
-      const content = await readFile(filePath, "utf-8");
-      const rel = relative(projectDir, filePath);
-
-      // God class detection
-      const classes = extractClasses(content);
-      for (const cls of classes) {
-        const isGodByMethods = cls.methodCount > GOD_CLASS_METHOD_THRESHOLD;
-        const isGodByLines = cls.lineCount > GOD_CLASS_LINE_THRESHOLD;
-
-        if (isGodByMethods || isGodByLines) {
-          const reason = isGodByMethods && isGodByLines
-            ? `${cls.methodCount} methods and ${cls.lineCount} lines`
-            : isGodByMethods
-              ? `${cls.methodCount} methods`
-              : `${cls.lineCount} lines`;
-
-          findings.push({
-            id: nextId(),
-            severity: (isGodByMethods && isGodByLines) ? "high" : "medium",
-            title: `God class: ${cls.name} (${reason})`,
-            description:
-              `Class "${cls.name}" in ${rel} has ${reason}. ` +
-              "God classes violate the Single Responsibility Principle and resist change.",
-            domain: "tech-debt",
-            rule: "god-class",
-            confidence: 0.85,
-            evidence: [{
-              file: rel,
-              line: cls.startLine,
-              snippet: `class ${cls.name} — ${reason}`,
-            }],
-            recommendation:
-              `Split ${cls.name} into smaller, focused classes. ` +
-              "Group related methods into separate services or helpers.",
-            effort: "large",
-            tags: ["code-smell", "god-class", "srp"],
-            source: "tool",
-          });
-        }
-      }
-
-      // Deep nesting detection
-      const nesting = findDeepNesting(content);
-      if (nesting) {
-        findings.push({
-          id: nextId(),
-          severity: nesting.depth > 6 ? "high" : "medium",
-          title: `Deep nesting (${nesting.depth} levels) in ${rel}`,
-          description:
-            `${rel} has code nested ${nesting.depth} levels deep. ` +
-            "Deep nesting makes code hard to follow and test.",
-          domain: "tech-debt",
-          rule: "deep-nesting",
-          confidence: 0.85,
-          evidence: [{
-            file: rel,
-            line: nesting.line,
-            snippet: nesting.snippet,
-          }],
-          recommendation:
-            "Flatten nesting with early returns (guard clauses), extract inner blocks into named functions, " +
-            "or use strategy/command patterns to eliminate deep conditionals.",
-          effort: "medium",
-          tags: ["code-smell", "nesting", "readability"],
-          source: "tool",
-        });
-      }
-    } catch { /* skip */ }
-  }
-
-  return findings;
+  const [godClasses, deepNesting] = await Promise.all([
+    detectGodClasses(projectDir),
+    detectDeepNesting(projectDir),
+  ]);
+  return [...godClasses, ...deepNesting];
 }
