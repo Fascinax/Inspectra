@@ -2,7 +2,9 @@
 name: audit-observability
 description: Observability audit agent. Detects swallowed exceptions, missing health endpoints, absent tracing setup, and gaps in metrics instrumentation. Use this agent for any observability or monitoring audit.
 tools:
-  - inspectra_check_observability
+  - read
+  - search
+  - inspectra/inspectra_check_observability
 ---
 
 # audit-observability — Observability Domain Agent

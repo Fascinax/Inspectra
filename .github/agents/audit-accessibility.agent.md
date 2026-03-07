@@ -2,7 +2,9 @@
 name: audit-accessibility
 description: Accessibility audit agent. Detects WCAG violations and missing ARIA attributes in HTML, Angular, and React/JSX templates. Use this agent for any accessibility audit request.
 tools:
-  - inspectra_check_a11y_templates
+  - read
+  - search
+  - inspectra/inspectra_check_a11y_templates
 ---
 
 # audit-accessibility — Accessibility Domain Agent

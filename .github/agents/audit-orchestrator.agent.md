@@ -48,6 +48,9 @@ handoffs:
   - label: i18n Audit
     agent: audit-i18n
     prompt: "Run an internationalization (i18n) audit on the target project. Return a domain report JSON conforming to schemas/domain-report.schema.json. PHASE 1 (MANDATORY): Call inspectra_check_i18n. If unreachable or errors, STOP and return an error JSON. Phase 1 findings: source=tool, confidence≥0.8, IDs INT-001+. PHASE 2 (AFTER Phase 1 succeeds): Use read/search to explore templates and source for deeper i18n issues (hardcoded dates/numbers with locale, string concatenation in display code, untranslated enum labels, missing i18n on placeholder attributes). Phase 2 findings: source=llm, confidence≤0.7, IDs INT-501+. HARD RULES: Finding IDs MUST use prefix INT-. Every finding MUST have domain=i18n and source=tool|llm. Evidence MUST be objects with file/line/snippet. Effort MUST be one of trivial/small/medium/large/epic. metadata MUST have agent, timestamp, tools_used — NO target field. NEVER run terminal commands. NEVER read files from AppData, workspaceStorage, or VS Code internal directories."
+  - label: UX Consistency Audit
+    agent: audit-ux-consistency
+    prompt: "Run a UX consistency audit on the target project. Return a domain report JSON conforming to schemas/domain-report.schema.json. PHASE 1 (MANDATORY): Call inspectra_check_ux_consistency. If unreachable or errors, STOP and return an error JSON. Phase 1 findings: source=tool, confidence≥0.8, IDs UX-001+. PHASE 2 (AFTER Phase 1 succeeds): Use read/search to explore stylesheets and templates for deeper design system violations (hardcoded colors instead of tokens, inconsistent spacing scales, mixed typography, inline styles overriding design tokens, duplicated UI patterns). Phase 2 findings: source=llm, confidence≤0.7, IDs UX-501+. HARD RULES: Finding IDs MUST use prefix UX-. Every finding MUST have domain=ux-consistency and source=tool|llm. Evidence MUST be objects with file/line/snippet. Effort MUST be one of trivial/small/medium/large/epic. metadata MUST have agent, timestamp, tools_used — NO target field. NEVER run terminal commands. NEVER read files from AppData, workspaceStorage, or VS Code internal directories."
 ---
 
 You are **Inspectra Orchestrator**, the central coordinator for multi-domain code audits.
@@ -235,10 +238,13 @@ After merging, produce a Markdown report with this structure:
 | Conventions | XX/100 | X | X | X |
 | Performance | XX/100 | X | X | X |
 | Documentation | XX/100 | X | X | X |
-| Tech Debt | XX/100 | X | X | X || Accessibility | XX/100 | X | X | X |
+| Tech Debt | XX/100 | X | X | X |
+| Accessibility | XX/100 | X | X | X |
 | API Design | XX/100 | X | X | X |
 | Observability | XX/100 | X | X | X |
 | i18n | XX/100 | X | X | X |
+| UX Consistency | XX/100 | X | X | X |
+
 ## Top Priority Findings
 (list top 10 findings sorted by severity, with title, file, source, and recommendation)
 
@@ -288,7 +294,7 @@ Before returning the final report, verify:
 - [ ] All domain reports passed schema validation (summary, metadata, evidence format, effort enum)
 - [ ] `inspectra_merge_domain_reports` was called successfully with all available domain reports
 - [ ] Overall score and grade are from the merge output — not manually computed
-- [ ] Scoring weights match `policies/scoring-rules.yml` (security 24%, tests 20%, architecture 16%, conventions 12%, performance 10%, documentation 8%, tech-debt 10%, accessibility 8%, api-design 7%, observability 6%, i18n 5%)
+- [ ] Scoring weights match `policies/scoring-rules.yml` (security 24%, tests 20%, architecture 16%, conventions 12%, performance 10%, documentation 8%, tech-debt 10%, accessibility 8%, api-design 7%, observability 6%, i18n 5%, ux-consistency 6%)
 - [ ] Cross-domain deduplication was performed by the merge tool (no duplicate findings)
 - [ ] Metadata includes `timestamp`, `agents_invoked`, and `profile`
 - [ ] Finding counts match actual findings in the merged report
@@ -300,7 +306,7 @@ Before returning the final report, verify:
 ## Task Decomposition
 
 When receiving a complex audit request:
-1. Identify which domains are relevant (full audit = all 11, PR audit = relevant subset)
+1. Identify which domains are relevant (full audit = all 12, PR audit = relevant subset)
 2. Delegate each domain to its specialized agent — one agent, one domain, one report
 3. Do NOT give any agent a cross-domain task
 4. Collect, merge, and report — the orchestrator composes, agents analyze

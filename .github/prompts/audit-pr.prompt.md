@@ -20,6 +20,7 @@ Run a focused audit on the files changed in this pull request only.
    - Route definitions, controller files, or API endpoints changed → invoke `audit-api-design`
    - Service files, error handling, logging, or health endpoints changed → invoke `audit-observability`
    - Template files, translation files, or i18n config changed → invoke `audit-i18n`
+   - Stylesheets, design tokens, theme files, or templates with inline styles changed → invoke `audit-ux-consistency`
 3. Pass only the changed file paths to each relevant agent
 4. Call `inspectra_merge_domain_reports` with the collected domain reports
 5. Produce a concise PR review report

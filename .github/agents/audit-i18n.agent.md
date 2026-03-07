@@ -2,7 +2,9 @@
 name: audit-i18n
 description: Internationalization (i18n) audit agent. Detects hardcoded user-facing strings, missing i18n setup, and date/number/currency formatting gaps. Use this agent for any i18n or localization audit.
 tools:
-  - inspectra_check_i18n
+  - read
+  - search
+  - inspectra/inspectra_check_i18n
 ---
 
 # audit-i18n — Internationalization Domain Agent
