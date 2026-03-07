@@ -18,6 +18,7 @@ import { registerAccessibilityTools } from "./register/accessibility.js";
 import { registerApiDesignTools } from "./register/api-design.js";
 import { registerObservabilityTools } from "./register/observability.js";
 import { registerI18nTools } from "./register/i18n.js";
+import { registerUxConsistencyTools } from "./register/ux-consistency.js";
 import { registerAdapterTools } from "./register/adapter.js";
 import { registerResources } from "./register/resources.js";
 import { registerPrompts } from "./register/prompts.js";
@@ -51,6 +52,7 @@ registerAccessibilityTools(server);
 registerApiDesignTools(server);
 registerObservabilityTools(server);
 registerI18nTools(server);
+registerUxConsistencyTools(server);
 registerAdapterTools(server);
 
 // ─── Register resources ──────────────────────────────────────────────────────
