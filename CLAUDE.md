@@ -4,7 +4,7 @@ Multi-agent code audit system using MCP tools. 13 agents across 12 domains, coor
 
 ## Quick Reference
 
-```
+```bash
 npm install        # install deps
 npm run build      # compile MCP server → mcp/dist/
 npm test           # 503 tests (Vitest)
@@ -65,6 +65,10 @@ Orchestrator: `merge_domain_reports`, `score_findings`
 Report: `render_html`, `render_pdf`, `render_trend`, `compare_reports`
 Governance: `log_activity`, `read_activity_log`
 Adapter: `generate_claude_md`, `generate_codex_agents_md`
+
+## Pagination
+
+All finding tools return paginated responses (default page size: 20). Every response includes `has_more` and `next_offset`. **Always paginate when `has_more: true`** — call the tool again with the returned `next_offset` until `has_more: false`, then merge all pages. Skipping pagination silently drops findings beyond the first page.
 
 ## Do NOT
 

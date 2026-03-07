@@ -7,6 +7,9 @@
  *   inspectra setup              Register MCP server + install agents globally in VS Code (zero project footprint)
  *   inspectra setup --claude     Generate CLAUDE.md + .mcp.json for Claude Code in the current directory
  *   inspectra setup --codex      Generate AGENTS.md + .codex/config.toml for OpenAI Codex in the current directory
+ *
+ * Note: CLAUDE.md and AGENTS.md are generated from hardcoded templates here, not from the repo root files.
+ * Keep writeTargetClaudeMd() and writeTargetAgentsMd() in sync with CLAUDE.md / AGENTS.md.
  *   inspectra init <project>     Symlink agents into a project (gitignored) + .vscode/mcp.json
  *   inspectra init <project> --copy   Copy agents into a project (commits with the repo)
  */
@@ -227,6 +230,10 @@ Grades: A (90+), B (75+), C (60+), D (40+), F (<40).
 ## Finding Format
 
 Every finding: \`id\` (SEC-001), \`severity\` (critical/high/medium/low/info), \`domain\`, \`rule\`, \`confidence\` (0.0–1.0), \`source\` (tool/llm), \`evidence\` (file paths).
+
+## Pagination
+
+All finding tools return paginated responses (default page size: 20). Every response includes \`has_more\` and \`next_offset\`. **Always paginate when \`has_more: true\`** — call the tool again with the returned \`next_offset\` until \`has_more: false\`, then merge all pages. Skipping pagination silently drops findings beyond the first page.
 `;
   writeFileSync(claudeMdPath, content, "utf-8");
   console.log(`  ✓ ${claudeMdPath}`);
@@ -293,6 +300,10 @@ Grades: A (90+), B (75+), C (60+), D (40+), F (<40).
 Every finding: \`id\` (e.g. SEC-001), \`severity\` (critical/high/medium/low/info), \`domain\`, \`rule\`, \`confidence\` (0.0–1.0), \`source\` (tool/llm), \`evidence\` (file paths).
 - Tool findings: IDs 001–499, confidence >= 0.8
 - LLM findings: IDs 501+, confidence <= 0.7
+
+## Pagination
+
+All finding tools return paginated responses (default page size: 20). Every response includes \`has_more\` and \`next_offset\`. **Always paginate when \`has_more: true\`** — call the tool again with the returned \`next_offset\` until \`has_more: false\`, then merge all pages. Skipping pagination silently drops findings beyond the first page.
 `;
   writeFileSync(agentsMdPath, content, "utf-8");
   console.log(`  ✓ ${agentsMdPath}`);

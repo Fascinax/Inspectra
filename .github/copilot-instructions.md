@@ -89,6 +89,26 @@ Tools are registered in the `inspectra` MCP server. Agents should call them by p
 - Markdown + JSON for reports
 - Zod for runtime type validation
 
+### Tool Response Pagination
+
+All finding tools return **paginated responses** to stay within the VS Code Copilot inline-response size budget (~10 KB). The default page size is 20 findings.
+
+Every tool response includes:
+```json
+{ "findings": [...], "total": 87, "count": 20, "has_more": true, "next_offset": 20 }
+```
+
+**Agents MUST paginate when `has_more` is `true`:**
+
+1. Call the tool with default parameters → receive findings 0–19, `has_more: true`, `next_offset: 20`
+2. Call the tool again with `offset: 20` → receive findings 20–39
+3. Repeat until `has_more` is `false`
+4. Merge all pages before building the domain report
+
+Failing to paginate means findings beyond the first page are silently dropped from the audit. This is the most common cause of incomplete domain reports.
+
+**Filtering to reduce page count:** Use severity or domain filters when available to reduce total findings before paginating (e.g., audit only `critical` and `high` severity first).
+
 ---
 
 ## Agent Governance (Stripe Minions Principles)

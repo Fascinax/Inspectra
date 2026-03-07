@@ -41,3 +41,7 @@ User prompt -> Orchestrator -> domain agents (tool scan + LLM exploration) -> me
 ## Domain Reports
 
 Each domain report must conform to `schemas/domain-report.schema.json`.
+
+## Pagination
+
+All finding tools return paginated responses (default page size: 20). Every response includes `has_more` and `next_offset`. **Always paginate when `has_more: true`** — call the tool again with the returned `next_offset` until `has_more: false`, then merge all pages. Skipping pagination silently drops findings beyond the first page.
