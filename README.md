@@ -8,6 +8,10 @@
 ![Claude Code](https://img.shields.io/badge/Claude_Code-D97757?style=for-the-badge&logo=anthropic&logoColor=white)
 ![OpenAI Codex](https://img.shields.io/badge/OpenAI_Codex-412991?style=for-the-badge&logo=openai&logoColor=white)
 
+[![Validate Config](https://github.com/Fascinax/Inspectra/actions/workflows/validate-config.yml/badge.svg?branch=main)](https://github.com/Fascinax/Inspectra/actions/workflows/validate-config.yml)
+[![npm version](https://img.shields.io/npm/v/inspectra?style=for-the-badge&logo=npm)](https://www.npmjs.com/package/inspectra)
+![Tests](https://img.shields.io/badge/tests-652%20passing-2ea043?style=for-the-badge)
+
 **Multi-agent code audit system** powered by GitHub Copilot Custom Agents and MCP.
 
 Inspectra coordinates specialized audit agents — security, tests, architecture, conventions, performance, documentation, tech-debt, accessibility, api-design, observability, and i18n — to produce structured, scored, and actionable code quality reports.

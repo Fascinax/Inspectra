@@ -119,7 +119,7 @@ Goal: Package and publish for external users.
 
 - [ ] Publish to npm (`npx inspectra setup`)
 - [x] Contributing guide (CONTRIBUTING.md)
-- [ ] README badges (CI status, npm version, test count)
+- [x] README badges (CI status, npm version, test count)
 - [ ] Demo GIF/video in README showing a full audit run
 - [x] Changelog (CHANGELOG.md, auto-generated from conventional commits)
 - [x] GitHub Releases with pre-built artifacts

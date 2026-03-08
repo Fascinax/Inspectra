@@ -16,6 +16,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 ### Changed
 
 - README contributor links now point to the new contribution and release-note guides.
+- README now exposes CI, npm version, and test-count badges for release readiness.
 - Roadmap progress now marks the contribution guide and changelog work as complete for the v0.8.0 documentation track.
 - Root package metadata is now aligned for npm publication, including publishable assets, runtime dependencies, and public registry metadata.
 - Package versions are aligned to `0.7.0` across the root package and MCP workspace.
