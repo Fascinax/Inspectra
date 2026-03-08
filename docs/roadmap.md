@@ -122,7 +122,7 @@ Goal: Package and publish for external users.
 - [ ] README badges (CI status, npm version, test count)
 - [ ] Demo GIF/video in README showing a full audit run
 - [x] Changelog (CHANGELOG.md, auto-generated from conventional commits)
-- [ ] GitHub Releases with pre-built artifacts
+- [x] GitHub Releases with pre-built artifacts
 
 ## v1.0.0 — Stable Release
 

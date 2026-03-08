@@ -1,12 +1,40 @@
 {
   "name": "inspectra",
-  "version": "0.5.0",
+  "version": "0.7.0",
   "description": "Multi-agent code audit system powered by GitHub Copilot Custom Agents and MCP",
-  "private": true,
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Fascinax/Inspectra.git"
+  },
+  "homepage": "https://github.com/Fascinax/Inspectra#readme",
+  "bugs": {
+    "url": "https://github.com/Fascinax/Inspectra/issues"
+  },
+  "keywords": [
+    "audit",
+    "mcp",
+    "copilot",
+    "agents",
+    "code-quality",
+    "static-analysis",
+    "developer-tools"
+  ],
   "bin": {
     "inspectra": "./bin/init.mjs"
   },
+  "files": [
+    "bin/",
+    "mcp/dist/",
+    "mcp/package.json",
+    ".github/agents/",
+    ".github/prompts/",
+    "policies/",
+    "schemas/",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "npm run build --workspace=mcp",
     "dev": "npm run dev --workspace=mcp",
@@ -20,11 +48,25 @@
     "validate:schemas": "bash scripts/validate-schemas.sh",
     "test:inspector": "node scripts/test-mcp-inspector.mjs",
     "clean": "rimraf mcp/dist",
-    "init": "node bin/init.mjs"
+    "init": "node bin/init.mjs",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm run build && npm test"
   },
   "workspaces": [
     "mcp"
   ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "@typescript-eslint/typescript-estree": "^8.56.1",
+    "fast-xml-parser": "^5.4.2",
+    "globby": "^14.0.0",
+    "handlebars": "^4.7.8",
+    "yaml": "^2.7.0",
+    "zod": "^3.24.0"
+  },
+  "optionalDependencies": {
+    "puppeteer": "^24.0.0"
+  },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@typescript-eslint/eslint-plugin": "^8.56.1",
@@ -39,6 +81,9 @@
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "license": "MIT"
 }

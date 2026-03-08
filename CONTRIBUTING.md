@@ -111,6 +111,12 @@ If your change affects rendering, configuration, or setup flows, also run the re
 
 Use the `Unreleased` section in [CHANGELOG.md](CHANGELOG.md) for notable changes. Keep entries short, factual, and grouped under `Added`, `Changed`, `Fixed`, or `Removed`.
 
+## Release Workflow
+
+- GitHub releases are automated by [.github/workflows/release.yml](.github/workflows/release.yml)
+- Release tags should match the package version exactly, for example `v0.7.0`
+- The workflow builds, tests, packs the npm artifact, uploads the tarball, and publishes to npm when `NPM_TOKEN` is configured
+
 ## Need More Context?
 
 - [README.md](README.md)
