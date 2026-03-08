@@ -118,10 +118,10 @@ Goal: Run Inspectra beyond Copilot, expand domain coverage.
 Goal: Package and publish for external users.
 
 - [ ] Publish to npm (`npx inspectra setup`)
-- [ ] Contributing guide (CONTRIBUTING.md)
+- [x] Contributing guide (CONTRIBUTING.md)
 - [ ] README badges (CI status, npm version, test count)
 - [ ] Demo GIF/video in README showing a full audit run
-- [ ] Changelog (CHANGELOG.md, auto-generated from conventional commits)
+- [x] Changelog (CHANGELOG.md, auto-generated from conventional commits)
 - [ ] GitHub Releases with pre-built artifacts
 
 ## v1.0.0 — Stable Release

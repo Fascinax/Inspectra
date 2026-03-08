@@ -1,0 +1,37 @@
+# Changelog
+
+<!-- markdownlint-disable MD024 -->
+
+All notable changes to this project will be documented in this file.
+
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project aims to follow Semantic Versioning once the `1.0.0` stability contract lands.
+
+## [Unreleased]
+
+### Added
+
+- Contributor guide in [CONTRIBUTING.md](CONTRIBUTING.md) covering setup, workflows, quality gates, and pull request expectations.
+
+### Changed
+
+- README contributor links now point to the new contribution and release-note guides.
+- Roadmap progress now marks the contribution guide and changelog work as complete for the v0.8.0 documentation track.
+
+## [0.7.0] - 2026-03-08
+
+### Added
+
+- Claude Code support via generated `CLAUDE.md` and `.mcp.json`
+- OpenAI Codex support via generated `AGENTS.md` and `.codex/config.toml`
+- `inspectra setup --claude`, `inspectra setup --codex`, `inspectra init <project> --claude`, and `inspectra init <project> --codex`
+- Accessibility, API design, observability, and i18n audit agents and MCP tools
+- Project-level configuration via `.inspectrarc.yml` / `.inspectrarc.yaml`
+- Finding suppression via `.inspectraignore`
+- `inspectra doctor` for environment diagnostics
+
+### Changed
+
+- Phase 2 prompts were tuned to improve audit precision and reduce false positives
+- Deduplication and scoring behavior were improved across merged reports
+- Secret detection became more context-aware with placeholder and comment filtering
+- Test coverage expanded to 500+ passing checks across the MCP server and merger pipeline

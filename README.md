@@ -387,7 +387,7 @@ docker compose up inspectra
 | Script | Description |
 | -------- | ------------- |
 | `npm run build` | Compile the MCP server (TypeScript → `mcp/dist/`) |
-| `npm test` | Run 346 unit + integration tests (Vitest) |
+| `npm test` | Run the Vitest suite |
 | `npm run test:watch` | Run tests in watch mode |
 | `npm run test:coverage` | Run tests with V8 coverage report |
 | `npm run lint` | TypeScript type-check + ESLint |
@@ -416,6 +416,8 @@ Tests are written with [Vitest](https://vitest.dev/) and live alongside source f
 
 ## Extending
 
+- **Contributing guide**: See [CONTRIBUTING.md](CONTRIBUTING.md)
+- **Release notes**: See [CHANGELOG.md](CHANGELOG.md)
 - **Add a tool**: See [docs/adding-a-tool.md](docs/adding-a-tool.md)
 - **Add an agent**: See [docs/adding-an-agent.md](docs/adding-an-agent.md)
 - **Architecture guide**: See [docs/architecture.md](docs/architecture.md)
