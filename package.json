@@ -36,7 +36,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "npm run build --workspace=mcp",
+    "build": "npm run clean && npm run build:mcp",
+    "build:mcp": "npm run build --workspace=mcp",
     "dev": "npm run dev --workspace=mcp",
     "lint": "tsc --noEmit --project mcp/tsconfig.src.json && eslint mcp/src/",
     "lint:fix": "eslint mcp/src/ --fix",

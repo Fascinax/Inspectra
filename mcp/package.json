@@ -6,8 +6,8 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "tsc --project tsconfig.src.json",
+    "dev": "tsc --watch --project tsconfig.src.json",
     "start": "node dist/index.js"
   },
   "dependencies": {
