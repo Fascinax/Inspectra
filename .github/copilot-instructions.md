@@ -52,6 +52,7 @@ Tools are registered in the `inspectra` MCP server. Agents should call them by p
 | ------ | -------- | --------- |
 | `inspectra_scan_secrets` | Security | Detect hardcoded secrets |
 | `inspectra_check_deps_vulns` | Security | npm audit for vulnerabilities |
+| `inspectra_check_security_config` | Security | Detect framework security misconfigurations |
 | `inspectra_parse_coverage` | Tests | Parse coverage reports |
 | `inspectra_parse_test_results` | Tests | Parse JUnit XML results |
 | `inspectra_detect_missing_tests` | Tests | Find untested source files |

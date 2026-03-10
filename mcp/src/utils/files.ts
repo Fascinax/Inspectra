@@ -49,14 +49,20 @@ export async function collectSourceFiles(
  *
  * @param dir - Root directory to walk.
  * @param ignoreDirs - Extra directory names to ignore (merged with built-in defaults).
+ * @param options - Additional collection options.
+ * @param options.dot - Include dotfiles (default: false).
  * @returns Absolute paths of all files found.
  */
-export async function collectAllFiles(dir: string, ignoreDirs?: string[]): Promise<string[]> {
+export async function collectAllFiles(
+  dir: string,
+  ignoreDirs?: string[],
+  options?: { dot?: boolean },
+): Promise<string[]> {
   const paths = await globby("**/*", {
     cwd: dir,
     ignore: buildIgnorePatterns(ignoreDirs),
     absolute: true,
-    dot: false,
+    dot: options?.dot ?? false,
     onlyFiles: true,
   });
   return paths.map((p) => resolve(p));

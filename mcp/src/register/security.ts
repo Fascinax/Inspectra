@@ -2,7 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { findingsResponse, withErrorHandling } from "./response.js";
 import { STANDARD_INPUT_SCHEMA, FINDINGS_TOOL_META, FINDINGS_OPEN_WORLD_META, ProfileField, ResponseFormatField, LimitField, OffsetField, ProjectDirField } from "./schemas.js";
-import { scanSecrets, scanSecretsInDir, checkDependencyVulnerabilities, runSemgrep, checkMavenDependencies } from "../tools/security.js";
+import { scanSecrets, scanSecretsInDir, checkDependencyVulnerabilities, runSemgrep, checkMavenDependencies, checkSecurityConfig } from "../tools/security.js";
 import { loadProfile } from "../policies/loader.js";
 import { validateProjectDir, validateFilePathsCsv } from "../utils/paths.js";
 
@@ -164,5 +164,33 @@ Examples:
       const findings = await checkMavenDependencies(safeDir);
       return findingsResponse(findings, responseFormat, { limit, offset });
     }, "inspectra_check_maven_deps"),
+  );
+
+  server.registerTool(
+    "inspectra_check_security_config",
+    {
+      title: "Check Security Configuration",
+      description: `Scan source files for framework-level security misconfigurations.
+
+Detects: Spring Security permitAll()/csrf().disable(), commented-out @PreAuthorize/@Secured/@RolesAllowed annotations, CORS wildcard origins with credentials, missing @Valid on @RequestBody, and exposed Actuator endpoints.
+
+Args:
+  - projectDir (string): Absolute path to the project root.
+
+Returns: Array of Finding objects (domain: "security", prefix: SEC-). Each finding includes the file path, line number, matched rule, and OWASP/CWE tags.
+
+Examples:
+  1. Scan a Spring Boot project:
+     { "projectDir": "/app/spring-project" }
+  2. Paginate results:
+     { "projectDir": "/app/spring-project", "limit": 10, "offset": 0 }`,
+      inputSchema: STANDARD_INPUT_SCHEMA,
+      ...FINDINGS_TOOL_META,
+    },
+    withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
+      const safeDir = await validateProjectDir(projectDir);
+      const findings = await checkSecurityConfig(safeDir);
+      return findingsResponse(findings, responseFormat, { limit, offset });
+    }, "inspectra_check_security_config"),
   );
 }

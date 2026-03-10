@@ -7,7 +7,7 @@ Inspectra uses GitHub Copilot Custom Agents to perform structured code audits.
 | Agent | Domain | Tools | Finding Prefix |
 | ------- | -------- | ------- | --------------- |
 | [audit-orchestrator](.github/agents/audit-orchestrator.agent.md) | Coordination | `inspectra_merge_domain_reports`, `inspectra_score_findings` | - |
-| [audit-security](.github/agents/audit-security.agent.md) | Security | `inspectra_scan_secrets`, `inspectra_check_deps_vulns`, `inspectra_run_semgrep`, `inspectra_check_maven_deps` | `SEC-` |
+| [audit-security](.github/agents/audit-security.agent.md) | Security | `inspectra_scan_secrets`, `inspectra_check_deps_vulns`, `inspectra_run_semgrep`, `inspectra_check_maven_deps`, `inspectra_check_security_config` | `SEC-` |
 | [audit-tests](.github/agents/audit-tests.agent.md) | Tests | `inspectra_parse_coverage`, `inspectra_parse_test_results`, `inspectra_detect_missing_tests`, `inspectra_parse_playwright_report`, `inspectra_detect_flaky_tests`, `inspectra_check_test_quality` | `TST-` |
 | [audit-architecture](.github/agents/audit-architecture.agent.md) | Architecture | `inspectra_check_layering`, `inspectra_analyze_dependencies`, `inspectra_detect_circular_deps` | `ARC-` |
 | [audit-conventions](.github/agents/audit-conventions.agent.md) | Conventions | `inspectra_check_naming`, `inspectra_check_file_lengths`, `inspectra_check_todos`, `inspectra_parse_lint_output`, `inspectra_detect_dry_violations`, `inspectra_check_function_lengths`, `inspectra_check_param_counts`, `inspectra_check_magic_numbers` | `CNV-` |

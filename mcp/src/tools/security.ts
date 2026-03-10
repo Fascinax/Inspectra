@@ -7,6 +7,7 @@ import { createIdSequence } from "../utils/id.js";
 import { logger } from "../logger.js";
 
 export { scanSecrets, scanSecretsInDir, SECRET_PATTERNS } from "./security-secrets.js";
+export { checkSecurityConfig } from "./security-config.js";
 
 const execFileAsync = promisify(execFile);
 

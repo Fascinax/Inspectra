@@ -18,7 +18,7 @@ const COMMENT_LINE_PATTERN = /^\s*(?:\/\/|\/\*|\*|#)/;
 
 /** Placeholder values that signal a non-secret (template, example, test fixture). */
 const PLACEHOLDER_PATTERN =
-  /\b(placeholder|changeme|change[_-]?me|your[_-]?\w*[_-]?here|todo[_-]?replace|replace[_-]?me|fill[_-]?in|example|xxx+|test[_-]?password|dummy|fake|sample|override|insert[_-]?here)\b/i;
+  /(?:^|[\W_])(placeholder|changeme|change[_-]?me|your[_-]?\w*[_-]?here|todo[_-]?replace|replace[_-]?me|fill[_-]?in|example|xxx+|test[_-]?password|dummy|fake|sample|override|insert[_-]?here)(?:$|[\W_])/i;
 
 /** Files in fixture/example/mock directories carry lower confidence. */
 const FIXTURE_OR_EXAMPLE_PATH =
@@ -30,6 +30,12 @@ export const SECRET_PATTERNS = [
     pattern: /(password|secret|api_?key|token|credentials)\s*[:=]\s*["'][^"']{8,}["']/gi,
     severity: "high" as const,
     confidence: 0.70,
+  },
+  {
+    rule: "no-hardcoded-secret-unquoted",
+    pattern: /(?:^|\b)\w*(?:PASSWORD|SECRET|API_?KEY|TOKEN|CREDENTIALS)\w*\s*[=:]\s*([^\s"'#][^\s#]{7,})/gim,
+    severity: "high" as const,
+    confidence: 0.65,
   },
   {
     rule: "no-private-key",
@@ -73,7 +79,7 @@ export async function scanSecrets(
   for (const filePath of filePaths) {
     // Check if this is a committed .env file — test the filename, not the content
     const fileName = filePath.split(/[\/\\]/).pop() ?? "";
-    if (/^\.env(?:\.(local|development|staging|production|test))?$/.test(fileName)) {
+    if (/^(?:\.env(?:\.(local|development|staging|production|test))?|(local|development|staging|production|test)\.env)$/.test(fileName)) {
       findings.push({
         id: nextId(),
         severity: "medium",
@@ -112,12 +118,18 @@ export interface SecretPattern {
  *
  * This is the preferred input mode when no explicit file list is available.
  */
+/** Returns true if a filename is a dotenv-style file (e.g. `.env`, `.env.local`, `local.env`). */
+function isDotenvFile(filePath: string): boolean {
+  const fileName = filePath.split(/[/\\]/).pop() ?? "";
+  return /(?:^\.|\.)env(?:\.(local|development|staging|production|test))?$/.test(fileName);
+}
+
 export async function scanSecretsInDir(
   projectDir: string,
   additionalPatterns?: Array<{ rule: string; pattern: string; severity: string }>,
 ): Promise<Finding[]> {
-  const allFiles = await collectAllFiles(projectDir);
-  const filePaths = allFiles.filter((f) => SCANNABLE_EXTENSIONS.has(extname(f)));
+  const allFiles = await collectAllFiles(projectDir, undefined, { dot: true });
+  const filePaths = allFiles.filter((f) => SCANNABLE_EXTENSIONS.has(extname(f)) || isDotenvFile(f));
   return scanSecrets(filePaths, additionalPatterns);
 }
 
