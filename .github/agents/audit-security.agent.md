@@ -1,4 +1,4 @@
---
+---
 name: audit-security
 description: Security audit agent. Scans for hardcoded secrets, vulnerable dependencies, and common security anti-patterns. Produces a domain report.
 tools:

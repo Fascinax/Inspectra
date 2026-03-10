@@ -1,4 +1,4 @@
---
+---
 name: audit-ux-consistency
 description: UX consistency audit agent. Detects design system violations, hardcoded values, inconsistent tokens, duplicated UI patterns, and visual inconsistencies across templates and stylesheets. Produces a domain report.
 tools:
