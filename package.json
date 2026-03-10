@@ -1,6 +1,6 @@
 {
   "name": "inspectra",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Multi-agent code audit system powered by GitHub Copilot Custom Agents and MCP",
   "type": "module",
   "packageManager": "npm@10",
@@ -49,9 +49,7 @@
     "test:inspector": "node scripts/test-mcp-inspector.mjs",
     "clean": "rimraf mcp/dist",
     "init": "node bin/init.mjs",
-    "release:check": "npm publish --dry-run",
-    "prepack": "npm run build",
-    "prepublishOnly": "npm run build && npm test"
+    "release:check": "npm publish --dry-run"
   },
   "workspaces": [
     "mcp"
