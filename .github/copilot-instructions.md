@@ -66,7 +66,7 @@ Tools are registered in the `inspectra` MCP server. Agents should call them by p
 | `inspectra_check_magic_numbers` | Conventions | Detect unnamed numeric constants |
 | `inspectra_check_dead_exports` | Tech Debt | Find exported symbols never imported |
 | `inspectra_detect_deprecated_apis` | Tech Debt | Detect deprecated framework API usage |
-| `inspectra_detect_code_smells` | Tech Debt | Flag God classes and deep nesting |
+| `inspectra_detect_code_smells` | Tech Debt | Flag God classes, deep nesting, JPA anti-patterns, and missing DB migrations |
 | `inspectra_merge_domain_reports` | Orchestrator | Merge and score reports |
 | `inspectra_score_findings` | Orchestrator | Compute a domain score |
 | `inspectra_render_html` | Report Engine | Render HTML report (Obsidian dark theme) |
@@ -76,7 +76,7 @@ Tools are registered in the `inspectra` MCP server. Agents should call them by p
 | `inspectra_log_activity` | Governance | Record agent activity to JSONL log |
 | `inspectra_read_activity_log` | Governance | Read agent activity log entries |
 | `inspectra_check_a11y_templates` | Accessibility | Detect a11y issues in HTML/Angular/JSX templates |
-| `inspectra_check_rest_conventions` | API Design | Check REST route naming and versioning |
+| `inspectra_check_rest_conventions` | API Design | Check REST route naming, versioning, HttpSession misuse, and pagination |
 | `inspectra_check_observability` | Observability | Detect missing logging, tracing, health endpoints |
 | `inspectra_check_i18n` | i18n | Detect hardcoded strings and missing i18n setup |
 | `inspectra_check_ux_consistency` | UX Consistency | Detect design system violations and visual inconsistencies |

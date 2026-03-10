@@ -35,6 +35,7 @@ export async function checkReadmeCompleteness(projectDir: string): Promise<Findi
   }
 
   const requiredSections = ["installation", "usage", "testing"];
+  const recommendedSections = ["prerequisites", "contributing", "license", "architecture"];
   const lowered = content.toLowerCase();
 
   for (const section of requiredSections) {
@@ -51,6 +52,24 @@ export async function checkReadmeCompleteness(projectDir: string): Promise<Findi
       recommendation: `Add a '${section}' section to improve discoverability for contributors and users.`,
       effort: "trivial",
       tags: ["readme"],
+      source: "tool",
+    });
+  }
+
+  for (const section of recommendedSections) {
+    if (lowered.includes(section)) continue;
+    findings.push({
+      id: nextId(),
+      severity: "low",
+      title: `README missing recommended section: ${section}`,
+      description: `The README does not include a '${section}' section. While not strictly required, this section improves project discoverability and contributor onboarding.`,
+      domain: "documentation",
+      rule: "readme-recommended-section-missing",
+      confidence: 0.80,
+      evidence: [{ file: relative(projectDir, readmePath) }],
+      recommendation: `Add a '${section}' section to the README.`,
+      effort: "trivial",
+      tags: ["readme", "onboarding"],
       source: "tool",
     });
   }

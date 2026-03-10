@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { relative, extname } from "node:path";
+import { relative, extname, basename } from "node:path";
 import type { Finding } from "../types.js";
 import { collectAllFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
@@ -220,4 +220,71 @@ function checkLazySelfInjection(
     tags: ["circular-dependency", "spring", "lazy", "anti-pattern"],
     source: "tool",
   });
+}
+
+/**
+ * Detects JPA/Hibernate projects that have no database migration tool (Liquibase or Flyway).
+ * Without schema migration tooling, DDL changes are untracked and deployments are error-prone.
+ */
+export async function detectMissingMigrationTool(projectDir: string): Promise<Finding[]> {
+  const nextId = createIdSequence("DEBT", 450);
+  const allFiles = await collectAllFiles(projectDir);
+  const javaFiles = allFiles.filter((f) => extname(f) === JAVA_EXTENSION);
+
+  let hasEntities = false;
+  for (const f of javaFiles) {
+    try {
+      const content = await readFile(f, "utf-8");
+      if (ENTITY_ANNOTATION.test(content)) {
+        hasEntities = true;
+        break;
+      }
+    } catch { /* skip */ }
+  }
+
+  if (!hasEntities) return [];
+
+  const hasLiquibase = allFiles.some(
+    (f) => /changelog-master\.(xml|ya?ml|json)$/i.test(basename(f)) ||
+           /[/\\]db[/\\]changelog[/\\]/i.test(f),
+  );
+  const hasFlyway = allFiles.some(
+    (f) => /[/\\]db[/\\]migration[/\\]/i.test(f) ||
+           /^V\d+__.*\.sql$/i.test(basename(f)),
+  );
+
+  let buildFileHasMigrationDep = false;
+  for (const f of allFiles) {
+    const name = basename(f);
+    if (name !== "pom.xml" && name !== "build.gradle" && name !== "build.gradle.kts") continue;
+    try {
+      const content = await readFile(f, "utf-8");
+      if (/liquibase|flyway/i.test(content)) {
+        buildFileHasMigrationDep = true;
+        break;
+      }
+    } catch { /* skip */ }
+  }
+
+  if (hasLiquibase || hasFlyway || buildFileHasMigrationDep) return [];
+
+  return [{
+    id: nextId(),
+    severity: "medium",
+    title: "JPA entities found but no database migration tool detected",
+    description:
+      "The project uses JPA @Entity classes but neither Liquibase nor Flyway is configured. " +
+      "Without a migration tool, schema changes are untracked, making rollbacks and team collaboration risky. " +
+      "Relying on hibernate.ddl-auto=update in production leads to data loss.",
+    domain: "tech-debt",
+    rule: "jpa-no-migration-tool",
+    confidence: 0.85,
+    evidence: [{ file: "pom.xml", snippet: "No liquibase/flyway dependency found" }],
+    recommendation:
+      "Add Liquibase or Flyway to your build (e.g. spring-boot-starter-liquibase). " +
+      "Create an initial changelog from your current schema, then track all DDL changes as versioned migrations.",
+    effort: "medium",
+    tags: ["jpa", "database", "migration", "liquibase", "flyway"],
+    source: "tool",
+  }];
 }

@@ -28,11 +28,23 @@ describe("checkReadmeCompleteness", () => {
   it("reports no finding when README has all sections", async () => {
     writeFileSync(
       join(tempDir, "README.md"),
-      "# Title\n## Installation\n## Usage\n## Testing\n## License\n",
+      "# Title\n## Installation\n## Usage\n## Testing\n## License\n## Prerequisites\n## Contributing\n## Architecture\n",
     );
     const findings = await checkReadmeCompleteness(tempDir);
-    const missingSection = findings.filter((f) => f.rule === "readme-missing-section");
-    expect(missingSection.length).toBeLessThanOrEqual(1);
+    expect(findings.filter((f) => f.rule === "readme-section-missing")).toHaveLength(0);
+    expect(findings.filter((f) => f.rule === "readme-recommended-section-missing")).toHaveLength(0);
+  });
+
+  it("reports recommended sections when missing", async () => {
+    writeFileSync(
+      join(tempDir, "README.md"),
+      "# Title\n## Installation\n## Usage\n## Testing\n",
+    );
+    const findings = await checkReadmeCompleteness(tempDir);
+    expect(findings.filter((f) => f.rule === "readme-section-missing")).toHaveLength(0);
+    const recommended = findings.filter((f) => f.rule === "readme-recommended-section-missing");
+    expect(recommended.length).toBeGreaterThan(0);
+    expect(recommended.every((f) => f.severity === "low")).toBe(true);
   });
 });
 

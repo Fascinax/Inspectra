@@ -10,6 +10,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Added
 
+- **Security**: `error-info-leak` rule detects `@ExceptionHandler` methods leaking `e.getMessage()`/`e.toString()` to clients.
+- **Security**: `file-upload-no-validation` rule detects `MultipartFile` params without size/type validation.
+- **Tech Debt**: JPA anti-pattern detection module (`tech-debt-jpa.ts`) with 6 rules: `jpa-data-on-entity`, `jpa-cascade-all-many-to-one`, `jpa-missing-version`, `jpa-missing-modifying`, `lazy-self-injection`, `jpa-no-migration-tool`.
+- **API Design**: `stateful-rest-controller` rule detects `HttpSession` usage in REST controllers.
+- **API Design**: `unpaginated-list-endpoint` rule flags `List<>`/`Collection<>` returns without `Pageable`.
+- **Tests**: `excessive-assertions` rule flags test files averaging >25 assertions per `@Test` method.
+- **Tests**: `missing-test-slicing` rule detects `@SpringBootTest` without slice annotations (`@WebMvcTest`, etc.).
+- **Performance**: Sync HTTP (`RestTemplate`), sync mail (`JavaMailSender.send`), and `Runtime.exec()` detection in Java source files.
+- **Documentation**: `readme-recommended-section-missing` rule checks for prerequisites, contributing, license, and architecture sections.
 - Contributor guide in [CONTRIBUTING.md](CONTRIBUTING.md) covering setup, workflows, quality gates, and pull request expectations.
 - Release automation in [.github/workflows/release.yml](.github/workflows/release.yml) to validate, pack, publish, and attach the npm artifact to GitHub releases.
 - `npm run release:check` to validate the npm publication path locally with `npm publish --dry-run`.

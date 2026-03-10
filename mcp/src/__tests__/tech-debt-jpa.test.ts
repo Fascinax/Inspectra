@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { detectJpaAntiPatterns } from "../tools/tech-debt-jpa.js";
+import { detectJpaAntiPatterns, detectMissingMigrationTool } from "../tools/tech-debt-jpa.js";
 
 function makeTempDir(): string {
   const dir = join(tmpdir(), `inspectra-jpa-${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -206,6 +206,70 @@ public class CleanService {
 }
 `);
     const findings = await detectJpaAntiPatterns(tempDir);
+    expect(findings).toHaveLength(0);
+  });
+});
+
+describe("detectMissingMigrationTool", () => {
+  let tempDir: string;
+
+  beforeEach(() => {
+    tempDir = makeTempDir();
+    mkdirSync(join(tempDir, "src", "main", "java", "com", "app", "entity"), { recursive: true });
+  });
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  function writeJava(subPath: string, content: string): void {
+    writeFileSync(join(tempDir, subPath), content, "utf8");
+  }
+
+  it("flags JPA entities without migration tool", async () => {
+    writeJava("src/main/java/com/app/entity/Cable.java", `
+@Entity
+public class Cable {
+    @Id private Long id;
+}
+`);
+    const findings = await detectMissingMigrationTool(tempDir);
+    expect(findings).toHaveLength(1);
+    expect(findings[0]!.rule).toBe("jpa-no-migration-tool");
+  });
+
+  it("does not flag when Liquibase dependency in pom.xml", async () => {
+    writeJava("src/main/java/com/app/entity/Cable.java", `
+@Entity
+public class Cable {
+    @Id private Long id;
+}
+`);
+    writeFileSync(join(tempDir, "pom.xml"), `<dependency><artifactId>liquibase-core</artifactId></dependency>`);
+    const findings = await detectMissingMigrationTool(tempDir);
+    expect(findings).toHaveLength(0);
+  });
+
+  it("does not flag when Flyway migration directory exists", async () => {
+    writeJava("src/main/java/com/app/entity/Cable.java", `
+@Entity
+public class Cable {
+    @Id private Long id;
+}
+`);
+    mkdirSync(join(tempDir, "src", "main", "resources", "db", "migration"), { recursive: true });
+    writeFileSync(join(tempDir, "src", "main", "resources", "db", "migration", "V1__init.sql"), "CREATE TABLE cable;");
+    const findings = await detectMissingMigrationTool(tempDir);
+    expect(findings).toHaveLength(0);
+  });
+
+  it("does not flag projects without entities", async () => {
+    writeJava("src/main/java/com/app/entity/Dto.java", `
+public class CableDto {
+    private Long id;
+}
+`);
+    const findings = await detectMissingMigrationTool(tempDir);
     expect(findings).toHaveLength(0);
   });
 });

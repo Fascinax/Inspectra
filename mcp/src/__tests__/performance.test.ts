@@ -73,4 +73,49 @@ describe("detectRuntimeMetrics", () => {
     const findings = await detectRuntimeMetrics(tempDir);
     expect(findings.some((f) => f.rule === "sync-fs-usage")).toBe(true);
   });
+
+  it("detects RestTemplate usage in Java source", async () => {
+    mkdirSync(join(tempDir, "src", "main", "java"), { recursive: true });
+    writeFileSync(
+      join(tempDir, "src", "main", "java", "ApiService.java"),
+      `public class ApiService {
+    private final RestTemplate restTemplate;
+    public String fetchData() {
+        return restTemplate.getForObject("http://api/data", String.class);
+    }
+}`,
+    );
+    const findings = await detectRuntimeMetrics(tempDir);
+    expect(findings.some((f) => f.rule === "sync-http-in-controller")).toBe(true);
+  });
+
+  it("detects JavaMailSender.send in Java source", async () => {
+    mkdirSync(join(tempDir, "src", "main", "java"), { recursive: true });
+    writeFileSync(
+      join(tempDir, "src", "main", "java", "NotificationService.java"),
+      `public class NotificationService {
+    private final JavaMailSender mailSender;
+    public void notify(String to) {
+        mailSender.send(message);
+    }
+}`,
+    );
+    const findings = await detectRuntimeMetrics(tempDir);
+    expect(findings.some((f) => f.rule === "sync-mail-in-controller")).toBe(true);
+  });
+
+  it("does not flag RestTemplate in test files", async () => {
+    mkdirSync(join(tempDir, "src", "test", "java"), { recursive: true });
+    writeFileSync(
+      join(tempDir, "src", "test", "java", "ApiServiceTest.java"),
+      `public class ApiServiceTest {
+    @Test
+    public void testFetch() {
+        restTemplate.getForObject("http://api/data", String.class);
+    }
+}`,
+    );
+    const findings = await detectRuntimeMetrics(tempDir);
+    expect(findings.some((f) => f.rule === "sync-http-in-controller")).toBe(false);
+  });
 });

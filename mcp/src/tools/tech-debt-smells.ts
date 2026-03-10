@@ -5,7 +5,7 @@ import { collectAllFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
 import { detectGodClasses } from "./tech-debt-god-class.js";
 import { detectDeepNesting } from "./tech-debt-deep-nesting.js";
-import { detectJpaAntiPatterns } from "./tech-debt-jpa.js";
+import { detectJpaAntiPatterns, detectMissingMigrationTool } from "./tech-debt-jpa.js";
 
 const SUPPORTED_EXTENSIONS = new Set([".ts", ".js", ".java", ".py", ".go", ".kt"]);
 const TEST_INFRA_PATH = /(?:^|[/\\])(?:__tests__|test__|tests|fixtures|__mocks__|e2e|spec)(?:[/\\]|$)/;
@@ -351,10 +351,11 @@ function findDeepNesting(content: string): { line: number; depth: number; snippe
  *   that should be flattened with early returns or extraction.
  */
 export async function detectCodeSmells(projectDir: string): Promise<Finding[]> {
-  const [godClasses, deepNesting, jpaSmells] = await Promise.all([
+  const [godClasses, deepNesting, jpaSmells, migrationSmells] = await Promise.all([
     detectGodClasses(projectDir),
     detectDeepNesting(projectDir),
     detectJpaAntiPatterns(projectDir),
+    detectMissingMigrationTool(projectDir),
   ]);
-  return [...godClasses, ...deepNesting, ...jpaSmells];
+  return [...godClasses, ...deepNesting, ...jpaSmells, ...migrationSmells];
 }

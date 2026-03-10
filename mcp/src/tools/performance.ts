@@ -170,10 +170,28 @@ export async function detectRuntimeMetrics(projectDir: string): Promise<Finding[
       title: "Potential unbounded loop detected",
       severity: "medium",
     },
+    {
+      regex: /\b[rR]estTemplate\b.*\.(exchange|getForObject|getForEntity|postForObject|postForEntity|put|delete)\s*\(/,
+      rule: "sync-http-in-controller",
+      title: "Synchronous HTTP call via RestTemplate",
+      severity: "medium",
+    },
+    {
+      regex: /\bJavaMailSender\b.*\.send\s*\(|\bmailSender\.send\s*\(/,
+      rule: "sync-mail-in-controller",
+      title: "Synchronous email sending",
+      severity: "medium",
+    },
+    {
+      regex: /\bRuntime\.getRuntime\(\)\.exec\s*\(/,
+      rule: "runtime-exec-usage",
+      title: "Runtime.exec() call detected",
+      severity: "high",
+    },
   ];
 
   // Sync I/O is acceptable in test helpers and fixture builders — exclude them
-  const TEST_OR_FIXTURE_PATH = /[/\\](?:__tests__|fixtures)[/\\]|\.(?:test|spec)\.[tj]s$/;
+  const TEST_OR_FIXTURE_PATH = /[/\\](?:__tests__|fixtures|test)[/\\]|\.(test|spec)\.[tj]sx?$|Test\.java$/;
 
   for (const filePath of files) {
     if (TEST_OR_FIXTURE_PATH.test(filePath)) continue;

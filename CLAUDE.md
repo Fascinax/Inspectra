@@ -7,7 +7,7 @@ Multi-agent code audit system using MCP tools. 13 agents across 12 domains, coor
 ```bash
 npm install        # install deps
 npm run build      # compile MCP server → mcp/dist/
-npm test           # 503 tests (Vitest)
+npm test           # 720+ tests (Vitest)
 npm run lint       # tsc --noEmit + ESLint
 ```
 
@@ -49,15 +49,15 @@ Weights (re-normalized at runtime): security 24%, tests 20%, architecture 16%, c
 
 ## MCP Tools (42 total)
 
-Security: `scan_secrets`, `check_deps_vulns`, `run_semgrep`, `check_maven_deps`, `check_security_config`
-Tests: `parse_coverage`, `parse_test_results`, `detect_missing_tests`, `parse_playwright_report`, `detect_flaky_tests`, `check_test_quality`
+Security: `scan_secrets`, `check_deps_vulns`, `run_semgrep`, `check_maven_deps`, `check_security_config` (includes error-info-leak, file-upload-no-validation)
+Tests: `parse_coverage`, `parse_test_results`, `detect_missing_tests`, `parse_playwright_report`, `detect_flaky_tests`, `check_test_quality` (includes excessive-assertions, missing-test-slicing)
 Architecture: `check_layering`, `analyze_dependencies`, `detect_circular_deps`
 Conventions: `check_naming`, `check_file_lengths`, `check_todos`, `parse_lint_output`, `detect_dry_violations`, `check_function_lengths`, `check_param_counts`, `check_magic_numbers`
-Performance: `analyze_bundle_size`, `check_build_timings`, `detect_runtime_metrics`
+Performance: `analyze_bundle_size`, `check_build_timings`, `detect_runtime_metrics` (includes sync-http, sync-mail, runtime-exec for Java)
 Documentation: `check_readme_completeness`, `check_adr_presence`, `detect_doc_code_drift`, `detect_env_example_drift`
-Tech-debt: `analyze_complexity`, `age_todos`, `check_dependency_staleness`, `check_dead_exports`, `detect_deprecated_apis`, `detect_code_smells`
+Tech-debt: `analyze_complexity`, `age_todos`, `check_dependency_staleness`, `check_dead_exports`, `detect_deprecated_apis`, `detect_code_smells` (includes JPA anti-patterns: @Data on entity, CascadeType.ALL, missing @Version/@Modifying, @Lazy self-injection, missing DB migration tool)
 Accessibility: `check_a11y_templates`
-API Design: `check_rest_conventions`
+API Design: `check_rest_conventions` (includes stateful-rest-controller, unpaginated-list-endpoint)
 Observability: `check_observability`
 i18n: `check_i18n`
 UX Consistency: `check_ux_consistency`
