@@ -1,9 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { findingsResponse, withErrorHandling } from "./response.js";
 import { STANDARD_INPUT_SCHEMA, FINDINGS_TOOL_META } from "./schemas.js";
+import { createConfigHandler } from "./handler-factory.js";
 import { checkRestConventions } from "../tools/api-design.js";
-import { validateProjectDir } from "../utils/paths.js";
-import { loadProjectConfig, resolveConfig } from "../utils/project-config.js";
 
 /**
  * Registers all api-design-domain MCP tools on the given server instance.
@@ -33,11 +31,6 @@ Examples:
       inputSchema: STANDARD_INPUT_SCHEMA,
       ...FINDINGS_TOOL_META,
     },
-    withErrorHandling(async ({ projectDir, responseFormat, limit, offset }) => {
-      const safeDir = await validateProjectDir(projectDir);
-      const config = resolveConfig(await loadProjectConfig(safeDir));
-      const findings = await checkRestConventions(safeDir, config.ignore_dirs);
-      return findingsResponse(findings, responseFormat, { limit, offset });
-    }, "inspectra_check_rest_conventions"),
+    createConfigHandler("inspectra_check_rest_conventions", checkRestConventions),
   );
 }

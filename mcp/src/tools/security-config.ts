@@ -3,6 +3,8 @@ import { join, relative, extname, basename } from "node:path";
 import type { Finding } from "../types.js";
 import { collectSourceFiles, collectAllFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
+import { finding } from "../utils/finding-builder.js";
+import { MAX_SNIPPET_LENGTH } from "../utils/shared-constants.js";
 import { logger } from "../logger.js";
 
 const JAVA_EXTENSIONS = [".java"];
@@ -114,24 +116,26 @@ function checkPermitAll(
   if (!PERMIT_ALL_PATTERN.test(content)) return;
 
   const line = findLineNumber(lines, PERMIT_ALL_PATTERN);
-  findings.push({
-    id: nextId(),
-    severity: "critical",
-    title: "All requests permitted without authentication",
-    description:
-      "Spring Security is configured with anyRequest().permitAll(), effectively disabling authentication for all endpoints. " +
-      "Any client can access any endpoint without credentials.",
-    domain: "security",
-    rule: "no-permit-all",
-    confidence: 0.95,
-    evidence: [{ file: relPath, line }],
-    recommendation:
-      "Replace .anyRequest().permitAll() with specific matchers: " +
-      "e.g. .requestMatchers(\"/public/**\").permitAll().anyRequest().authenticated()",
-    effort: "medium",
-    tags: ["owasp:A01", "CWE-862", "spring-security", "authentication"],
-    source: "tool",
-  });
+  findings.push(
+    finding(nextId)
+      .severity("critical")
+      .title("All requests permitted without authentication")
+      .description(
+        "Spring Security is configured with anyRequest().permitAll(), effectively disabling authentication for all endpoints. " +
+        "Any client can access any endpoint without credentials.",
+      )
+      .domain("security")
+      .rule("no-permit-all")
+      .confidence(0.95)
+      .file(relPath, line)
+      .recommendation(
+        "Replace .anyRequest().permitAll() with specific matchers: " +
+        "e.g. .requestMatchers(\"/public/**\").permitAll().anyRequest().authenticated()",
+      )
+      .effort("medium")
+      .tags(["owasp:A01", "CWE-862", "spring-security", "authentication"])
+      .build(),
+  );
 }
 
 function checkCsrfDisabled(
@@ -144,24 +148,26 @@ function checkCsrfDisabled(
   if (!CSRF_DISABLE_PATTERN.test(content)) return;
 
   const line = findLineNumber(lines, /\.csrf/);
-  findings.push({
-    id: nextId(),
-    severity: "high",
-    title: "CSRF protection is disabled",
-    description:
-      "Spring Security CSRF protection is explicitly disabled. " +
-      "This exposes the application to cross-site request forgery attacks unless the API is purely stateless with token-based auth.",
-    domain: "security",
-    rule: "no-csrf-disable",
-    confidence: 0.90,
-    evidence: [{ file: relPath, line }],
-    recommendation:
-      "If the API uses session-based auth or cookies, re-enable CSRF. " +
-      "If purely stateless with JWT/Bearer tokens and no cookies, CSRF disable may be acceptable — add a comment documenting the rationale.",
-    effort: "small",
-    tags: ["owasp:A01", "CWE-352", "spring-security", "csrf"],
-    source: "tool",
-  });
+  findings.push(
+    finding(nextId)
+      .severity("high")
+      .title("CSRF protection is disabled")
+      .description(
+        "Spring Security CSRF protection is explicitly disabled. " +
+        "This exposes the application to cross-site request forgery attacks unless the API is purely stateless with token-based auth.",
+      )
+      .domain("security")
+      .rule("no-csrf-disable")
+      .confidence(0.90)
+      .file(relPath, line)
+      .recommendation(
+        "If the API uses session-based auth or cookies, re-enable CSRF. " +
+        "If purely stateless with JWT/Bearer tokens and no cookies, CSRF disable may be acceptable — add a comment documenting the rationale.",
+      )
+      .effort("small")
+      .tags(["owasp:A01", "CWE-352", "spring-security", "csrf"])
+      .build(),
+  );
 }
 
 function checkCommentedAuthAnnotations(
@@ -182,7 +188,7 @@ function checkCommentedAuthAnnotations(
         domain: "security",
         rule: "no-commented-auth",
         confidence: 0.92,
-        evidence: [{ file: relPath, line: i + 1, snippet: lines[i]!.trim().substring(0, 120) }],
+        evidence: [{ file: relPath, line: i + 1, snippet: lines[i]!.trim().substring(0, MAX_SNIPPET_LENGTH) }],
         recommendation:
           "Uncomment the security annotation or replace it with the intended access control. " +
           "Never commit security bypasses.",
@@ -275,7 +281,7 @@ function checkMissingValid(
           domain: "security",
           rule: "missing-valid-annotation",
           confidence: 0.88,
-          evidence: [{ file: relPath, line: i + 1, snippet: line.trim().substring(0, 120) }],
+          evidence: [{ file: relPath, line: i + 1, snippet: line.trim().substring(0, MAX_SNIPPET_LENGTH) }],
           recommendation:
             "Add @Valid before @RequestBody: " +
             "public ResponseEntity<?> create(@Valid @RequestBody MyDTO dto)",
@@ -350,7 +356,7 @@ function checkErrorInfoLeak(
         domain: "security",
         rule: "error-info-leak",
         confidence: 0.90,
-        evidence: [{ file: relPath, line: i + 1, snippet: line.trim().substring(0, 120) }],
+        evidence: [{ file: relPath, line: i + 1, snippet: line.trim().substring(0, MAX_SNIPPET_LENGTH) }],
         recommendation:
           "Return a generic error message to clients (e.g., \"An internal error occurred\"). " +
           "Log the full exception server-side for debugging.",

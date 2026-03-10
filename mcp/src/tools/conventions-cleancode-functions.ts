@@ -4,9 +4,7 @@ import type { Finding } from "../types.js";
 import type { ProfileConfig } from "../policies/loader.js";
 import { collectAllFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
-
-const SUPPORTED_EXTENSIONS = new Set([".ts", ".js", ".java", ".py", ".go", ".kt"]);
-const TEST_INFRA_PATH = /(?:^|[/\\])(?:__tests__|test__|tests|fixtures|__mocks__|e2e|spec)(?:[/\\]|$)/;
+import { SUPPORTED_EXTENSIONS, TEST_INFRA_PATH } from "../utils/shared-constants.js";
 
 const DEFAULT_FUNCTION_LENGTH_WARNING = 30;
 const DEFAULT_FUNCTION_LENGTH_ERROR = 60;

@@ -5,6 +5,7 @@ import { promisify } from "node:util";
 import type { Finding } from "../types.js";
 import { createIdSequence } from "../utils/id.js";
 import { logger } from "../logger.js";
+import { MAX_SNIPPET_LENGTH } from "../utils/shared-constants.js";
 
 export { scanSecrets, scanSecretsInDir, SECRET_PATTERNS } from "./security-secrets.js";
 export { checkSecurityConfig } from "./security-config.js";
@@ -12,7 +13,6 @@ export { checkSecurityConfig } from "./security-config.js";
 const execFileAsync = promisify(execFile);
 
 const MAX_DESCRIPTION_LENGTH = 500;
-const MAX_SNIPPET_LENGTH = 120;
 const PROCESS_TIMEOUT_MS = 30_000;
 
 /**

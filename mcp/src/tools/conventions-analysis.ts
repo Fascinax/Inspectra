@@ -4,10 +4,9 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import type { Finding } from "../types.js";
 import { createIdSequence } from "../utils/id.js";
+import { MAX_SNIPPET_LENGTH } from "../utils/shared-constants.js";
 
 const execFileAsync = promisify(execFile);
-
-const MAX_SNIPPET_LENGTH = 120;
 const MAX_TITLE_EXCERPT_LENGTH = 80;
 const ESLINT_TIMEOUT_MS = 30_000;
 

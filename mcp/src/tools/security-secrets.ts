@@ -4,14 +4,13 @@ import type { Finding } from "../types.js";
 import { collectAllFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
 import { logger } from "../logger.js";
+import { MAX_SNIPPET_LENGTH } from "../utils/shared-constants.js";
 
 /** Extensions scanned by scanSecretsInDir. */
 const SCANNABLE_EXTENSIONS = new Set([
   ".ts", ".js", ".java", ".py", ".go", ".kt",
   ".env", ".yaml", ".yml", ".json", ".xml", ".properties",
 ]);
-
-const MAX_SNIPPET_LENGTH = 120;
 
 /** Lines that are purely comments — skip them to avoid flagging documented examples. */
 const COMMENT_LINE_PATTERN = /^\s*(?:\/\/|\/\*|\*|#)/;

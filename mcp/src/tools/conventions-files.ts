@@ -4,8 +4,8 @@ import type { Finding } from "../types.js";
 import type { ProfileConfig } from "../policies/loader.js";
 import { collectAllFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
+import { MAX_SNIPPET_LENGTH, TEST_INFRA_PATH } from "../utils/shared-constants.js";
 
-const MAX_SNIPPET_LENGTH = 120;
 const MAX_TITLE_EXCERPT_LENGTH = 80;
 
 const DEFAULT_FILE_LENGTH_WARNING = 400;
@@ -22,7 +22,6 @@ export async function checkFileLengths(projectDir: string, profile?: ProfileConf
   const errorThreshold = profile?.file_lengths?.error ?? DEFAULT_FILE_LENGTH_ERROR;
 
   const files = await collectAllFiles(projectDir);
-  const TEST_INFRA_PATH = /[/\\](?:__tests__|fixtures)[/\\]/;
 
   for (const filePath of files) {
     if (![".ts", ".js", ".java"].includes(extname(filePath))) continue;
@@ -64,7 +63,6 @@ export async function checkTodoFixmes(projectDir: string): Promise<Finding[]> {
   const nextId = createIdSequence("CNV", 100);
 
   const files = await collectAllFiles(projectDir);
-  const TEST_INFRA_PATH = /[/\\](?:__tests__|fixtures)[/\\]/;
 
   for (const filePath of files) {
     if (![".ts", ".js", ".java"].includes(extname(filePath))) continue;

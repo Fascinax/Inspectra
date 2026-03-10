@@ -3,10 +3,7 @@ import { relative, extname } from "node:path";
 import type { Finding } from "../types.js";
 import { collectAllFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
-
-const SUPPORTED_EXTENSIONS = new Set([".ts", ".js", ".java", ".py", ".go", ".kt"]);
-const TEST_INFRA_PATH = /(?:^|[/\\])(?:__tests__|test__|tests|fixtures|__mocks__|e2e|spec)(?:[/\\]|$)/;
-const MAX_SNIPPET_LENGTH = 120;
+import { SUPPORTED_EXTENSIONS, TEST_INFRA_PATH, MAX_SNIPPET_LENGTH } from "../utils/shared-constants.js";
 
 const DEEP_NESTING_THRESHOLD = 4;
 

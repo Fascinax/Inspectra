@@ -3,10 +3,10 @@ import { relative, extname } from "node:path";
 import type { Finding } from "../types.js";
 import { collectAllFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
+import { TEST_INFRA_PATH } from "../utils/shared-constants.js";
 
 const BLOCK_SIZE = 6;
 const MIN_BLOCK_LENGTH = 80;
-const TEST_INFRA_PATH = /[/\\](?:__tests__|fixtures)[/\\]/;
 const SUPPORTED_EXTENSIONS = new Set([".ts", ".js", ".java"]);
 
 /**

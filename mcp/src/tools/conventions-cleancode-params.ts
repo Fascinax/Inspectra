@@ -4,10 +4,7 @@ import type { Finding } from "../types.js";
 import type { ProfileConfig } from "../policies/loader.js";
 import { collectAllFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
-
-const SUPPORTED_EXTENSIONS = new Set([".ts", ".js", ".java", ".py", ".go", ".kt"]);
-const TEST_INFRA_PATH = /(?:^|[/\\])(?:__tests__|test__|tests|fixtures|__mocks__|e2e|spec)(?:[/\\]|$)/;
-const MAX_SNIPPET_LENGTH = 120;
+import { SUPPORTED_EXTENSIONS, TEST_INFRA_PATH, MAX_SNIPPET_LENGTH } from "../utils/shared-constants.js";
 
 const DEFAULT_PARAM_COUNT_WARNING = 3;
 const DEFAULT_PARAM_COUNT_ERROR = 5;

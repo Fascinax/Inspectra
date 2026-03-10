@@ -3,9 +3,7 @@ import { relative, extname } from "node:path";
 import type { Finding } from "../types.js";
 import { collectAllFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
-
-const SUPPORTED_EXTENSIONS = new Set([".ts", ".js", ".java", ".py", ".go", ".kt"]);
-const TEST_INFRA_PATH = /(?:^|[/\\])(?:__tests__|test__|tests|fixtures|__mocks__|e2e|spec)(?:[/\\]|$)/;
+import { SUPPORTED_EXTENSIONS, TEST_INFRA_PATH } from "../utils/shared-constants.js";
 
 const GOD_CLASS_METHOD_THRESHOLD = 10;
 const GOD_CLASS_LINE_THRESHOLD = 500;
