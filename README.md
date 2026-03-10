@@ -247,93 +247,29 @@ export INSPECTRA_PROFILE=java-backend
 
 ## Project Structure
 
-```markdown
+```
 inspectra/
 ├─ .github/
-│  ├─ agents/           # Copilot Custom Agent profiles
-│  │  ├─ audit-orchestrator.agent.md
-│  │  ├─ audit-security.agent.md
-│  │  ├─ audit-tests.agent.md
-│  │  ├─ audit-architecture.agent.md
-│  │  ├─ audit-conventions.agent.md
-│  │  ├─ audit-performance.agent.md
-│  │  ├─ audit-documentation.agent.md
-│  │  ├─ audit-tech-debt.agent.md
-│  │  ├─ audit-accessibility.agent.md
-│  │  ├─ audit-api-design.agent.md
-│  │  ├─ audit-observability.agent.md
-│  │  └─ audit-i18n.agent.md
-│  ├─ prompts/          # Reusable prompt files
-│  │  ├─ audit.prompt.md
-│  │  └─ audit-pr.prompt.md
+│  ├─ agents/           # 13 Copilot Custom Agent definitions
+│  ├─ prompts/          # /audit and /audit-pr entry points
 │  ├─ workflows/        # GitHub Actions CI/CD
-│  │  └─ validate-config.yml   # Build, test & validate on push/PR
 │  └─ copilot-instructions.md
 │
-├─ mcp/                 # MCP server (TypeScript)
-│  └─ src/
-│     ├─ index.ts       # Server entry point
-│     ├─ types.ts       # Zod schemas & TypeScript types
-│     ├─ tools/
-│     │  ├─ security.ts        # inspectra_scan_secrets, inspectra_check_deps_vulns
-│     │  ├─ tests.ts           # inspectra_parse_coverage, inspectra_parse_test_results, inspectra_detect_missing_tests
-│     │  ├─ architecture.ts    # inspectra_check_layering, inspectra_analyze_dependencies
-│     │  ├─ conventions.ts     # inspectra_check_naming, inspectra_check_file_lengths, inspectra_check_todos
-│     │  ├─ performance.ts     # inspectra_analyze_bundle_size, inspectra_check_build_timings
-│     │  ├─ documentation.ts   # inspectra_check_readme_completeness, inspectra_check_adr_presence
-│     │  ├─ tech-debt.ts       # inspectra_analyze_complexity, inspectra_age_todos
-│     │  ├─ accessibility.ts   # inspectra_check_a11y_templates
-│     │  ├─ api-design.ts      # inspectra_check_rest_conventions
-│     │  ├─ observability.ts   # inspectra_check_observability
-│     │  ├─ i18n.ts            # inspectra_check_i18n
-│     │  └─ adapter.ts         # inspectra_generate_claude_md
-│     ├─ merger/
-│     │  ├─ merge-findings.ts  # inspectra_merge_domain_reports tool
-│     │  ├─ deduplicate.ts     # Deduplication logic
-│     │  └─ score.ts           # Scoring engine
-│     ├─ register/      # Tool registration modules
-│     ├─ policies/      # Policy loader & scoring defaults
-│     └─ utils/         # Shared utilities (files, paths, project-config)
+├─ mcp/src/             # MCP server (TypeScript, ES2022, Node 20+)
+│  ├─ tools/            # Domain tool implementations (one file per domain)
+│  ├─ register/         # Tool registration with input/output schemas
+│  ├─ merger/           # Scoring engine, deduplication, merge
+│  ├─ policies/         # YAML policy loader & scoring defaults
+│  ├─ renderer/         # HTML, PDF, Markdown, SARIF renderers
+│  └─ utils/            # Shared utilities (files, paths, project-config)
 │
-├─ schemas/             # JSON Schema contracts
-│  ├─ finding.schema.json
-│  ├─ domain-report.schema.json
-│  ├─ consolidated-report.schema.json
-│  └─ scoring.schema.json
-│
-├─ policies/            # Scoring rules & stack profiles
-│  ├─ severity-matrix.yml
-│  ├─ scoring-rules.yml
-│  ├─ deduplication-rules.yml
-│  ├─ confidence-rules.yml
-│  └─ profiles/
-│     ├─ generic.yml
-│     ├─ java-angular-playwright.yml
-│     ├─ java-backend.yml
-│     ├─ angular-frontend.yml
-│     └─ typescript-node.yml
-│
+├─ schemas/             # JSON Schema 2020-12 contracts
+├─ policies/            # Scoring rules, severity matrix & stack profiles
+├─ docs/                # ADRs, guides, architecture docs
+├─ examples/            # Sample findings & reports
 ├─ scripts/             # Dev & CI utility scripts
-│  ├─ bootstrap.sh
-│  ├─ validate-schemas.sh
-│  ├─ lint-agents.sh
-│  └─ smoke-test-mcp.sh
-│
-├─ examples/            # Sample outputs
-│  ├─ findings/
-│  └─ reports/
-│
-├─ docs/                # Documentation
-│  ├─ architecture.md
-│  ├─ adding-a-tool.md
-│  ├─ adding-an-agent.md
-│  ├─ output-format.md
-│  ├─ scoring-model.md
-│  ├─ agent-governance.md
-│  └─ roadmap.md
-│
 ├─ Makefile             # Unified command runner
-└─ bin/init.mjs         # Copy agents into a target project
+└─ bin/init.mjs         # CLI entry point
 ```
 
 ---
