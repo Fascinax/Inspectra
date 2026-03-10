@@ -23,6 +23,19 @@ const TEST_BLOCK_PATTERN = /\b(it|test)\s*\(|@Test\b/;
 /** Test blocks that use `skip` / `xit` / `test.skip` are intentionally skipped — exclude them. */
 const SKIP_PATTERN = /\b(xit|xtest|it\.skip|test\.skip|describe\.skip|@Ignore)\b/;
 
+/** Assertions in Java / JUnit. */
+const JAVA_ASSERTION =
+  /(\bassert\w+\s*\(|\bverify\s*\(|\bassertThat\s*\(|\.andExpect\s*\(|\bexpect\s*\()/g;
+
+/** @SpringBootTest on Java test classes. */
+const SPRING_BOOT_TEST = /@SpringBootTest\b/;
+
+/** Lighter slice annotations that should be preferred. */
+const SLICE_TEST_ANNOTATIONS =
+  /@WebMvcTest|@WebFluxTest|@DataJpaTest|@RestClientTest|@JsonTest|@JdbcTest\b/;
+
+const EXCESSIVE_ASSERTION_THRESHOLD = 25;
+
 /**
  * Analyzes test files for two common quality issues:
  * 1. Tests that have no assertion statements (they always pass regardless of behavior).
@@ -89,6 +102,55 @@ export async function checkTestQuality(projectDir: string): Promise<Finding[]> {
             "Add explicit assertions on observable outcomes. Consider whether mocks are necessary or if tests can use real collaborators.",
           effort: "medium",
           tags: ["test-quality", "mocking", "over-mocking"],
+          source: "tool",
+        });
+      }
+
+      // Excessive assertions per test file (Java — .andExpect sprawl)
+      if (filePath.endsWith(".java")) {
+        const javaAssertMatches = content.match(JAVA_ASSERTION) ?? [];
+        const testMethodCount = (content.match(/@Test\b/g) ?? []).length;
+        if (testMethodCount > 0 && javaAssertMatches.length / testMethodCount > EXCESSIVE_ASSERTION_THRESHOLD) {
+          findings.push({
+            id: nextId(),
+            severity: "medium",
+            title: `Brittle tests: ${Math.round(javaAssertMatches.length / testMethodCount)} assertions/test in ${relPath}`,
+            description:
+              `This test file averages ${Math.round(javaAssertMatches.length / testMethodCount)} assertions per test method ` +
+              `(${javaAssertMatches.length} total across ${testMethodCount} tests). ` +
+              "Tests with too many assertions are brittle — any field change breaks them.",
+            domain: "tests",
+            rule: "excessive-assertions",
+            confidence: 0.75,
+            evidence: [{ file: relPath, snippet: `assertions=${javaAssertMatches.length}, tests=${testMethodCount}` }],
+            recommendation:
+              "Split large test methods into focused tests that verify one concept each. " +
+              "Use custom assertion helpers or AssertJ's recursive comparison for complex objects.",
+            effort: "medium",
+            tags: ["test-quality", "brittle-tests", "assertions"],
+            source: "tool",
+          });
+        }
+      }
+
+      // @SpringBootTest without slice annotations (heavy integration tests)
+      if (filePath.endsWith(".java") && SPRING_BOOT_TEST.test(content) && !SLICE_TEST_ANNOTATIONS.test(content)) {
+        findings.push({
+          id: nextId(),
+          severity: "low",
+          title: `@SpringBootTest without test slicing: ${relPath}`,
+          description:
+            "This test uses @SpringBootTest which loads the full application context (database, messaging, etc.). " +
+            "For controller or repository tests, use sliced annotations (@WebMvcTest, @DataJpaTest) for faster, more isolated tests.",
+          domain: "tests",
+          rule: "missing-test-slicing",
+          confidence: 0.70,
+          evidence: [{ file: relPath }],
+          recommendation:
+            "Use @WebMvcTest for controller tests, @DataJpaTest for repository tests, " +
+            "or @RestClientTest for REST client tests. Reserve @SpringBootTest for true integration tests.",
+          effort: "medium",
+          tags: ["test-quality", "spring-boot", "test-slicing", "performance"],
           source: "tool",
         });
       }

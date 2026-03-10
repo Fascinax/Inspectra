@@ -253,4 +253,86 @@ public class SourceCheck {
       expect(f.confidence).toBeGreaterThanOrEqual(0.8);
     }
   });
+
+  it("detects error info leak in @ExceptionHandler", async () => {
+    writeJava("LeakyAdvice.java", `
+@ControllerAdvice
+public class LeakyAdvice {
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<String> handleRuntime(RuntimeException e) {
+        return ResponseEntity.status(500).body(e.getMessage());
+    }
+}
+`);
+    const findings = await checkSecurityConfig(TMP_DIR);
+    const leaks = findings.filter((f) => f.rule === "error-info-leak");
+    expect(leaks.length).toBeGreaterThan(0);
+    expect(leaks[0]!.severity).toBe("high");
+  });
+
+  it("detects e.toString() leak in @ExceptionHandler", async () => {
+    writeJava("ToStringAdvice.java", `
+@ControllerAdvice
+public class ToStringAdvice {
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handle(Exception ex) {
+        return ResponseEntity.status(500).body(ex.toString());
+    }
+}
+`);
+    const findings = await checkSecurityConfig(TMP_DIR);
+    const leaks = findings.filter((f) => f.rule === "error-info-leak");
+    expect(leaks.length).toBeGreaterThan(0);
+  });
+
+  it("does not flag exception handler with generic message", async () => {
+    writeJava("SafeAdvice.java", `
+@ControllerAdvice
+public class SafeAdvice {
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<String> handleRuntime(RuntimeException e) {
+        log.error("Unexpected error", e);
+        return ResponseEntity.status(500).body("An internal error occurred");
+    }
+}
+`);
+    const findings = await checkSecurityConfig(TMP_DIR);
+    const leaks = findingsForFile(findings, "SafeAdvice.java").filter((f) => f.rule === "error-info-leak");
+    expect(leaks).toHaveLength(0);
+  });
+
+  it("detects file upload without validation", async () => {
+    writeJava("UploadController.java", `
+@RestController
+public class UploadController {
+    @PostMapping("/upload")
+    public String upload(@RequestParam("file") MultipartFile file) {
+        service.process(file);
+        return "ok";
+    }
+}
+`);
+    const findings = await checkSecurityConfig(TMP_DIR);
+    const upload = findings.filter((f) => f.rule === "file-upload-no-validation");
+    expect(upload.length).toBeGreaterThan(0);
+    expect(upload[0]!.severity).toBe("medium");
+  });
+
+  it("does not flag file upload with size check", async () => {
+    writeJava("ValidUpload.java", `
+@RestController
+public class ValidUpload {
+    @PostMapping("/upload")
+    public String upload(@RequestParam("file") MultipartFile file) {
+        if (file.getSize() > 10_000_000) throw new RuntimeException("Too large");
+        if (!file.getContentType().startsWith("image/")) throw new RuntimeException("Bad type");
+        service.process(file);
+        return "ok";
+    }
+}
+`);
+    const findings = await checkSecurityConfig(TMP_DIR);
+    const upload = findingsForFile(findings, "ValidUpload.java").filter((f) => f.rule === "file-upload-no-validation");
+    expect(upload).toHaveLength(0);
+  });
 });

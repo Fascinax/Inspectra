@@ -32,6 +32,18 @@ const VALID_BEFORE_REQUEST_BODY =
 const ACTUATOR_EXPOSE_ALL =
   /management\.endpoints\.web\.exposure\.include\s*=\s*\*/;
 
+// ─── Error Info Leak ────────────────────────────────────────────────────────
+
+const EXCEPTION_HANDLER_ANNOTATION = /@ExceptionHandler\b/;
+const EXCEPTION_MESSAGE_LEAK =
+  /(?:e|ex|exception|err|error|throwable|t)\.getMessage\s*\(\s*\)|(?:e|ex|exception|err|error|throwable|t)\.toString\s*\(\s*\)/;
+
+// ─── File Upload Validation ─────────────────────────────────────────────────
+
+const MULTIPART_FILE_PARAM = /@RequestParam[^)]*MultipartFile|MultipartFile\s+\w+/;
+const FILE_SIZE_CHECK = /getSize\s*\(\s*\)|maxFileSize|max-file-size|multipart\.max-file-size|maxUploadSize/;
+const FILE_TYPE_CHECK = /getContentType\s*\(\s*\)|getOriginalFilename\s*\(\s*\).*\.(endsWith|contains|matches)|MIME|mime[Tt]ype|content-?[Tt]ype.*check|allowedExtensions|allowedTypes/;
+
 /**
  * Scans a project for framework-level security misconfigurations.
  *
@@ -41,6 +53,8 @@ const ACTUATOR_EXPOSE_ALL =
  * - CORS wildcard origin (`*`) combined with `allowCredentials(true)`
  * - Missing `@Valid` on `@RequestBody` parameters
  * - Actuator endpoints exposed without authentication
+ * - Exception handler leaking `e.getMessage()` to client responses
+ * - File upload (`MultipartFile`) without size or type validation
  */
 export async function checkSecurityConfig(
   projectDir: string,
@@ -65,6 +79,8 @@ export async function checkSecurityConfig(
       checkCommentedAuthAnnotations(lines, relPath, findings, nextId);
       checkCorsWildcard(content, lines, relPath, findings, nextId);
       checkMissingValid(content, lines, relPath, findings, nextId);
+      checkErrorInfoLeak(content, lines, relPath, findings, nextId);
+      checkFileUploadValidation(content, lines, relPath, findings, nextId);
     } catch (err) {
       logger.warn("checkSecurityConfig: could not read file", { file: filePath, error: String(err) });
     }
@@ -301,6 +317,90 @@ function checkActuatorExposure(
     tags: ["owasp:A05", "CWE-200", "spring-boot", "actuator"],
     source: "tool",
   });
+}
+
+function checkErrorInfoLeak(
+  content: string,
+  lines: string[],
+  relPath: string,
+  findings: Finding[],
+  nextId: () => string,
+): void {
+  if (!EXCEPTION_HANDLER_ANNOTATION.test(content)) return;
+
+  let insideHandler = false;
+  let handlerStart = 0;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]!;
+    if (EXCEPTION_HANDLER_ANNOTATION.test(line)) {
+      insideHandler = true;
+      handlerStart = i;
+    }
+
+    if (insideHandler && EXCEPTION_MESSAGE_LEAK.test(line)) {
+      findings.push({
+        id: nextId(),
+        severity: "high",
+        title: "Exception message leaked to client",
+        description:
+          "An @ExceptionHandler returns e.getMessage() or e.toString() directly to the client. " +
+          "Internal exceptions (NullPointerException, JDBC errors, etc.) expose implementation details " +
+          "such as table names, stack info, and database error messages.",
+        domain: "security",
+        rule: "error-info-leak",
+        confidence: 0.90,
+        evidence: [{ file: relPath, line: i + 1, snippet: line.trim().substring(0, 120) }],
+        recommendation:
+          "Return a generic error message to clients (e.g., \"An internal error occurred\"). " +
+          "Log the full exception server-side for debugging.",
+        effort: "small",
+        tags: ["owasp:A04", "CWE-209", "error-handling", "info-leak"],
+        source: "tool",
+      });
+      insideHandler = false;
+    }
+
+    if (insideHandler && i - handlerStart > 30) {
+      insideHandler = false;
+    }
+  }
+}
+
+function checkFileUploadValidation(
+  content: string,
+  lines: string[],
+  relPath: string,
+  findings: Finding[],
+  nextId: () => string,
+): void {
+  if (!MULTIPART_FILE_PARAM.test(content)) return;
+
+  const hasSizeCheck = FILE_SIZE_CHECK.test(content);
+  const hasTypeCheck = FILE_TYPE_CHECK.test(content);
+
+  if (!hasSizeCheck && !hasTypeCheck) {
+    const line = findLineNumber(lines, MULTIPART_FILE_PARAM);
+    findings.push({
+      id: nextId(),
+      severity: "medium",
+      title: "File upload without size or type validation",
+      description:
+        "A MultipartFile parameter is accepted without checking file size, MIME type, or extension. " +
+        "This exposes the application to denial-of-service via large file uploads and " +
+        "potential code execution via malicious file types.",
+      domain: "security",
+      rule: "file-upload-no-validation",
+      confidence: 0.85,
+      evidence: [{ file: relPath, line }],
+      recommendation:
+        "Validate file size (e.g., reject files > 10MB), MIME type (whitelist allowed types), " +
+        "and file extension before processing. Configure spring.servlet.multipart.max-file-size.",
+      effort: "medium",
+      tags: ["owasp:A04", "CWE-434", "file-upload", "validation"],
+      source: "tool",
+    });
+  }
 }
 
 // ─── Utility ────────────────────────────────────────────────────────────────

@@ -129,4 +129,99 @@ describe("checkTestQuality", () => {
     const findings = await checkTestQuality(tempDir);
     expect(findings.length).toBe(0);
   });
+
+  it("detects excessive assertions per test method in Java", async () => {
+    const assertions = Array.from({ length: 60 }, (_, i) =>
+      `        .andExpect(jsonPath("$.field${i}").value("val${i}"))`
+    ).join("\n");
+    writeFileSync(
+      join(tempDir, "BrittleTest.java"),
+      `public class BrittleTest {
+    @Test
+    public void testGetCable() throws Exception {
+        mockMvc.perform(get("/cables/1"))
+            .andExpect(status().isOk())
+${assertions};
+    }
+    @Test
+    public void testGetCable2() throws Exception {
+        mockMvc.perform(get("/cables/2"))
+            .andExpect(status().isOk())
+${assertions};
+    }
+}`,
+    );
+    const findings = await checkTestQuality(tempDir);
+    const brittle = findings.filter((f) => f.rule === "excessive-assertions");
+    expect(brittle).toHaveLength(1);
+    expect(brittle[0]!.severity).toBe("medium");
+  });
+
+  it("does not flag Java tests with reasonable assertion count", async () => {
+    writeFileSync(
+      join(tempDir, "ReasonableTest.java"),
+      `public class ReasonableTest {
+    @Test
+    public void testCreate() {
+        assertEquals("expected", result);
+        assertNotNull(entity);
+        assertTrue(entity.isActive());
+    }
+    @Test
+    public void testUpdate() {
+        assertEquals("updated", result);
+    }
+}`,
+    );
+    const findings = await checkTestQuality(tempDir);
+    expect(findings.filter((f) => f.rule === "excessive-assertions")).toHaveLength(0);
+  });
+
+  it("detects @SpringBootTest without slicing", async () => {
+    writeFileSync(
+      join(tempDir, "HeavyTest.java"),
+      `@SpringBootTest
+public class HeavyTest {
+    @Test
+    public void testController() {
+        assertEquals("ok", result);
+    }
+}`,
+    );
+    const findings = await checkTestQuality(tempDir);
+    const slicing = findings.filter((f) => f.rule === "missing-test-slicing");
+    expect(slicing).toHaveLength(1);
+    expect(slicing[0]!.severity).toBe("low");
+  });
+
+  it("does not flag @WebMvcTest", async () => {
+    writeFileSync(
+      join(tempDir, "SlicedTest.java"),
+      `@WebMvcTest(UserController.class)
+public class SlicedTest {
+    @Test
+    public void testController() {
+        assertEquals("ok", result);
+    }
+}`,
+    );
+    const findings = await checkTestQuality(tempDir);
+    expect(findings.filter((f) => f.rule === "missing-test-slicing")).toHaveLength(0);
+  });
+
+  it("does not flag @DataJpaTest", async () => {
+    writeFileSync(
+      join(tempDir, "RepoTest.java"),
+      `@DataJpaTest
+@SpringBootTest
+public class RepoTest {
+    @Test
+    public void testRepo() {
+        assertNotNull(repo.findById(1L));
+    }
+}`,
+    );
+    const findings = await checkTestQuality(tempDir);
+    expect(findings.filter((f) => f.rule === "missing-test-slicing")).toHaveLength(0);
+  });
 });

@@ -134,4 +134,68 @@ public class UserController {
     const findings = await checkRestConventions(tempDir);
     expect(findings.some((f) => f.rule === "non-kebab-case-path")).toBe(true);
   });
+
+  it("detects HttpSession usage in REST controller", async () => {
+    writeFileSync(
+      join(tempDir, "SessionController.java"),
+      `@RestController
+public class SessionController {
+    @PostMapping("/import")
+    public String doImport(HttpSession session) {
+        String id = session.getId();
+        return id;
+    }
+}`,
+    );
+    const findings = await checkRestConventions(tempDir);
+    const session = findings.filter((f) => f.rule === "stateful-rest-controller");
+    expect(session).toHaveLength(1);
+    expect(session[0]!.severity).toBe("high");
+  });
+
+  it("does not flag HttpSession in non-controller class", async () => {
+    writeFileSync(
+      join(tempDir, "SessionService.java"),
+      `@Service
+public class SessionService {
+    public void track(HttpSession session) {
+        session.getAttribute("user");
+    }
+}`,
+    );
+    const findings = await checkRestConventions(tempDir);
+    expect(findings.filter((f) => f.rule === "stateful-rest-controller")).toHaveLength(0);
+  });
+
+  it("detects unpaginated list endpoint", async () => {
+    writeFileSync(
+      join(tempDir, "ListController.java"),
+      `@RestController
+public class ListController {
+    @GetMapping("/cables")
+    public ResponseEntity<List<CableDTO>> getCables() {
+        return ResponseEntity.ok(service.findAll());
+    }
+}`,
+    );
+    const findings = await checkRestConventions(tempDir);
+    const pagination = findings.filter((f) => f.rule === "unpaginated-list-endpoint");
+    expect(pagination).toHaveLength(1);
+    expect(pagination[0]!.severity).toBe("medium");
+  });
+
+  it("does not flag paginated endpoint", async () => {
+    writeFileSync(
+      join(tempDir, "PagedController.java"),
+      `@RestController
+public class PagedController {
+    @GetMapping("/cables")
+    public ResponseEntity<Page<CableDTO>> getCables(Pageable pageable) {
+        return ResponseEntity.ok(service.findAll(pageable));
+    }
+}`,
+    );
+    const findings = await checkRestConventions(tempDir);
+    expect(findings.filter((f) => f.rule === "unpaginated-list-endpoint")).toHaveLength(0);
+  });
 });

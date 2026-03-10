@@ -17,6 +17,15 @@ const HAS_VERSION = /\/(?:api\/)?v\d+\//i;
 /** Detects non-kebab-case segments: camelCase, PascalCase, or snake_case in path segments */
 const NON_KEBAB_SEGMENT = /[a-z][A-Z]|[A-Z]{2}|_/;
 
+/** HttpSession usage in REST controllers — stateful breach */
+const HTTP_SESSION_USAGE =
+  /HttpSession\s+\w+|HttpServletRequest\s+\w+.*\.getSession|@SessionAttributes\b/;
+
+/** Controller returns raw List/Collection without pagination wrapper */
+const LIST_RETURN_TYPE =
+  /(?:ResponseEntity<\s*)?(?:List|Collection|Set)<[^>]+>\s*>\s*\w+\s*\(|(?:public|protected)\s+(?:List|Collection|Set)<[^>]+>\s+\w+\s*\(/;
+const PAGEABLE_PARAM = /Pageable\b|Page<|PageRequest\b|Slice<|@PageableDefault\b/;
+
 const SOURCE_EXTENSIONS = [".ts", ".js", ".java"];
 
 /**
@@ -43,6 +52,52 @@ export async function checkRestConventions(projectDir: string, ignoreDirs?: stri
       // Extract routes from Express, NestJS, and Spring patterns
       const routes = extractRoutes(content, relPath);
       allRoutes.push(...routes);
+
+      // Check for HttpSession usage in REST controllers
+      if (HTTP_SESSION_USAGE.test(content) && /@(?:RestController|Controller)\b/.test(content)) {
+        const sessionLine = content.split("\n").findIndex((l) => HTTP_SESSION_USAGE.test(l));
+        findings.push({
+          id: nextId(),
+          severity: "high",
+          title: `HttpSession used in REST controller: ${relPath}`,
+          description:
+            "A REST controller injects HttpSession or calls getSession(). REST APIs should be stateless — " +
+            "using server-side sessions breaks horizontal scalability and requires sticky sessions for load balancing.",
+          domain: "api-design",
+          rule: "stateful-rest-controller",
+          confidence: 0.90,
+          evidence: [{ file: relPath, line: sessionLine >= 0 ? sessionLine + 1 : 1 }],
+          recommendation:
+            "Replace session usage with stateless authentication (JWT, OAuth2 tokens). " +
+            "Store user context in the token payload, not the server session.",
+          effort: "large",
+          tags: ["api-design", "rest", "stateless", "scalability"],
+          source: "tool",
+        });
+      }
+
+      // Check for List return types without pagination in controllers
+      if (/@(?:RestController|Controller)\b/.test(content) && LIST_RETURN_TYPE.test(content) && !PAGEABLE_PARAM.test(content)) {
+        const listLine = content.split("\n").findIndex((l) => LIST_RETURN_TYPE.test(l));
+        findings.push({
+          id: nextId(),
+          severity: "medium",
+          title: `Unpaginated list endpoint: ${relPath}`,
+          description:
+            "A controller returns List/Collection without pagination (no Pageable parameter or Page return type). " +
+            "With growing data, this causes memory spikes and slow responses.",
+          domain: "api-design",
+          rule: "unpaginated-list-endpoint",
+          confidence: 0.80,
+          evidence: [{ file: relPath, line: listLine >= 0 ? listLine + 1 : 1 }],
+          recommendation:
+            "Accept a Pageable parameter and return Page<T> instead of List<T>. " +
+            "Example: Page<UserDTO> getUsers(Pageable pageable)",
+          effort: "medium",
+          tags: ["api-design", "rest", "pagination", "performance"],
+          source: "tool",
+        });
+      }
 
       for (const route of routes) {
         if (HAS_VERSION.test(route.path)) {
