@@ -1,8 +1,9 @@
 import { readFile } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { relative } from "node:path";
 import type { Finding } from "../types.js";
 import { collectSourceFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
+import { getAllHealthDetectors } from "../strategies/health-detectors.js";
 
 // ─── Patterns ─────────────────────────────────────────────────────────────────
 
@@ -12,9 +13,6 @@ const CATCH_BLOCK = /catch\s*\([^)]*\)\s*\{([^}]*)\}/gs;
 /** Logger invocations (common logger patterns) */
 const LOGGER_CALL =
   /(?:logger|log|console|this\.log|this\.logger|winston|bunyan|pino)\s*\.\s*(?:error|warn|info|debug|log|fatal)\s*\(/i;
-
-/** Health/readiness endpoint pattern */
-const HEALTH_ENDPOINT = /(?:["'`]\/(?:health|ready|readiness|liveness|ping|status)["'`]|@GetMapping\s*\(\s*["']\/(?:health|ready|actuator)[^"']*["']\s*\))/i;
 
 /** Tracing setup patterns (OpenTelemetry, Jaeger, Zipkin) */
 const TRACING_SETUP =
@@ -45,12 +43,16 @@ export async function checkObservability(projectDir: string, ignoreDirs?: string
   let swallowedCatchCount = 0;
   const swallowedCatchSamples: Array<{ file: string; line: number }> = [];
 
+  const healthDetectors = getAllHealthDetectors();
+
   for (const filePath of files) {
     try {
       const content = await readFile(filePath, "utf-8");
       const relPath = relative(projectDir, filePath);
 
-      if (HEALTH_ENDPOINT.test(content)) hasHealthEndpoint = true;
+      if (!hasHealthEndpoint) {
+        hasHealthEndpoint = healthDetectors.some((d) => d.hasHealthEndpoint(content));
+      }
       if (TRACING_SETUP.test(content)) hasTracingSetup = true;
       if (METRICS_SETUP.test(content)) hasMetricsSetup = true;
 
@@ -71,9 +73,14 @@ export async function checkObservability(projectDir: string, ignoreDirs?: string
     }
   }
 
-  // ─── Spring Boot Actuator detection via config files ──────────────────────
+  // ─── Config-based health detection (Actuator, etc.) ──────────────────────
   if (!hasHealthEndpoint) {
-    hasHealthEndpoint = await detectActuatorConfig(projectDir);
+    for (const detector of healthDetectors) {
+      if (await detector.hasHealthConfig(projectDir)) {
+        hasHealthEndpoint = true;
+        break;
+      }
+    }
   }
 
   // Swallowed exceptions
@@ -143,29 +150,4 @@ export async function checkObservability(projectDir: string, ignoreDirs?: string
   }
 
   return findings;
-}
-
-const ACTUATOR_DEPENDENCY = /spring-boot-starter-actuator/;
-const ACTUATOR_MANAGEMENT_KEY = /management[\s.:]+endpoint|management[\s.:]+endpoints/;
-
-async function detectActuatorConfig(projectDir: string): Promise<boolean> {
-  // Check build manifests for Actuator dependency
-  const manifests = ["pom.xml", "build.gradle", "build.gradle.kts"];
-  for (const name of manifests) {
-    try {
-      const content = await readFile(join(projectDir, name), "utf-8");
-      if (ACTUATOR_DEPENDENCY.test(content)) return true;
-    } catch { /* file not found */ }
-  }
-
-  // Check Spring Boot application config files for management endpoint config
-  const configFiles = await collectSourceFiles(projectDir, [".properties", ".yml", ".yaml"]);
-  for (const filePath of configFiles) {
-    try {
-      const content = await readFile(filePath, "utf-8");
-      if (ACTUATOR_MANAGEMENT_KEY.test(content)) return true;
-    } catch { /* skip */ }
-  }
-
-  return false;
 }

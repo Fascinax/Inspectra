@@ -3,18 +3,10 @@ import { relative, extname } from "node:path";
 import type { Finding } from "../types.js";
 import { collectSourceFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
+import { getAllRouteExtractors } from "../strategies/route-extractors.js";
+import type { Route } from "../strategies/types.js";
 
-// ─── Patterns ─────────────────────────────────────────────────────────────────
-
-/** Express/Hapi.js route definitions */
-const EXPRESS_ROUTE =
-  /(?:router|app)\.(get|post|put|patch|delete|head)\s*\(\s*["'`]([^"'`]+)["'`]/gi;
-/** NestJS route decorators */
-const NESTJS_ROUTE =
-  /@(?:Get|Post|Put|Patch|Delete)\s*\(\s*["'`]([^"'`]*)["'`]\s*\)/gi;
-/** Spring MVC route annotations */
-const SPRING_ROUTE =
-  /@(?:GetMapping|PostMapping|PutMapping|DeleteMapping|PatchMapping|RequestMapping)\s*\(\s*(?:value\s*=\s*)?["'']([^"'']+)["'']/gi;
+// ─── Patterns ───────────────────────────────────────────────────────────────────────
 
 /** CRUD verb list that should NOT appear in resource names */
 const CRUD_VERBS = /\/(get|create|add|delete|remove|update|edit|fetch|retrieve|list|find)(?=[A-Z_\-/]|$)/i;
@@ -40,7 +32,7 @@ export async function checkRestConventions(projectDir: string, ignoreDirs?: stri
   const nextId = createIdSequence("API");
 
   // Track versioning globally: if any route has versioning we assume the project uses it
-  const allRoutes: Array<{ path: string; method: string; file: string; line: number }> = [];
+  const allRoutes: Route[] = [];
   let hasAnyVersioned = false;
 
   for (const filePath of files) {
@@ -134,37 +126,8 @@ export async function checkRestConventions(projectDir: string, ignoreDirs?: stri
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function extractRoutes(
-  content: string,
-  file: string,
-): Array<{ path: string; method: string; file: string; line: number }> {
-  const routes: Array<{ path: string; method: string; file: string; line: number }> = [];
-
-  const addRoute = (path: string, method: string, charIndex: number) => {
-    routes.push({
-      path,
-      method,
-      file,
-      line: content.slice(0, charIndex).split("\n").length,
-    });
-  };
-
-  EXPRESS_ROUTE.lastIndex = 0;
-  for (const m of content.matchAll(EXPRESS_ROUTE)) {
-    addRoute(m[2] ?? "", m[1] ?? "", m.index ?? 0);
-  }
-
-  NESTJS_ROUTE.lastIndex = 0;
-  for (const m of content.matchAll(NESTJS_ROUTE)) {
-    addRoute(m[1] ?? "/", "rest", m.index ?? 0);
-  }
-
-  SPRING_ROUTE.lastIndex = 0;
-  for (const m of content.matchAll(SPRING_ROUTE)) {
-    addRoute(m[1] ?? "", "rest", m.index ?? 0);
-  }
-
-  return routes;
+function extractRoutes(content: string, file: string): Route[] {
+  return getAllRouteExtractors().flatMap((e) => e.extractRoutes(content, file));
 }
 
 /** Heuristically convert a verb-based path to a noun-based one. */

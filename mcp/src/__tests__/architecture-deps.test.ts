@@ -11,13 +11,19 @@ function makeTempDir(): string {
 }
 
 describe("architecture-deps", () => {
+  let tempDir: string;
+
+  beforeEach(() => { tempDir = makeTempDir(); });
+  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
+
   it("analyzeModuleDependencies returns findings array", async () => {
-    const findings = await analyzeModuleDependencies(process.cwd());
+    const findings = await analyzeModuleDependencies(tempDir);
     expect(Array.isArray(findings)).toBe(true);
   });
 
   it("detectCircularDependencies returns findings array", async () => {
-    const findings = await detectCircularDependencies(process.cwd());
+    writeFileSync(join(tempDir, "a.ts"), "export const a = 1;\n");
+    const findings = await detectCircularDependencies(tempDir);
     expect(Array.isArray(findings)).toBe(true);
   });
 });

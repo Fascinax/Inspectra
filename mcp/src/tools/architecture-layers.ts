@@ -5,6 +5,7 @@ import type { ProfileConfig } from "../types.js";
 import { collectSourceFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
 import { extractModuleSpecifiers } from "../utils/ast.js";
+import { getImportResolver } from "../strategies/import-resolvers.js";
 
 const LAYER_ORDER = ["presentation", "application", "domain", "infrastructure"] as const;
 
@@ -57,12 +58,13 @@ export async function checkLayering(
 
     try {
       const content = await readFile(filePath, "utf-8");
-      const importPaths = extractImports(content, extname(filePath));
+      const ext = extname(filePath);
+      const importPaths = extractImports(content, ext);
+      const resolver = getImportResolver(ext);
 
       for (const rawImp of importPaths) {
-        // Normalize Java package imports (com.app.domain.Model → /com/app/domain/Model)
-        const imp = rawImp.includes(".") && !rawImp.includes("/")
-          ? "/" + rawImp.replace(/\./g, "/")
+        const imp = resolver
+          ? resolver.normalizeForLayerDetection(rawImp)
           : rawImp;
         const targetLayer = detectLayer(imp, layerPatterns);
         if (!targetLayer) continue;

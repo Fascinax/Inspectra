@@ -4,6 +4,7 @@ import type { Finding } from "../types.js";
 import { collectSourceFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
 import { extractImports } from "./architecture-layers.js";
+import { getImportResolver } from "../strategies/import-resolvers.js";
 
 /**
  * Analyzes `package.json` (and `pom.xml`) for dependency health issues:
@@ -78,25 +79,11 @@ export async function detectCircularDependencies(projectDir: string): Promise<Fi
     try {
       const content = await readFile(filePath, "utf-8");
       const rawImports = extractImports(content, extname(filePath));
-      const dir = dirname(filePath);
+      const resolver = getImportResolver(extname(filePath));
 
       const deps: string[] = [];
       for (const imp of rawImports) {
-        let resolved: string | undefined;
-
-        if (imp.startsWith(".")) {
-          // Relative imports (JS/TS)
-          const ext = extname(imp);
-          const candidates = ext
-            ? [resolve(dir, imp)]
-            : [resolve(dir, `${imp}.ts`), resolve(dir, `${imp}.js`), resolve(dir, imp, "index.ts")];
-          resolved = candidates.find((c) => files.includes(c));
-        } else if (/^[a-z][\w]*(\.[a-z][\w]*)+(\.[A-Z][\w]*)?$/i.test(imp)) {
-          // Java package imports (com.app.service.UserService)
-          const pathSuffix = imp.replace(/\./g, "/") + ".java";
-          resolved = files.find((f) => f.replace(/\\/g, "/").endsWith(pathSuffix));
-        }
-
+        const resolved = resolver?.resolveToFile(imp, filePath, files);
         if (resolved) deps.push(resolved);
       }
       graph.set(filePath, deps);
