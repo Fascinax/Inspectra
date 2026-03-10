@@ -52,10 +52,11 @@ npm test
 ### Adding or Updating an MCP Tool
 
 1. Implement the logic in the appropriate file under `mcp/src/tools/`
-2. Register the tool in `mcp/src/register/`
-3. Reuse shared response helpers from `mcp/src/register/response.ts`
-4. Add or update tests in `mcp/src/__tests__/`
-5. Update related docs if the tool is user-facing
+2. Use `FindingBuilder` from `mcp/src/utils/finding-builder.ts` for constructing findings
+3. Use shared constants from `mcp/src/utils/shared-constants.ts` (`MAX_SNIPPET_LENGTH`, `SUPPORTED_EXTENSIONS`, `TEST_INFRA_PATH`)
+4. Register the tool in `mcp/src/register/` using handler factories from `mcp/src/register/handler-factory.ts`
+5. Add or update tests in `mcp/src/__tests__/`
+6. Update related docs if the tool is user-facing
 
 See [docs/adding-a-tool.md](docs/adding-a-tool.md) for the detailed flow.
 

@@ -22,6 +22,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Contributor guide in [CONTRIBUTING.md](CONTRIBUTING.md) covering setup, workflows, quality gates, and pull request expectations.
 - Release automation in [.github/workflows/release.yml](.github/workflows/release.yml) to validate, pack, publish, and attach the npm artifact to GitHub releases.
 - `npm run release:check` to validate the npm publication path locally with `npm publish --dry-run`.
+- **Internal**: `FindingBuilder` fluent builder (`utils/finding-builder.ts`) for constructing `Finding` objects — replaces manual object literals in tool functions.
+- **Internal**: Handler factory (`register/handler-factory.ts`) with `createStandardHandler`, `createConfigHandler`, `createProfiledHandler` — reduces 5-6 line handler boilerplate to a single call.
+- **Internal**: Shared constants module (`utils/shared-constants.ts`) centralizing `MAX_SNIPPET_LENGTH`, `SUPPORTED_EXTENSIONS`, and `TEST_INFRA_PATH`.
 
 ### Fixed
 
@@ -29,6 +32,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - **Architecture**: `detectCircularDependencies` now resolves Java package imports to file paths, enabling cycle detection in Java codebases (previously skipped all non-relative imports).
 - **API Design**: New `non-kebab-case-path` rule detects camelCase, PascalCase, and snake_case segments in REST route paths.
 - **Observability**: `checkObservability` now scans `pom.xml`/`build.gradle` for `spring-boot-starter-actuator` and `application.properties`/`.yml` for Actuator management config, eliminating false-positive "missing health endpoint" findings on Spring Boot projects.
+- **Conventions**: `TEST_INFRA_PATH` regex now consistently matches `tests/`, `e2e/`, `spec/`, and `__mocks__/` directories across all tools (previously some tools used a narrower pattern that missed these paths).
 
 ### Changed
 

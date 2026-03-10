@@ -6,37 +6,47 @@ This guide explains how to add a new audit tool to the Inspectra MCP server.
 
 ### 1. Choose the Domain
 
-Decide which domain the tool belongs to: `security`, `tests`, `architecture`, or `code-quality`. Each domain has a corresponding file in `mcp/src/tools/`.
+Decide which domain the tool belongs to: `security`, `tests`, `architecture`, `conventions`, `performance`, `documentation`, `tech-debt`, `accessibility`, `api-design`, `observability`, `i18n`, or `ux-consistency`. Each domain has corresponding files in `mcp/src/tools/`.
 
 ### 2. Implement the Tool Function
 
 Add your function to the appropriate domain file. The function must:
 
-- Accept clear input parameters (typically a project directory path or file paths).
+- Accept clear input parameters (typically a project directory path and optional `ignoreDirs`).
 - Return `Finding[]` — an array of findings conforming to the schema.
 - Handle errors gracefully (never throw — return an empty array on failure).
+- Use `FindingBuilder` from `utils/finding-builder.ts` for constructing findings.
+- Use shared constants from `utils/shared-constants.ts` (`MAX_SNIPPET_LENGTH`, `SUPPORTED_EXTENSIONS`, `TEST_INFRA_PATH`).
 
 ```typescript
-// mcp/src/tools/security.ts
+// mcp/src/tools/security-my-check.ts
+import type { Finding } from "../types.js";
+import { createIdSequence } from "../utils/id.js";
+import { finding } from "../utils/finding-builder.js";
+import { MAX_SNIPPET_LENGTH, SUPPORTED_EXTENSIONS } from "../utils/shared-constants.js";
 
-export async function myNewSecurityCheck(projectDir: string): Promise<Finding[]> {
+export async function myNewSecurityCheck(
+  projectDir: string,
+  ignoreDirs?: string[],
+): Promise<Finding[]> {
+  const nextId = createIdSequence("SEC", 200); // unique range to avoid ID collisions
   const findings: Finding[] = [];
-  let counter = 200; // use a unique range to avoid ID collisions
 
   // ... analysis logic ...
 
-  findings.push({
-    id: `SEC-${String(counter++).padStart(3, "0")}`,
-    severity: "medium",
-    title: "Description of the issue",
-    domain: "security",
-    rule: "my-new-rule",
-    confidence: 0.85,
-    evidence: [{ file: "path/to/file.ts", line: 42 }],
-    recommendation: "How to fix it.",
-    effort: "small",
-    tags: ["relevant-tag"],
-  });
+  findings.push(
+    finding(nextId)
+      .severity("medium")
+      .title("Description of the issue")
+      .domain("security")
+      .rule("my-new-rule")
+      .confidence(0.85)
+      .file("path/to/file.ts", 42, "suspicious code snippet")
+      .recommendation("How to fix it.")
+      .effort("small")
+      .tags(["relevant-tag"])
+      .build(),
+  );
 
   return findings;
 }
@@ -44,21 +54,32 @@ export async function myNewSecurityCheck(projectDir: string): Promise<Finding[]>
 
 ### 3. Register the Tool in the MCP Server
 
-Add the tool registration in `mcp/src/index.ts`:
+Add the tool registration in the appropriate `mcp/src/register/*.ts` file. Use the handler factory to reduce boilerplate:
 
 ```typescript
-import { myNewSecurityCheck } from "./tools/security.js";
+// mcp/src/register/security.ts
+import { myNewSecurityCheck } from "../tools/security-my-check.js";
+import { createConfigHandler } from "./handler-factory.js";
+import { STANDARD_INPUT_SCHEMA, FINDINGS_TOOL_META } from "./schemas.js";
 
-server.tool(
-  "my-new-check",                               // tool name
-  "Description of what this tool does",          // description
-  { projectDir: z.string() },                   // input schema
-  async ({ projectDir }) => {
-    const findings = await myNewSecurityCheck(projectDir);
-    return { content: [{ type: "text", text: JSON.stringify(findings, null, 2) }] };
-  }
+// Inside the register function:
+server.registerTool(
+  "inspectra_my_new_check",
+  {
+    title: "My New Security Check",
+    description: "Description of what this tool does.\n\nArgs:\n  - projectDir (string): Absolute path to the project root.",
+    inputSchema: STANDARD_INPUT_SCHEMA,
+    ...FINDINGS_TOOL_META,
+  },
+  createConfigHandler("inspectra_my_new_check", myNewSecurityCheck),
 );
 ```
+
+Three handler factories are available:
+
+- `createStandardHandler(toolName, fn)` — validates dir, calls `fn(dir)`, returns paginated response.
+- `createConfigHandler(toolName, fn)` — same + loads `.inspectrarc.yml` and passes `ignoreDirs` to `fn(dir, ignoreDirs)`.
+- `createProfiledHandler(toolName, policiesDir, fn)` — same + loads a profile and passes it to `fn(dir, profileConfig)`.
 
 ### 4. Update the Agent Profile
 

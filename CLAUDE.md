@@ -7,7 +7,7 @@ Multi-agent code audit system using MCP tools. 13 agents across 12 domains, coor
 ```bash
 npm install        # install deps
 npm run build      # compile MCP server → mcp/dist/
-npm test           # 720+ tests (Vitest)
+npm test           # 750+ tests (Vitest)
 npm run lint       # tsc --noEmit + ESLint
 ```
 
@@ -21,7 +21,7 @@ npm run lint       # tsc --noEmit + ESLint
   - `merger/` — scoring engine, deduplication, merge
   - `policies/` — YAML policy loader, scoring defaults
   - `renderer/` — HTML, PDF, Markdown, SARIF, JSON renderers
-  - `utils/` — shared utilities (files, paths, project-config)
+  - `utils/` — shared utilities (files, paths, project-config, finding-builder, shared-constants)
 - `schemas/` — JSON Schema 2020-12 contracts (finding, domain-report, consolidated-report)
 - `policies/` — scoring-rules.yml, severity-matrix.yml, profiles/
 - `bin/init.mjs` — CLI entry point (`inspectra setup`, `inspectra setup --claude`, `inspectra setup --codex`, `inspectra init`, `inspectra doctor`)
@@ -31,7 +31,10 @@ npm run lint       # tsc --noEmit + ESLint
 - Every MCP tool is prefixed `inspectra_` and registered in a `register/*.ts` file
 - Tool functions live in `tools/*.ts`, register files in `register/*.ts` — keep them separate
 - All tool responses use `findingsResponse()` or `jsonResponse()` from `register/response.ts`
+- Handler registration uses factory functions from `register/handler-factory.ts`: `createStandardHandler`, `createConfigHandler`, `createProfiledHandler`
 - Input schemas use `STANDARD_INPUT_SCHEMA` or `PROFILED_INPUT_SCHEMA` from `register/schemas.ts`
+- Shared constants (`MAX_SNIPPET_LENGTH`, `SUPPORTED_EXTENSIONS`, `TEST_INFRA_PATH`) live in `utils/shared-constants.ts`
+- Use `FindingBuilder` from `utils/finding-builder.ts` for constructing findings in tool functions
 - Findings must match `schemas/finding.schema.json` — domain enum: security, tests, architecture, conventions, performance, documentation, tech-debt, accessibility, api-design, observability, i18n, ux-consistency
 - Finding IDs: tool-detected `001-499` (source: "tool", confidence ≥ 0.8), LLM-detected `501+` (source: "llm", confidence ≤ 0.7)
 - Prefixes: SEC-, TST-, ARC-, CNV-, PRF-, DOC-, DEBT-, ACC-, API-, OBS-, INT-, UX-
