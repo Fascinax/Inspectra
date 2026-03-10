@@ -82,12 +82,21 @@ export async function detectCircularDependencies(projectDir: string): Promise<Fi
 
       const deps: string[] = [];
       for (const imp of rawImports) {
-        if (!imp.startsWith(".")) continue;
-        const ext = extname(imp);
-        const candidates = ext
-          ? [resolve(dir, imp)]
-          : [resolve(dir, `${imp}.ts`), resolve(dir, `${imp}.js`), resolve(dir, imp, "index.ts")];
-        const resolved = candidates.find((c) => files.includes(c));
+        let resolved: string | undefined;
+
+        if (imp.startsWith(".")) {
+          // Relative imports (JS/TS)
+          const ext = extname(imp);
+          const candidates = ext
+            ? [resolve(dir, imp)]
+            : [resolve(dir, `${imp}.ts`), resolve(dir, `${imp}.js`), resolve(dir, imp, "index.ts")];
+          resolved = candidates.find((c) => files.includes(c));
+        } else if (/^[a-z][\w]*(\.[a-z][\w]*)+(\.[A-Z][\w]*)?$/i.test(imp)) {
+          // Java package imports (com.app.service.UserService)
+          const pathSuffix = imp.replace(/\./g, "/") + ".java";
+          resolved = files.find((f) => f.replace(/\\/g, "/").endsWith(pathSuffix));
+        }
+
         if (resolved) deps.push(resolved);
       }
       graph.set(filePath, deps);

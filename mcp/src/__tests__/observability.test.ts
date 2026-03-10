@@ -83,4 +83,59 @@ describe("checkObservability", () => {
       expect(f.source).toBe("tool");
     }
   });
+
+  it("does NOT flag missing health when pom.xml has spring-boot-starter-actuator", async () => {
+    for (let i = 0; i < 6; i++) {
+      writeFileSync(join(tempDir, `module${i}.ts`), `export const x${i} = ${i};`);
+    }
+    writeFileSync(
+      join(tempDir, "pom.xml"),
+      `<project>
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+  </dependencies>
+</project>`,
+    );
+    const findings = await checkObservability(tempDir);
+    const healthFindings = findings.filter((f) => f.rule === "missing-health-endpoint");
+    expect(healthFindings).toHaveLength(0);
+  });
+
+  it("does NOT flag missing health when application.properties has management config", async () => {
+    for (let i = 0; i < 6; i++) {
+      writeFileSync(join(tempDir, `module${i}.ts`), `export const x${i} = ${i};`);
+    }
+    const resourceDir = join(tempDir, "src", "main", "resources");
+    mkdirSync(resourceDir, { recursive: true });
+    writeFileSync(
+      join(resourceDir, "application.properties"),
+      `management.endpoints.web.exposure.include=health,info\nserver.port=8080\n`,
+    );
+    const findings = await checkObservability(tempDir);
+    const healthFindings = findings.filter((f) => f.rule === "missing-health-endpoint");
+    expect(healthFindings).toHaveLength(0);
+  });
+
+  it("does NOT flag missing health when application.yml has management config", async () => {
+    for (let i = 0; i < 6; i++) {
+      writeFileSync(join(tempDir, `module${i}.ts`), `export const x${i} = ${i};`);
+    }
+    const resourceDir = join(tempDir, "src", "main", "resources");
+    mkdirSync(resourceDir, { recursive: true });
+    writeFileSync(
+      join(resourceDir, "application.yml"),
+      `management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+`,
+    );
+    const findings = await checkObservability(tempDir);
+    const healthFindings = findings.filter((f) => f.rule === "missing-health-endpoint");
+    expect(healthFindings).toHaveLength(0);
+  });
 });

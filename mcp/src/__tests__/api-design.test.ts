@@ -74,4 +74,64 @@ router.delete('/items', () => {});
       expect(f.source).toBe("tool");
     }
   });
+
+  it("detects camelCase path segments", async () => {
+    writeFileSync(
+      join(tempDir, "routes.ts"),
+      `const router = require('express').Router();
+router.get('/api/v1/userProfiles', (req, res) => res.json([]));
+`,
+    );
+    const findings = await checkRestConventions(tempDir);
+    expect(findings.some((f) => f.rule === "non-kebab-case-path")).toBe(true);
+  });
+
+  it("detects snake_case path segments", async () => {
+    writeFileSync(
+      join(tempDir, "routes.ts"),
+      `const router = require('express').Router();
+router.get('/api/v1/user_profiles', (req, res) => res.json([]));
+`,
+    );
+    const findings = await checkRestConventions(tempDir);
+    expect(findings.some((f) => f.rule === "non-kebab-case-path")).toBe(true);
+  });
+
+  it("does NOT flag kebab-case path segments", async () => {
+    writeFileSync(
+      join(tempDir, "routes.ts"),
+      `const router = require('express').Router();
+router.get('/api/v1/user-profiles', (req, res) => res.json([]));
+router.get('/api/v1/orders/:id', (req, res) => res.json({}));
+`,
+    );
+    const findings = await checkRestConventions(tempDir);
+    const casingFindings = findings.filter((f) => f.rule === "non-kebab-case-path");
+    expect(casingFindings).toHaveLength(0);
+  });
+
+  it("does NOT flag path parameters like :userId", async () => {
+    writeFileSync(
+      join(tempDir, "routes.ts"),
+      `const router = require('express').Router();
+router.get('/api/v1/users/:userId', (req, res) => res.json({}));
+`,
+    );
+    const findings = await checkRestConventions(tempDir);
+    const casingFindings = findings.filter((f) => f.rule === "non-kebab-case-path");
+    expect(casingFindings).toHaveLength(0);
+  });
+
+  it("detects camelCase in Spring MVC route annotations", async () => {
+    writeFileSync(
+      join(tempDir, "UserController.java"),
+      `@RestController
+public class UserController {
+    @GetMapping("/userProfiles")
+    public List<User> getUserProfiles() { return List.of(); }
+}`,
+    );
+    const findings = await checkRestConventions(tempDir);
+    expect(findings.some((f) => f.rule === "non-kebab-case-path")).toBe(true);
+  });
 });

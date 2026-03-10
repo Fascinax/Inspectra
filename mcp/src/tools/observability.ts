@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { relative } from "node:path";
+import { join, relative } from "node:path";
 import type { Finding } from "../types.js";
 import { collectSourceFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
@@ -71,6 +71,11 @@ export async function checkObservability(projectDir: string, ignoreDirs?: string
     }
   }
 
+  // ─── Spring Boot Actuator detection via config files ──────────────────────
+  if (!hasHealthEndpoint) {
+    hasHealthEndpoint = await detectActuatorConfig(projectDir);
+  }
+
   // Swallowed exceptions
   if (swallowedCatchCount > 0) {
     findings.push({
@@ -138,4 +143,29 @@ export async function checkObservability(projectDir: string, ignoreDirs?: string
   }
 
   return findings;
+}
+
+const ACTUATOR_DEPENDENCY = /spring-boot-starter-actuator/;
+const ACTUATOR_MANAGEMENT_KEY = /management[\s.:]+endpoint|management[\s.:]+endpoints/;
+
+async function detectActuatorConfig(projectDir: string): Promise<boolean> {
+  // Check build manifests for Actuator dependency
+  const manifests = ["pom.xml", "build.gradle", "build.gradle.kts"];
+  for (const name of manifests) {
+    try {
+      const content = await readFile(join(projectDir, name), "utf-8");
+      if (ACTUATOR_DEPENDENCY.test(content)) return true;
+    } catch { /* file not found */ }
+  }
+
+  // Check Spring Boot application config files for management endpoint config
+  const configFiles = await collectSourceFiles(projectDir, [".properties", ".yml", ".yaml"]);
+  for (const filePath of configFiles) {
+    try {
+      const content = await readFile(filePath, "utf-8");
+      if (ACTUATOR_MANAGEMENT_KEY.test(content)) return true;
+    } catch { /* skip */ }
+  }
+
+  return false;
 }

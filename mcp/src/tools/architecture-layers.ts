@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { relative } from "node:path";
+import { extname, relative } from "node:path";
 import type { Finding } from "../types.js";
 import type { ProfileConfig } from "../types.js";
 import { collectSourceFiles } from "../utils/files.js";
@@ -49,7 +49,7 @@ export async function checkLayering(
   const effectiveAllowed = allowedDependencies ?? profile?.architecture?.allowed_dependencies;
   const layerPatterns = buildLayerPatterns(profile?.architecture?.layers);
 
-  const files = await collectSourceFiles(projectDir);
+  const files = await collectSourceFiles(projectDir, undefined, undefined);
 
   for (const filePath of files) {
     const sourceLayer = detectLayer(filePath, layerPatterns);
@@ -57,9 +57,13 @@ export async function checkLayering(
 
     try {
       const content = await readFile(filePath, "utf-8");
-      const importPaths = extractImports(content);
+      const importPaths = extractImports(content, extname(filePath));
 
-      for (const imp of importPaths) {
+      for (const rawImp of importPaths) {
+        // Normalize Java package imports (com.app.domain.Model → /com/app/domain/Model)
+        const imp = rawImp.includes(".") && !rawImp.includes("/")
+          ? "/" + rawImp.replace(/\./g, "/")
+          : rawImp;
         const targetLayer = detectLayer(imp, layerPatterns);
         if (!targetLayer) continue;
 

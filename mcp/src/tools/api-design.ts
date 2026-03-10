@@ -22,10 +22,8 @@ const CRUD_VERBS = /\/(get|create|add|delete|remove|update|edit|fetch|retrieve|l
 /** Check if the path has a version segment (/v1/, /v2/, /api/v1/, etc) */
 const HAS_VERSION = /\/(?:api\/)?v\d+\//i;
 
-/** A resource segment: at least 2 chars, should be plural (ends with 's' or 'es') for collections */
-const NON_PLURAL_RESOURCE = /\/([a-z][a-z0-9_-]*)(?:\/|$)/gi;
-
-const PLURAL_ENDINGS = /s($|\/)/;
+/** Detects non-kebab-case segments: camelCase, PascalCase, or snake_case in path segments */
+const NON_KEBAB_SEGMENT = /[a-z][A-Z]|[A-Z]{2}|_/;
 
 const SOURCE_EXTENSIONS = [".ts", ".js", ".java"];
 
@@ -78,6 +76,30 @@ export async function checkRestConventions(projectDir: string, ignoreDirs?: stri
             tags: ["api-design", "rest", "naming"],
             source: "tool",
           });
+        }
+
+        // Check for non-kebab-case path segments (camelCase, PascalCase, snake_case)
+        const segments = route.path.split("/").filter((s) => s && !s.startsWith(":") && !s.startsWith("{"));
+        for (const seg of segments) {
+          if (NON_KEBAB_SEGMENT.test(seg)) {
+            findings.push({
+              id: nextId(),
+              severity: "low",
+              title: `Non-kebab-case path segment: "${seg}"`,
+              description:
+                `Route "${route.method.toUpperCase()} ${route.path}" contains a non-kebab-case segment "${seg}". ` +
+                "REST convention uses lowercase kebab-case for URL segments (e.g., /user-profiles instead of /userProfiles).",
+              domain: "api-design",
+              rule: "non-kebab-case-path",
+              confidence: 0.85,
+              evidence: [{ file: route.file, line: route.line }],
+              recommendation: `Rename "${seg}" to "${toKebab(seg)}".`,
+              effort: "small",
+              tags: ["api-design", "rest", "naming"],
+              source: "tool",
+            });
+            break; // One finding per route is enough
+          }
         }
       }
     } catch {
@@ -151,4 +173,13 @@ function toNounPath(path: string): string {
     const segment = path.split("/").find((s) => s.toLowerCase().includes(verb.toLowerCase()) && s.length > verb.length);
     return segment ? `/${segment.replace(new RegExp(verb, "i"), "")}` : "/resources";
   });
+}
+
+/** Convert camelCase/PascalCase/snake_case to kebab-case. */
+function toKebab(segment: string): string {
+  return segment
+    .replace(/_/g, "-")
+    .replace(/([a-z])([A-Z])/g, "$1-$2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1-$2")
+    .toLowerCase();
 }

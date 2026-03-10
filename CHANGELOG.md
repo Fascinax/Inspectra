@@ -14,6 +14,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Release automation in [.github/workflows/release.yml](.github/workflows/release.yml) to validate, pack, publish, and attach the npm artifact to GitHub releases.
 - `npm run release:check` to validate the npm publication path locally with `npm publish --dry-run`.
 
+### Fixed
+
+- **Architecture**: Java package imports (`com.app.domain.Model`) are now normalized to path form before layer detection, fixing false negatives on Java projects.
+- **Architecture**: `detectCircularDependencies` now resolves Java package imports to file paths, enabling cycle detection in Java codebases (previously skipped all non-relative imports).
+- **API Design**: New `non-kebab-case-path` rule detects camelCase, PascalCase, and snake_case segments in REST route paths.
+- **Observability**: `checkObservability` now scans `pom.xml`/`build.gradle` for `spring-boot-starter-actuator` and `application.properties`/`.yml` for Actuator management config, eliminating false-positive "missing health endpoint" findings on Spring Boot projects.
+
 ### Changed
 
 - README contributor links now point to the new contribution and release-note guides.
