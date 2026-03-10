@@ -3,6 +3,7 @@
   "version": "0.7.0",
   "description": "Multi-agent code audit system powered by GitHub Copilot Custom Agents and MCP",
   "type": "module",
+  "packageManager": "npm@10",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Fascinax/Inspectra.git"
@@ -20,9 +21,7 @@
     "static-analysis",
     "developer-tools"
   ],
-  "bin": {
-    "inspectra": "./bin/init.mjs"
-  },
+    "bin": "./bin/init.mjs",
   "files": [
     "bin/",
     "mcp/dist/",
@@ -50,6 +49,7 @@
     "test:inspector": "node scripts/test-mcp-inspector.mjs",
     "clean": "rimraf mcp/dist",
     "init": "node bin/init.mjs",
+    "release:check": "npm publish --dry-run",
     "prepack": "npm run build",
     "prepublishOnly": "npm run build && npm test"
   },

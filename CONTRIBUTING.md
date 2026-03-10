@@ -115,7 +115,8 @@ Use the `Unreleased` section in [CHANGELOG.md](CHANGELOG.md) for notable changes
 
 - GitHub releases are automated by [.github/workflows/release.yml](.github/workflows/release.yml)
 - Release tags should match the package version exactly, for example `v0.7.0`
-- The workflow builds, tests, packs the npm artifact, uploads the tarball, and publishes to npm when `NPM_TOKEN` is configured
+- Run `npm run release:check` locally before cutting a release
+- The workflow builds, tests, packs the npm artifact, uploads the tarball, and publishes to npm with provenance when `NPM_TOKEN` is configured
 
 ## Need More Context?
 

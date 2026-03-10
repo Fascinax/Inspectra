@@ -398,6 +398,21 @@ docker compose up inspectra
 | `npm run lint:fix` | Auto-fix ESLint violations |
 | `npm run format` | Format source with Prettier |
 | `npm run format:check` | Check Prettier formatting (CI-safe) |
+| `npm run release:check` | Run the npm publication preflight (`npm publish --dry-run`) |
+
+---
+
+## Release Checklist
+
+Before publishing a new version:
+
+1. Bump the version in [package.json](package.json) and update [CHANGELOG.md](CHANGELOG.md)
+2. Run `npm run release:check`
+3. Create a GitHub release tag matching the package version, for example `v0.7.0`
+4. Ensure the `NPM_TOKEN` repository secret is configured
+5. Publish via the release workflow in [.github/workflows/release.yml](.github/workflows/release.yml)
+
+The release workflow builds, tests, packs the artifact, publishes with npm provenance, and attaches the tarball to the GitHub release.
 
 ---
 
