@@ -1,7 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { extname, relative } from "node:path";
-import type { Finding } from "../types.js";
-import type { ProfileConfig } from "../types.js";
+import type { Finding, ProfileConfig } from "../types.js";
 import { collectSourceFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
 import { extractModuleSpecifiers } from "../utils/ast.js";

@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { join, relative, extname, resolve, dirname } from "node:path";
+import { join, relative, extname } from "node:path";
 import type { Finding } from "../types.js";
 import { collectSourceFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
