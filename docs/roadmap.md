@@ -1,12 +1,12 @@
 # Roadmap
 
-## Current State (v0.7.0)
+## Current State (v0.7.3)
 
 Inspectra is a functional multi-agent code audit system with:
 
 - 13 Copilot Custom Agents (orchestrator + 12 domain agents) with enriched Phase 2 prompts
-- 36 MCP tools across 12 domains (security, tests, architecture, conventions, performance, documentation, tech-debt, accessibility, api-design, observability, i18n, ux-consistency)
-- JSON Schema contracts for all outputs (11-domain finding validation)
+- 42 MCP tools across 12 domains (security, tests, architecture, conventions, performance, documentation, tech-debt, accessibility, api-design, observability, i18n, ux-consistency)
+- JSON Schema contracts for all outputs (12-domain finding validation)
 - Scoring engine with weighted domains (12 domains) and grade system
 - Markdown, JSON, HTML, SARIF, and PDF report renderers
 - Trend tracking and audit comparison via MCP tools
@@ -14,8 +14,10 @@ Inspectra is a functional multi-agent code audit system with:
 - Context-aware secret detection with placeholder + comment filtering
 - Per-project configuration via `.inspectrarc.yml` and finding suppression via `.inspectraignore`
 - Claude Code support: `CLAUDE.md`, `.mcp.json`, `inspectra setup --claude` CLI
+- Codex support: `AGENTS.md`, `.codex/config.toml`, `inspectra setup --codex` CLI
 - `inspectra doctor` diagnostic command
-- 503+ passing tests across 64+ test files
+- Internal patterns: FindingBuilder, handler factory, shared constants
+- 750+ passing tests across 79 test files
 
 ## v0.2.0 - Tool Depth COMPLETE
 

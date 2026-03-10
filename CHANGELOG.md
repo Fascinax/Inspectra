@@ -8,6 +8,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.7.3] - 2026-03-10
+
 ### Added
 
 - **Security**: `error-info-leak` rule detects `@ExceptionHandler` methods leaking `e.getMessage()`/`e.toString()` to clients.

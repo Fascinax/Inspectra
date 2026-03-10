@@ -1,6 +1,6 @@
 {
   "name": "inspectra",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "Multi-agent code audit system powered by GitHub Copilot Custom Agents and MCP",
   "type": "module",
   "packageManager": "npm@10",

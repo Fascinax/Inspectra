@@ -1,6 +1,6 @@
 {
   "name": "inspectra-mcp-server",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "Inspectra MCP server — exposes audit tools for Copilot agents",
   "private": true,
   "type": "module",
