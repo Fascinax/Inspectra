@@ -119,7 +119,7 @@ Goal: Run Inspectra beyond Copilot, expand domain coverage.
 
 Goal: Package and publish for external users.
 
-- [ ] Publish to npm (`npx inspectra setup`)
+- [x] Publish to npm (`npx inspectra setup`)
 - [x] Contributing guide (CONTRIBUTING.md)
 - [x] README badges (CI status, npm version, test count)
 - [ ] Demo GIF/video in README showing a full audit run
