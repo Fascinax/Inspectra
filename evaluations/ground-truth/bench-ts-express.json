@@ -1,0 +1,278 @@
+{
+  "repo": "bench-ts-express",
+  "stack": "typescript-node",
+  "description": "Express REST API with auth, users, products — seeded with security, API design, observability, testing, conventions, and tech-debt issues",
+  "expert_ranking": [
+    "SEC-GT-001",
+    "SEC-GT-002",
+    "SEC-GT-003",
+    "OBS-GT-001",
+    "TST-GT-001",
+    "API-GT-001",
+    "DEBT-GT-002",
+    "OBS-GT-002"
+  ],
+  "root_causes": [
+    {
+      "id": "RC-001",
+      "title": "No secret management strategy",
+      "description": "All secrets are hardcoded in source files instead of using environment variables or a vault",
+      "symptoms": ["SEC-GT-001", "SEC-GT-002", "SEC-GT-003"],
+      "fix": "Move all secrets to environment variables or a secret manager (Vault, AWS Secrets Manager)"
+    },
+    {
+      "id": "RC-002",
+      "title": "No REST API design guidelines",
+      "description": "Routes use verb-based paths (/getUser, /createUser) instead of resource-based REST conventions (/users, /users/:id)",
+      "symptoms": ["API-GT-001", "API-GT-002", "API-GT-003", "API-GT-004"],
+      "fix": "Adopt resource-based REST conventions with proper HTTP verbs"
+    },
+    {
+      "id": "RC-003",
+      "title": "No test mandate or CI gate",
+      "description": "Only 1 of 3 services has a test file; no coverage threshold enforced",
+      "symptoms": ["TST-GT-001", "TST-GT-002"],
+      "fix": "Add test coverage gate to CI pipeline, require tests for new services"
+    },
+    {
+      "id": "RC-004",
+      "title": "No observability strategy",
+      "description": "No health endpoint, exceptions are swallowed silently in catch blocks, no structured logging",
+      "symptoms": ["OBS-GT-001", "OBS-GT-002", "OBS-GT-003", "OBS-GT-004"],
+      "fix": "Add health endpoint, define error-handling policy (never swallow, always log), adopt structured logger"
+    }
+  ],
+  "issues": [
+    {
+      "id": "SEC-GT-001",
+      "severity": "critical",
+      "domain": "security",
+      "title": "Hardcoded JWT secret in source code",
+      "file": "src/config.ts",
+      "line": 4,
+      "tool_detectable": true,
+      "expected_tools": ["scan_secrets"],
+      "root_cause": "RC-001"
+    },
+    {
+      "id": "SEC-GT-002",
+      "severity": "critical",
+      "domain": "security",
+      "title": "Hardcoded database connection string with credentials",
+      "file": "src/config.ts",
+      "line": 5,
+      "tool_detectable": true,
+      "expected_tools": ["scan_secrets"],
+      "root_cause": "RC-001"
+    },
+    {
+      "id": "SEC-GT-003",
+      "severity": "high",
+      "domain": "security",
+      "title": "Hardcoded API key in service class",
+      "file": "src/services/auth.service.ts",
+      "line": 16,
+      "tool_detectable": true,
+      "expected_tools": ["scan_secrets"],
+      "root_cause": "RC-001"
+    },
+    {
+      "id": "API-GT-001",
+      "severity": "medium",
+      "domain": "api-design",
+      "title": "Verb-based route: /getUser/:id",
+      "file": "src/routes/users.ts",
+      "line": 8,
+      "tool_detectable": true,
+      "expected_tools": ["check_rest_conventions"],
+      "root_cause": "RC-002"
+    },
+    {
+      "id": "API-GT-002",
+      "severity": "medium",
+      "domain": "api-design",
+      "title": "Verb-based route: /createUser",
+      "file": "src/routes/users.ts",
+      "line": 9,
+      "tool_detectable": true,
+      "expected_tools": ["check_rest_conventions"],
+      "root_cause": "RC-002"
+    },
+    {
+      "id": "API-GT-003",
+      "severity": "medium",
+      "domain": "api-design",
+      "title": "Verb-based route: /updateUser/:id",
+      "file": "src/routes/users.ts",
+      "line": 10,
+      "tool_detectable": true,
+      "expected_tools": ["check_rest_conventions"],
+      "root_cause": "RC-002"
+    },
+    {
+      "id": "API-GT-004",
+      "severity": "medium",
+      "domain": "api-design",
+      "title": "Verb-based route: /deleteUser/:id",
+      "file": "src/routes/users.ts",
+      "line": 11,
+      "tool_detectable": true,
+      "expected_tools": ["check_rest_conventions"],
+      "root_cause": "RC-002"
+    },
+    {
+      "id": "OBS-GT-001",
+      "severity": "medium",
+      "domain": "observability",
+      "title": "No health check endpoint (/health or /healthz)",
+      "file": "src/index.ts",
+      "line": 1,
+      "tool_detectable": true,
+      "expected_tools": ["check_observability"],
+      "root_cause": "RC-004"
+    },
+    {
+      "id": "OBS-GT-002",
+      "severity": "medium",
+      "domain": "observability",
+      "title": "Swallowed exception in getById — catch block returns generic error without logging",
+      "file": "src/controllers/user.controller.ts",
+      "line": 15,
+      "tool_detectable": true,
+      "expected_tools": ["check_observability"],
+      "root_cause": "RC-004"
+    },
+    {
+      "id": "OBS-GT-003",
+      "severity": "medium",
+      "domain": "observability",
+      "title": "Swallowed exception in update — catch block returns generic error without logging",
+      "file": "src/controllers/user.controller.ts",
+      "line": 39,
+      "tool_detectable": true,
+      "expected_tools": ["check_observability"],
+      "root_cause": "RC-004"
+    },
+    {
+      "id": "OBS-GT-004",
+      "severity": "medium",
+      "domain": "observability",
+      "title": "Swallowed exception in remove — catch block returns generic error without logging",
+      "file": "src/controllers/user.controller.ts",
+      "line": 47,
+      "tool_detectable": true,
+      "expected_tools": ["check_observability"],
+      "root_cause": "RC-004"
+    },
+    {
+      "id": "TST-GT-001",
+      "severity": "medium",
+      "domain": "tests",
+      "title": "No test file for user.service.ts",
+      "file": "src/services/user.service.ts",
+      "line": 1,
+      "tool_detectable": true,
+      "expected_tools": ["detect_missing_tests"],
+      "root_cause": "RC-003"
+    },
+    {
+      "id": "TST-GT-002",
+      "severity": "medium",
+      "domain": "tests",
+      "title": "No test file for auth.service.ts",
+      "file": "src/services/auth.service.ts",
+      "line": 1,
+      "tool_detectable": true,
+      "expected_tools": ["detect_missing_tests"],
+      "root_cause": "RC-003"
+    },
+    {
+      "id": "CNV-GT-001",
+      "severity": "low",
+      "domain": "conventions",
+      "title": "TODO: add authentication middleware",
+      "file": "src/routes/users.ts",
+      "line": 7,
+      "tool_detectable": true,
+      "expected_tools": ["check_todos"],
+      "root_cause": null
+    },
+    {
+      "id": "CNV-GT-002",
+      "severity": "low",
+      "domain": "conventions",
+      "title": "TODO: implement real JWT verification",
+      "file": "src/services/auth.service.ts",
+      "line": 52,
+      "tool_detectable": true,
+      "expected_tools": ["check_todos"],
+      "root_cause": null
+    },
+    {
+      "id": "CNV-GT-003",
+      "severity": "low",
+      "domain": "conventions",
+      "title": "TODO + FIXME markers in logger middleware",
+      "file": "src/middleware/logger.ts",
+      "line": 3,
+      "tool_detectable": true,
+      "expected_tools": ["check_todos"],
+      "root_cause": null
+    },
+    {
+      "id": "CNV-GT-004",
+      "severity": "low",
+      "domain": "conventions",
+      "title": "Magic number 18 used as age threshold",
+      "file": "src/controllers/user.controller.ts",
+      "line": 23,
+      "tool_detectable": true,
+      "expected_tools": ["check_magic_numbers"],
+      "root_cause": null
+    },
+    {
+      "id": "CNV-GT-005",
+      "severity": "low",
+      "domain": "conventions",
+      "title": "Magic number 120 used as age threshold",
+      "file": "src/controllers/user.controller.ts",
+      "line": 27,
+      "tool_detectable": true,
+      "expected_tools": ["check_magic_numbers"],
+      "root_cause": null
+    },
+    {
+      "id": "CNV-GT-006",
+      "severity": "medium",
+      "domain": "conventions",
+      "title": "Long function requestLogger (~60 lines)",
+      "file": "src/middleware/logger.ts",
+      "line": 6,
+      "tool_detectable": true,
+      "expected_tools": ["check_function_lengths"],
+      "root_cause": null
+    },
+    {
+      "id": "DEBT-GT-001",
+      "severity": "low",
+      "domain": "tech-debt",
+      "title": "8 dead exports in helpers.ts — none imported by any other module",
+      "file": "src/utils/helpers.ts",
+      "line": 1,
+      "tool_detectable": true,
+      "expected_tools": ["check_dead_exports"],
+      "root_cause": null
+    },
+    {
+      "id": "DEBT-GT-002",
+      "severity": "medium",
+      "domain": "tech-debt",
+      "title": "Deep nesting (6 levels) in authenticate method",
+      "file": "src/services/auth.service.ts",
+      "line": 19,
+      "tool_detectable": true,
+      "expected_tools": ["detect_code_smells"],
+      "root_cause": null
+    }
+  ]
+}

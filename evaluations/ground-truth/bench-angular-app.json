@@ -1,0 +1,238 @@
+{
+  "repo": "bench-angular-app",
+  "stack": "angular-frontend",
+  "description": "Angular 18 frontend with user management — seeded with accessibility, i18n, UX consistency, and conventions issues",
+  "expert_ranking": [
+    "ACC-GT-001",
+    "I18N-GT-001",
+    "ACC-GT-002",
+    "UX-GT-001",
+    "ACC-GT-006",
+    "I18N-GT-002",
+    "UX-GT-002",
+    "ACC-GT-004"
+  ],
+  "root_causes": [
+    {
+      "id": "RC-001",
+      "title": "No accessibility testing or checklist",
+      "description": "Images missing alt text, interactive elements missing aria-labels, inputs missing labels, HTML missing lang — all basic WCAG 2.1 violations",
+      "symptoms": ["ACC-GT-001", "ACC-GT-002", "ACC-GT-003", "ACC-GT-004", "ACC-GT-005", "ACC-GT-006", "ACC-GT-007"],
+      "fix": "Add axe-core or pa11y to CI, create component a11y checklist"
+    },
+    {
+      "id": "RC-002",
+      "title": "No i18n pipeline despite ngx-translate dependency",
+      "description": "ngx-translate is installed but all user-facing strings are hardcoded in templates instead of using translate pipe",
+      "symptoms": ["I18N-GT-001", "I18N-GT-002", "I18N-GT-003", "I18N-GT-004"],
+      "fix": "Extract all user-facing strings to translation JSON files, use {{ 'KEY' | translate }} pipe"
+    },
+    {
+      "id": "RC-003",
+      "title": "No design token system",
+      "description": "Colors are hardcoded as hex values in inline styles and SCSS instead of using CSS custom properties. Only 1 CSS variable exists (--primary) but is inconsistently used.",
+      "symptoms": ["UX-GT-001", "UX-GT-002", "UX-GT-003", "UX-GT-004"],
+      "fix": "Define design tokens as CSS custom properties, replace all hardcoded hex colors, ban inline styles"
+    }
+  ],
+  "issues": [
+    {
+      "id": "ACC-GT-001",
+      "severity": "high",
+      "domain": "accessibility",
+      "title": "<html> element missing lang attribute",
+      "file": "src/index.html",
+      "line": 1,
+      "tool_detectable": true,
+      "expected_tools": ["check_a11y_templates"],
+      "root_cause": "RC-001"
+    },
+    {
+      "id": "ACC-GT-002",
+      "severity": "medium",
+      "domain": "accessibility",
+      "title": "<img> missing alt attribute (logo)",
+      "file": "src/app/shared/header/header.component.html",
+      "line": 3,
+      "tool_detectable": true,
+      "expected_tools": ["check_a11y_templates"],
+      "root_cause": "RC-001"
+    },
+    {
+      "id": "ACC-GT-003",
+      "severity": "medium",
+      "domain": "accessibility",
+      "title": "Icon-only <button> missing aria-label (menu toggle)",
+      "file": "src/app/shared/header/header.component.html",
+      "line": 9,
+      "tool_detectable": true,
+      "expected_tools": ["check_a11y_templates"],
+      "root_cause": "RC-001"
+    },
+    {
+      "id": "ACC-GT-004",
+      "severity": "medium",
+      "domain": "accessibility",
+      "title": "<img> missing alt attribute (user avatar)",
+      "file": "src/app/users/user-list/user-list.component.html",
+      "line": 25,
+      "tool_detectable": true,
+      "expected_tools": ["check_a11y_templates"],
+      "root_cause": "RC-001"
+    },
+    {
+      "id": "ACC-GT-005",
+      "severity": "medium",
+      "domain": "accessibility",
+      "title": "<img> missing alt attribute (empty state illustration)",
+      "file": "src/app/users/user-list/user-list.component.html",
+      "line": 48,
+      "tool_detectable": true,
+      "expected_tools": ["check_a11y_templates"],
+      "root_cause": "RC-001"
+    },
+    {
+      "id": "ACC-GT-006",
+      "severity": "medium",
+      "domain": "accessibility",
+      "title": "<input> without associated <label> (search field)",
+      "file": "src/app/users/user-list/user-list.component.html",
+      "line": 5,
+      "tool_detectable": true,
+      "expected_tools": ["check_a11y_templates"],
+      "root_cause": "RC-001"
+    },
+    {
+      "id": "ACC-GT-007",
+      "severity": "medium",
+      "domain": "accessibility",
+      "title": "Icon-only <button> missing aria-label (search button)",
+      "file": "src/app/users/user-list/user-list.component.html",
+      "line": 6,
+      "tool_detectable": true,
+      "expected_tools": ["check_a11y_templates"],
+      "root_cause": "RC-001"
+    },
+    {
+      "id": "ACC-GT-008",
+      "severity": "medium",
+      "domain": "accessibility",
+      "title": "<input> without associated <label> (name field)",
+      "file": "src/app/users/user-detail/user-detail.component.html",
+      "line": 5,
+      "tool_detectable": true,
+      "expected_tools": ["check_a11y_templates"],
+      "root_cause": "RC-001"
+    },
+    {
+      "id": "ACC-GT-009",
+      "severity": "medium",
+      "domain": "accessibility",
+      "title": "<input> without associated <label> (email field)",
+      "file": "src/app/users/user-detail/user-detail.component.html",
+      "line": 8,
+      "tool_detectable": true,
+      "expected_tools": ["check_a11y_templates"],
+      "root_cause": "RC-001"
+    },
+    {
+      "id": "I18N-GT-001",
+      "severity": "high",
+      "domain": "i18n",
+      "title": "Hardcoded user-facing strings in header template (MyApp Dashboard, Welcome back, Sign Out)",
+      "file": "src/app/shared/header/header.component.html",
+      "line": 4,
+      "tool_detectable": true,
+      "expected_tools": ["check_i18n"],
+      "root_cause": "RC-002"
+    },
+    {
+      "id": "I18N-GT-002",
+      "severity": "high",
+      "domain": "i18n",
+      "title": "Hardcoded user-facing strings in user list template (User Management, Previous, Next)",
+      "file": "src/app/users/user-list/user-list.component.html",
+      "line": 2,
+      "tool_detectable": true,
+      "expected_tools": ["check_i18n"],
+      "root_cause": "RC-002"
+    },
+    {
+      "id": "I18N-GT-003",
+      "severity": "high",
+      "domain": "i18n",
+      "title": "Hardcoded user-facing strings in user detail template (User Details, Save Changes, Cancel)",
+      "file": "src/app/users/user-detail/user-detail.component.html",
+      "line": 2,
+      "tool_detectable": true,
+      "expected_tools": ["check_i18n"],
+      "root_cause": "RC-002"
+    },
+    {
+      "id": "I18N-GT-004",
+      "severity": "medium",
+      "domain": "i18n",
+      "title": "Hardcoded copyright text in app component",
+      "file": "src/app/app.component.html",
+      "line": 1,
+      "tool_detectable": true,
+      "expected_tools": ["check_i18n"],
+      "root_cause": "RC-002"
+    },
+    {
+      "id": "UX-GT-001",
+      "severity": "medium",
+      "domain": "ux-consistency",
+      "title": "Inline styles with hardcoded colors in header (background: #e74c3c)",
+      "file": "src/app/shared/header/header.component.html",
+      "line": 15,
+      "tool_detectable": true,
+      "expected_tools": ["check_ux_consistency"],
+      "root_cause": "RC-003"
+    },
+    {
+      "id": "UX-GT-002",
+      "severity": "medium",
+      "domain": "ux-consistency",
+      "title": "Inline styles with hardcoded colors in user list (background: #3498db, #e74c3c)",
+      "file": "src/app/users/user-list/user-list.component.html",
+      "line": 36,
+      "tool_detectable": true,
+      "expected_tools": ["check_ux_consistency"],
+      "root_cause": "RC-003"
+    },
+    {
+      "id": "UX-GT-003",
+      "severity": "medium",
+      "domain": "ux-consistency",
+      "title": "Inline styles with hardcoded colors in user detail (background: #2ecc71, #95a5a6)",
+      "file": "src/app/users/user-detail/user-detail.component.html",
+      "line": 18,
+      "tool_detectable": true,
+      "expected_tools": ["check_ux_consistency"],
+      "root_cause": "RC-003"
+    },
+    {
+      "id": "UX-GT-004",
+      "severity": "medium",
+      "domain": "ux-consistency",
+      "title": "Multiple hardcoded color values in global stylesheet instead of CSS variables",
+      "file": "src/styles.scss",
+      "line": 1,
+      "tool_detectable": true,
+      "expected_tools": ["check_ux_consistency"],
+      "root_cause": "RC-003"
+    },
+    {
+      "id": "UX-GT-005",
+      "severity": "low",
+      "domain": "ux-consistency",
+      "title": "Magic z-index value 9999 in header styles",
+      "file": "src/styles.scss",
+      "line": 24,
+      "tool_detectable": true,
+      "expected_tools": ["check_ux_consistency"],
+      "root_cause": "RC-003"
+    }
+  ]
+}

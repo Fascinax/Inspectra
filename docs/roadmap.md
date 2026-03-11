@@ -126,6 +126,83 @@ Goal: Package and publish for external users.
 - [x] Changelog (CHANGELOG.md, auto-generated from conventional commits)
 - [x] GitHub Releases with pre-built artifacts
 
+## v0.9.0 — Architecture Benchmark & Diagnostic Intelligence
+
+Goal: **Prove which architecture tier actually delivers the best diagnostic quality before building more complexity.** Then invest in the winning tier.
+
+See [ADR-008: Benchmark Before Architecture](adr/008-benchmark-before-architecture.md) for the full decision framework.  
+See [ADR-007: Diagnostic Intelligence Layer](adr/007-diagnostic-intelligence-layer.md) for the diagnostic layer design (gated by benchmark results).
+
+### Phase 0 — Architecture Benchmark (do this FIRST)
+
+Three tiers compete on the same repos, measured by the same expert panel:
+
+| Tier | Architecture | Cost | Description |
+|---|---|---|---|
+| **A** | 1 orchestrator, all tools, 1 LLM synthesis | Lowest | No sub-agents, no Phase 2. Single pass. |
+| **B** | Tools + structured domain analysis + conditional explorer | Medium | 1 explorer agent fires only on hotspot signals. |
+| **C** | Current: 12 agents × (Phase 1 tools + Phase 2 LLM) | Highest | Full multi-agent deep exploration. |
+
+- [ ] Establish ground truth: expert-written issue lists for 3-5 target repos (`evaluations/ground-truth/`)
+- [ ] Tier A prompt: `.github/prompts/audit-tier-a.prompt.md` — single-pass orchestrator with all tools
+- [ ] Tier B prompt: `.github/prompts/audit-tier-b.prompt.md` — hybrid with conditional explorer
+- [ ] Tier C: current system (no changes needed)
+- [ ] Evaluation harness: `evaluations/benchmark-harness.ts` — runs all tiers, collects metrics
+- [ ] Run benchmark: 3 tiers × 3-5 repos × 3 runs = 27-45 audit runs
+- [ ] Expert review: blind scoring on precision, recall, root cause hit rate, actionability (1-5)
+- [ ] Analysis and verdict: `evaluations/benchmark-results.md`
+- [ ] Architectural decision: commit to winning tier for the diagnostic layer foundation
+
+**Decision gates:**
+- Tier A ≈ Tier C on quality → **simplify radically**, keep tools + single synthesis
+- Tier B > A but ≈ C → **adopt hybrid**, 1 orchestrator + 1 conditional explorer
+- Tier C >> B >> A → **current arch justified**, proceed with ADR-007 as designed
+- All ≈ on quality, C costs 10x more → **cost efficiency wins**, simplify
+
+### Phase 3 — Correlation Engine (gated by benchmark — applies to winning tier)
+
+- [ ] Hotspot detection: group findings by file, module, dependency, or pattern convergence
+  - File hotspot: 3+ findings from 2+ domains on the same file
+  - Module hotspot: 5+ findings across files in a shared directory
+  - Dependency hotspot: multiple findings tracing to the same external dependency
+  - Pattern hotspot: same rule triggered 5+ times across different files
+- [ ] Implement `mcp/src/merger/correlate.ts` with `Hotspot` and clustering logic
+- [ ] New MCP tool: `inspectra_correlate_findings`
+
+### Phase 3b — Root Cause Inference
+
+- [ ] Root cause taxonomy: god-module, missing-abstraction, dependency-rot, test-gap, convention-drift, misaligned-architecture, security-shortcut, documentation-debt, isolated
+- [ ] Rules-based pattern matching: `policies/root-cause-patterns.yml` maps hotspot signatures to root cause categories
+- [ ] LLM-assisted inference for hotspots that don't match known patterns (confidence ≤ 0.6)
+- [ ] Implement `mcp/src/merger/root-cause.ts` with `RootCauseCluster` structure
+- [ ] New MCP tool: `inspectra_infer_root_causes`
+- [ ] New schema: `schemas/root-cause-cluster.schema.json`
+
+### Phase 4 — Prioritization Engine
+
+- [ ] Impact scoring per cluster: `severity_ceiling × blast_radius × remediation_leverage / effort`
+- [ ] Remediation plan: group clusters into Fix Now / Next Sprint / Backlog batches
+- [ ] Score simulation: "fixing these 2 root causes brings you from 62/100 to 81/100"
+- [ ] Implement `mcp/src/merger/prioritize.ts` with `RemediationPlan` structure
+- [ ] New MCP tool: `inspectra_build_remediation_plan`
+- [ ] New schema: `schemas/remediation-plan.schema.json`
+
+### Phase 5 — Enhanced Report
+
+- [ ] Diagnosis-first report layout: Executive Diagnosis → Remediation Plan → Root Cause Analysis → Domain Breakdown
+- [ ] Executive Diagnosis: 3 sentences max, 1-3 root causes that matter, expected score after fix, first action
+- [ ] Remediation batches with effort, impact, estimated score improvement, and fix dependencies
+- [ ] Score context: what the number captures and what it doesn't
+- [ ] Update HTML/PDF/Markdown renderers for diagnosis-first layout
+
+### Orchestrator Evolution
+
+- [ ] Architecture adapted to benchmark winner (may be 1 prompt, hybrid, or multi-agent)
+- [ ] Orchestrator produces root cause clusters, not just flat top-10 findings
+- [ ] Backward-compatible: `clusters` and `remediation_plan` are optional fields in consolidated report schema
+
+---
+
 ## v1.0.0 — Stable Release
 
 Goal: Stability contract — no breaking changes to schemas, tools, or CLI.
@@ -148,3 +225,5 @@ These are aspirational. They'll only be prioritized if there's real user demand.
 - Documentation site (likely Docusaurus or VitePress)
 - Dashboard web app for audit history visualization
 - Slack/Teams webhook integration for audit notifications
+- Scoring calibration: benchmark against expert audits to validate score fidelity
+- Feedback loop: let users flag false root causes to improve pattern matching

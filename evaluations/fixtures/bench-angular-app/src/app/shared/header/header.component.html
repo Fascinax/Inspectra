@@ -1,0 +1,19 @@
+<header class="main-header">
+  <div class="logo">
+    <img src="/assets/logo.png">
+    <span>MyApp Dashboard</span>
+  </div>
+  <nav>
+    <a routerLink="/users">Users</a>
+    <a routerLink="/settings">Settings</a>
+    <button (click)="toggleMenu()">
+      <i class="fa fa-bars"></i>
+    </button>
+  </nav>
+  <div class="user-info">
+    <span>Welcome back, {{ userName }}</span>
+    <button (click)="logout()" style="background: #e74c3c; color: white; border: none; padding: 8px 16px; border-radius: 4px;">
+      Sign Out
+    </button>
+  </div>
+</header>

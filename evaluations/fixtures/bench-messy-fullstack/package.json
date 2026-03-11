@@ -1,0 +1,18 @@
+{
+  "name": "bench-messy-fullstack",
+  "version": "0.1.0",
+  "description": "Intentionally messy fullstack app — maximum issue density",
+  "main": "src/app.ts",
+  "dependencies": {
+    "express": "^4.18.0",
+    "mysql": "^2.18.0",
+    "axios": "^1.6.0",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.0",
+    "request": "^2.88.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

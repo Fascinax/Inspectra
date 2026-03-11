@@ -1,0 +1,137 @@
+/* Global styles */
+:root {
+  --primary: #3498db;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f5f5f5;
+  color: #333333;
+}
+
+.main-header {
+  background: #2c3e50;
+  color: white;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 9999;
+}
+
+.main-header .logo img {
+  height: 40px;
+  margin-right: 12px;
+}
+
+.main-header nav a {
+  color: white;
+  text-decoration: none;
+  margin: 0 16px;
+  font-size: 14px;
+}
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+.user-table th {
+  background: #34495e;
+  color: white;
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 13px;
+}
+
+.user-table td {
+  padding: 10px 16px;
+  border-bottom: 1px solid #ecf0f1;
+  font-size: 14px;
+}
+
+.search-bar input {
+  padding: 8px 16px;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 300px;
+}
+
+.search-bar button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.pagination button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pagination button:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+.active {
+  color: #27ae60;
+  font-weight: 600;
+}
+
+.inactive {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group input,
+.form-group select {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+  font-size: 15px;
+}
+
+footer {
+  background: #2c3e50;
+  color: #bdc3c7;
+  padding: 20px;
+  text-align: center;
+  font-size: 13px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.user-detail {
+  animation: fadeIn 0.3s ease-in;
+}

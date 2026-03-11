@@ -1,0 +1,496 @@
+{
+  "repo": "bench-messy-fullstack",
+  "stack": "typescript-node",
+  "description": "Intentionally messy TypeScript fullstack app — maximum issue density, god class, duplicated code, secrets, bad naming, no tests, deep nesting, dead exports",
+  "expert_ranking": [
+    "SEC-GT-001",
+    "SEC-GT-004",
+    "DEBT-GT-001",
+    "SEC-GT-002",
+    "DEBT-GT-004",
+    "OBS-GT-001",
+    "CNV-GT-004",
+    "ACC-GT-001",
+    "API-GT-001",
+    "DEBT-GT-002"
+  ],
+  "root_causes": [
+    {
+      "id": "RC-001",
+      "title": "No secret management",
+      "description": "Multiple hardcoded secrets scattered across files: DB passwords, JWT secret, SMTP password, connection strings",
+      "symptoms": ["SEC-GT-001", "SEC-GT-002", "SEC-GT-003", "SEC-GT-004"],
+      "fix": "Move all secrets to environment variables, add .env.example, add secret scanning to CI"
+    },
+    {
+      "id": "RC-002",
+      "title": "God object anti-pattern (app.ts)",
+      "description": "Single file handles server setup, auth, CRUD for 3 entities, email, caching, reporting — 220+ lines with no separation of concerns",
+      "symptoms": ["DEBT-GT-001", "DEBT-GT-002", "DEBT-GT-003", "CNV-GT-004", "OBS-GT-002"],
+      "fix": "Decompose into modules: routes, controllers, services, middleware. Apply single responsibility principle."
+    },
+    {
+      "id": "RC-003",
+      "title": "No code quality standards",
+      "description": "Mixed naming conventions (PascalCase, camelCase, snake_case, SCREAMING_CASE for functions), duplicated utility functions across 3 files, no linter, no formatter",
+      "symptoms": ["CNV-GT-001", "CNV-GT-002", "CNV-GT-003", "DEBT-GT-004", "DEBT-GT-005"],
+      "fix": "Adopt consistent naming convention, centralize utilities, enable ESLint + Prettier"
+    },
+    {
+      "id": "RC-004",
+      "title": "No REST API design",
+      "description": "All routes use verb-based paths (/getUsers, /createUser, /deleteUser), no versioning, no resource-based structure",
+      "symptoms": ["API-GT-001", "API-GT-002", "API-GT-003", "API-GT-004", "API-GT-005"],
+      "fix": "Adopt resource-based REST conventions with proper HTTP verbs"
+    },
+    {
+      "id": "RC-005",
+      "title": "Zero test coverage",
+      "description": "No test files exist anywhere in the project — no unit tests, no integration tests",
+      "symptoms": ["TST-GT-001"],
+      "fix": "Add test framework (Vitest/Jest), write critical path tests, add coverage gate to CI"
+    }
+  ],
+  "issues": [
+    {
+      "id": "SEC-GT-001",
+      "severity": "critical",
+      "domain": "security",
+      "title": "Hardcoded database password in app.ts",
+      "file": "src/app.ts",
+      "line": 9,
+      "tool_detectable": true,
+      "expected_tools": ["scan_secrets"],
+      "root_cause": "RC-001"
+    },
+    {
+      "id": "SEC-GT-002",
+      "severity": "critical",
+      "domain": "security",
+      "title": "Hardcoded JWT secret in app.ts",
+      "file": "src/app.ts",
+      "line": 10,
+      "tool_detectable": true,
+      "expected_tools": ["scan_secrets"],
+      "root_cause": "RC-001"
+    },
+    {
+      "id": "SEC-GT-003",
+      "severity": "high",
+      "domain": "security",
+      "title": "Hardcoded SMTP password in app.ts",
+      "file": "src/app.ts",
+      "line": 11,
+      "tool_detectable": true,
+      "expected_tools": ["scan_secrets"],
+      "root_cause": "RC-001"
+    },
+    {
+      "id": "SEC-GT-004",
+      "severity": "critical",
+      "domain": "security",
+      "title": "Hardcoded database connection string with credentials in database.ts",
+      "file": "src/database.ts",
+      "line": 2,
+      "tool_detectable": true,
+      "expected_tools": ["scan_secrets"],
+      "root_cause": "RC-001"
+    },
+    {
+      "id": "SEC-GT-005",
+      "severity": "high",
+      "domain": "security",
+      "title": "SQL injection via string concatenation in buildQuery function",
+      "file": "src/database.ts",
+      "line": 8,
+      "tool_detectable": false,
+      "expected_tools": [],
+      "root_cause": null
+    },
+    {
+      "id": "API-GT-001",
+      "severity": "medium",
+      "domain": "api-design",
+      "title": "Verb-based routes: /getUsers, /getUser/:id",
+      "file": "src/app.ts",
+      "line": 26,
+      "tool_detectable": true,
+      "expected_tools": ["check_rest_conventions"],
+      "root_cause": "RC-004"
+    },
+    {
+      "id": "API-GT-002",
+      "severity": "medium",
+      "domain": "api-design",
+      "title": "Verb-based routes: /createUser, /updateUser/:id, /deleteUser/:id",
+      "file": "src/app.ts",
+      "line": 38,
+      "tool_detectable": true,
+      "expected_tools": ["check_rest_conventions"],
+      "root_cause": "RC-004"
+    },
+    {
+      "id": "API-GT-003",
+      "severity": "medium",
+      "domain": "api-design",
+      "title": "Verb-based routes: /getProducts, /createProduct",
+      "file": "src/app.ts",
+      "line": 99,
+      "tool_detectable": true,
+      "expected_tools": ["check_rest_conventions"],
+      "root_cause": "RC-004"
+    },
+    {
+      "id": "API-GT-004",
+      "severity": "medium",
+      "domain": "api-design",
+      "title": "Verb-based routes: /createOrder, /getOrders",
+      "file": "src/app.ts",
+      "line": 114,
+      "tool_detectable": true,
+      "expected_tools": ["check_rest_conventions"],
+      "root_cause": "RC-004"
+    },
+    {
+      "id": "API-GT-005",
+      "severity": "medium",
+      "domain": "api-design",
+      "title": "Verb-based routes: /login, /getReport, /sendNotification",
+      "file": "src/app.ts",
+      "line": 145,
+      "tool_detectable": true,
+      "expected_tools": ["check_rest_conventions"],
+      "root_cause": "RC-004"
+    },
+    {
+      "id": "OBS-GT-001",
+      "severity": "medium",
+      "domain": "observability",
+      "title": "No health check endpoint",
+      "file": "src/app.ts",
+      "line": 1,
+      "tool_detectable": true,
+      "expected_tools": ["check_observability"],
+      "root_cause": null
+    },
+    {
+      "id": "OBS-GT-002",
+      "severity": "medium",
+      "domain": "observability",
+      "title": "Swallowed exception in login handler — catch returns generic error without logging",
+      "file": "src/app.ts",
+      "line": 155,
+      "tool_detectable": true,
+      "expected_tools": ["check_observability"],
+      "root_cause": "RC-002"
+    },
+    {
+      "id": "OBS-GT-003",
+      "severity": "medium",
+      "domain": "observability",
+      "title": "Swallowed exception in sendNotification handler",
+      "file": "src/app.ts",
+      "line": 186,
+      "tool_detectable": true,
+      "expected_tools": ["check_observability"],
+      "root_cause": null
+    },
+    {
+      "id": "OBS-GT-004",
+      "severity": "medium",
+      "domain": "observability",
+      "title": "Swallowed exceptions in mega-handler (update and delete actions)",
+      "file": "src/handlers/mega-handler.ts",
+      "line": 42,
+      "tool_detectable": true,
+      "expected_tools": ["check_observability"],
+      "root_cause": null
+    },
+    {
+      "id": "TST-GT-001",
+      "severity": "high",
+      "domain": "tests",
+      "title": "Zero test files in entire project",
+      "file": "src/app.ts",
+      "line": 1,
+      "tool_detectable": true,
+      "expected_tools": ["detect_missing_tests"],
+      "root_cause": "RC-005"
+    },
+    {
+      "id": "CNV-GT-001",
+      "severity": "medium",
+      "domain": "conventions",
+      "title": "Inconsistent naming: PascalCase functions (GetAllItems, CountItems), snake_case (get_item_by_id), SCREAMING_CASE (DELETE_ITEM, FILTER_BY_STATUS), mixed (update_Item)",
+      "file": "src/handlers/CRUD_helper.ts",
+      "line": 1,
+      "tool_detectable": true,
+      "expected_tools": ["check_naming"],
+      "root_cause": "RC-003"
+    },
+    {
+      "id": "CNV-GT-002",
+      "severity": "low",
+      "domain": "conventions",
+      "title": "Multiple TODO and FIXME markers in app.ts",
+      "file": "src/app.ts",
+      "line": 175,
+      "tool_detectable": true,
+      "expected_tools": ["check_todos"],
+      "root_cause": null
+    },
+    {
+      "id": "CNV-GT-003",
+      "severity": "low",
+      "domain": "conventions",
+      "title": "Multiple TODO and FIXME markers in CRUD_helper.ts",
+      "file": "src/handlers/CRUD_helper.ts",
+      "line": 2,
+      "tool_detectable": true,
+      "expected_tools": ["check_todos"],
+      "root_cause": null
+    },
+    {
+      "id": "CNV-GT-004",
+      "severity": "medium",
+      "domain": "conventions",
+      "title": "Magic numbers throughout app.ts: 10000, 50000, 0.95, 0.90, 0.2, 5000, 499, 300000",
+      "file": "src/app.ts",
+      "line": 125,
+      "tool_detectable": true,
+      "expected_tools": ["check_magic_numbers"],
+      "root_cause": "RC-002"
+    },
+    {
+      "id": "CNV-GT-005",
+      "severity": "medium",
+      "domain": "conventions",
+      "title": "Long function: createUser handler (42 lines, 7 levels of nesting)",
+      "file": "src/app.ts",
+      "line": 38,
+      "tool_detectable": true,
+      "expected_tools": ["check_function_lengths"],
+      "root_cause": "RC-002"
+    },
+    {
+      "id": "CNV-GT-006",
+      "severity": "medium",
+      "domain": "conventions",
+      "title": "Function sendEmail has 8 parameters",
+      "file": "src/app.ts",
+      "line": 180,
+      "tool_detectable": true,
+      "expected_tools": ["check_param_counts"],
+      "root_cause": null
+    },
+    {
+      "id": "CNV-GT-007",
+      "severity": "medium",
+      "domain": "conventions",
+      "title": "Function handleUserAction has 8 parameters",
+      "file": "src/handlers/mega-handler.ts",
+      "line": 4,
+      "tool_detectable": true,
+      "expected_tools": ["check_param_counts"],
+      "root_cause": null
+    },
+    {
+      "id": "CNV-GT-008",
+      "severity": "medium",
+      "domain": "conventions",
+      "title": "File app.ts exceeds recommended length (220+ lines god class)",
+      "file": "src/app.ts",
+      "line": 1,
+      "tool_detectable": true,
+      "expected_tools": ["check_file_lengths"],
+      "root_cause": "RC-002"
+    },
+    {
+      "id": "DEBT-GT-001",
+      "severity": "high",
+      "domain": "tech-debt",
+      "title": "God class: app.ts handles server, auth, CRUD, email, caching, reporting in 220+ lines",
+      "file": "src/app.ts",
+      "line": 1,
+      "tool_detectable": true,
+      "expected_tools": ["detect_code_smells"],
+      "root_cause": "RC-002"
+    },
+    {
+      "id": "DEBT-GT-002",
+      "severity": "medium",
+      "domain": "tech-debt",
+      "title": "Deep nesting (7 levels) in createUser handler",
+      "file": "src/app.ts",
+      "line": 38,
+      "tool_detectable": true,
+      "expected_tools": ["detect_code_smells"],
+      "root_cause": "RC-002"
+    },
+    {
+      "id": "DEBT-GT-003",
+      "severity": "medium",
+      "domain": "tech-debt",
+      "title": "Deep nesting (7 levels) in handleUserAction",
+      "file": "src/handlers/mega-handler.ts",
+      "line": 14,
+      "tool_detectable": true,
+      "expected_tools": ["detect_code_smells"],
+      "root_cause": null
+    },
+    {
+      "id": "DEBT-GT-004",
+      "severity": "medium",
+      "domain": "tech-debt",
+      "title": "Duplicated code: formatDate, formatCurrency, generateSlug exist identically in app.ts, database.ts, and utils.ts",
+      "file": "src/app.ts",
+      "line": 199,
+      "tool_detectable": false,
+      "expected_tools": [],
+      "root_cause": "RC-003"
+    },
+    {
+      "id": "DEBT-GT-005",
+      "severity": "low",
+      "domain": "tech-debt",
+      "title": "Dead exports: app.ts exports sendEmail, setCache, getCache, formatDate, formatCurrency, generateSlug — never imported elsewhere",
+      "file": "src/app.ts",
+      "line": 215,
+      "tool_detectable": true,
+      "expected_tools": ["check_dead_exports"],
+      "root_cause": "RC-003"
+    },
+    {
+      "id": "DEBT-GT-006",
+      "severity": "low",
+      "domain": "tech-debt",
+      "title": "Dead exports: mega-handler.ts exports hashPassword, validateEmail, calculateDiscount, formatPhoneNumber — never imported",
+      "file": "src/handlers/mega-handler.ts",
+      "line": 63,
+      "tool_detectable": true,
+      "expected_tools": ["check_dead_exports"],
+      "root_cause": "RC-003"
+    },
+    {
+      "id": "DEBT-GT-007",
+      "severity": "low",
+      "domain": "tech-debt",
+      "title": "Dead exports: all 8 functions in CRUD_helper.ts are never imported",
+      "file": "src/handlers/CRUD_helper.ts",
+      "line": 7,
+      "tool_detectable": true,
+      "expected_tools": ["check_dead_exports"],
+      "root_cause": "RC-003"
+    },
+    {
+      "id": "DEBT-GT-008",
+      "severity": "low",
+      "domain": "tech-debt",
+      "title": "Dead exports: all 8 functions in utils.ts are never imported",
+      "file": "src/utils/utils.ts",
+      "line": 1,
+      "tool_detectable": true,
+      "expected_tools": ["check_dead_exports"],
+      "root_cause": "RC-003"
+    },
+    {
+      "id": "ACC-GT-001",
+      "severity": "high",
+      "domain": "accessibility",
+      "title": "<html> missing lang attribute",
+      "file": "src/templates/index.html",
+      "line": 2,
+      "tool_detectable": true,
+      "expected_tools": ["check_a11y_templates"],
+      "root_cause": null
+    },
+    {
+      "id": "ACC-GT-002",
+      "severity": "medium",
+      "domain": "accessibility",
+      "title": "<img> missing alt attribute (logo)",
+      "file": "src/templates/index.html",
+      "line": 13,
+      "tool_detectable": true,
+      "expected_tools": ["check_a11y_templates"],
+      "root_cause": null
+    },
+    {
+      "id": "ACC-GT-003",
+      "severity": "medium",
+      "domain": "accessibility",
+      "title": "Icon-only <button> missing aria-label",
+      "file": "src/templates/index.html",
+      "line": 15,
+      "tool_detectable": true,
+      "expected_tools": ["check_a11y_templates"],
+      "root_cause": null
+    },
+    {
+      "id": "ACC-GT-004",
+      "severity": "medium",
+      "domain": "accessibility",
+      "title": "3 <input> elements without associated <label>",
+      "file": "src/templates/index.html",
+      "line": 55,
+      "tool_detectable": true,
+      "expected_tools": ["check_a11y_templates"],
+      "root_cause": null
+    },
+    {
+      "id": "ACC-GT-005",
+      "severity": "medium",
+      "domain": "accessibility",
+      "title": "<select> without associated <label>",
+      "file": "src/templates/index.html",
+      "line": 58,
+      "tool_detectable": true,
+      "expected_tools": ["check_a11y_templates"],
+      "root_cause": null
+    },
+    {
+      "id": "I18N-GT-001",
+      "severity": "medium",
+      "domain": "i18n",
+      "title": "Hardcoded user-facing text throughout HTML template (Admin Dashboard, Welcome to the Dashboard, etc.)",
+      "file": "src/templates/index.html",
+      "line": 14,
+      "tool_detectable": true,
+      "expected_tools": ["check_i18n"],
+      "root_cause": null
+    },
+    {
+      "id": "UX-GT-001",
+      "severity": "medium",
+      "domain": "ux-consistency",
+      "title": "Inline styles with hardcoded color in HTML template",
+      "file": "src/templates/index.html",
+      "line": 47,
+      "tool_detectable": true,
+      "expected_tools": ["check_ux_consistency"],
+      "root_cause": null
+    },
+    {
+      "id": "UX-GT-002",
+      "severity": "medium",
+      "domain": "ux-consistency",
+      "title": "Hardcoded color values in stylesheet instead of CSS variables",
+      "file": "src/styles/main.scss",
+      "line": 1,
+      "tool_detectable": true,
+      "expected_tools": ["check_ux_consistency"],
+      "root_cause": null
+    },
+    {
+      "id": "UX-GT-003",
+      "severity": "low",
+      "domain": "ux-consistency",
+      "title": "Inconsistent z-index values (999, 998, 10000) without scale",
+      "file": "src/styles/main.scss",
+      "line": 22,
+      "tool_detectable": true,
+      "expected_tools": ["check_ux_consistency"],
+      "root_cause": null
+    }
+  ]
+}

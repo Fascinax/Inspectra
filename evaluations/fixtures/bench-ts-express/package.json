@@ -1,0 +1,18 @@
+{
+  "name": "bench-ts-express",
+  "version": "1.0.0",
+  "description": "Express REST API — benchmark fixture for Inspectra architecture evaluation",
+  "main": "src/index.ts",
+  "dependencies": {
+    "express": "^4.18.0",
+    "jsonwebtoken": "^9.0.0",
+    "axios": "^1.6.0",
+    "lodash": "^4.17.21",
+    "pg": "^8.11.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vitest": "^3.0.0",
+    "@types/express": "^4.17.0"
+  }
+}

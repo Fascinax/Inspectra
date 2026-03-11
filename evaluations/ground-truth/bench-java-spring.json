@@ -1,0 +1,260 @@
+{
+  "repo": "bench-java-spring",
+  "stack": "java-backend",
+  "description": "Java Spring Boot backend with JPA, Spring Security, Actuator — seeded with security misconfig, JPA anti-patterns, API design, and observability issues",
+  "expert_ranking": [
+    "SEC-GT-001",
+    "SEC-GT-002",
+    "SEC-GT-003",
+    "DEBT-GT-001",
+    "SEC-GT-005",
+    "API-GT-001",
+    "SEC-GT-004",
+    "DEBT-GT-002"
+  ],
+  "root_causes": [
+    {
+      "id": "RC-001",
+      "title": "Spring Security misconfiguration",
+      "description": "Security is effectively disabled: CSRF off, all requests permitted, CORS accepts any origin with credentials, actuator endpoints fully exposed, error details leaked",
+      "symptoms": ["SEC-GT-002", "SEC-GT-003", "SEC-GT-004", "SEC-GT-005", "SEC-GT-006", "SEC-GT-008"],
+      "fix": "Configure role-based access, restrict CORS to known origins, limit actuator exposure, disable stacktrace in production"
+    },
+    {
+      "id": "RC-002",
+      "title": "JPA/Hibernate anti-patterns on entity design",
+      "description": "@Data on entities breaks equals/hashCode, CascadeType.ALL on @ManyToOne causes unintended deletes, missing @Version prevents optimistic locking, missing @Modifying on UPDATE queries",
+      "symptoms": ["DEBT-GT-001", "DEBT-GT-002", "DEBT-GT-003", "DEBT-GT-004"],
+      "fix": "Use @Getter/@Setter instead of @Data, scope cascade to PERSIST/MERGE, add @Version field, add @Modifying on UPDATE queries"
+    },
+    {
+      "id": "RC-003",
+      "title": "No API design standards",
+      "description": "REST controller uses HttpSession (stateful), returns unbounded List without pagination, no input validation on @RequestBody",
+      "symptoms": ["API-GT-001", "API-GT-002", "SEC-GT-007"],
+      "fix": "Remove HttpSession usage, add Pageable to list endpoints, add @Valid on all @RequestBody params"
+    }
+  ],
+  "issues": [
+    {
+      "id": "SEC-GT-001",
+      "severity": "critical",
+      "domain": "security",
+      "title": "Hardcoded database password in application.properties",
+      "file": "src/main/resources/application.properties",
+      "line": 3,
+      "tool_detectable": true,
+      "expected_tools": ["scan_secrets"],
+      "root_cause": null
+    },
+    {
+      "id": "SEC-GT-002",
+      "severity": "high",
+      "domain": "security",
+      "title": "CSRF protection explicitly disabled",
+      "file": "src/main/java/com/example/config/SecurityConfig.java",
+      "line": 22,
+      "tool_detectable": true,
+      "expected_tools": ["check_security_config"],
+      "root_cause": "RC-001"
+    },
+    {
+      "id": "SEC-GT-003",
+      "severity": "high",
+      "domain": "security",
+      "title": "All requests permitted without authentication (permitAll)",
+      "file": "src/main/java/com/example/config/SecurityConfig.java",
+      "line": 24,
+      "tool_detectable": true,
+      "expected_tools": ["check_security_config"],
+      "root_cause": "RC-001"
+    },
+    {
+      "id": "SEC-GT-004",
+      "severity": "high",
+      "domain": "security",
+      "title": "CORS wildcard origin (*) with allowCredentials(true)",
+      "file": "src/main/java/com/example/config/SecurityConfig.java",
+      "line": 33,
+      "tool_detectable": true,
+      "expected_tools": ["check_security_config"],
+      "root_cause": "RC-001"
+    },
+    {
+      "id": "SEC-GT-005",
+      "severity": "medium",
+      "domain": "security",
+      "title": "Actuator endpoints fully exposed (management.endpoints.web.exposure.include=*)",
+      "file": "src/main/resources/application.properties",
+      "line": 5,
+      "tool_detectable": true,
+      "expected_tools": ["check_security_config"],
+      "root_cause": "RC-001"
+    },
+    {
+      "id": "SEC-GT-006",
+      "severity": "medium",
+      "domain": "security",
+      "title": "Exception handler leaks internal error message via e.getMessage()",
+      "file": "src/main/java/com/example/controller/UserController.java",
+      "line": 43,
+      "tool_detectable": true,
+      "expected_tools": ["check_security_config"],
+      "root_cause": "RC-001"
+    },
+    {
+      "id": "SEC-GT-007",
+      "severity": "medium",
+      "domain": "security",
+      "title": "Missing @Valid on @RequestBody in createUser endpoint",
+      "file": "src/main/java/com/example/controller/UserController.java",
+      "line": 38,
+      "tool_detectable": true,
+      "expected_tools": ["check_security_config"],
+      "root_cause": "RC-003"
+    },
+    {
+      "id": "SEC-GT-008",
+      "severity": "low",
+      "domain": "security",
+      "title": "Server error stacktrace always included in responses",
+      "file": "src/main/resources/application.properties",
+      "line": 7,
+      "tool_detectable": false,
+      "expected_tools": [],
+      "root_cause": "RC-001"
+    },
+    {
+      "id": "API-GT-001",
+      "severity": "high",
+      "domain": "api-design",
+      "title": "HttpSession used in REST controller (stateful anti-pattern)",
+      "file": "src/main/java/com/example/controller/UserController.java",
+      "line": 29,
+      "tool_detectable": true,
+      "expected_tools": ["check_rest_conventions"],
+      "root_cause": "RC-003"
+    },
+    {
+      "id": "API-GT-002",
+      "severity": "medium",
+      "domain": "api-design",
+      "title": "List endpoint returns unbounded List<User> without pagination",
+      "file": "src/main/java/com/example/controller/UserController.java",
+      "line": 23,
+      "tool_detectable": true,
+      "expected_tools": ["check_rest_conventions"],
+      "root_cause": "RC-003"
+    },
+    {
+      "id": "DEBT-GT-001",
+      "severity": "high",
+      "domain": "tech-debt",
+      "title": "@Data on @Entity — breaks JPA equals/hashCode contract",
+      "file": "src/main/java/com/example/entity/User.java",
+      "line": 7,
+      "tool_detectable": true,
+      "expected_tools": ["detect_code_smells"],
+      "root_cause": "RC-002"
+    },
+    {
+      "id": "DEBT-GT-002",
+      "severity": "high",
+      "domain": "tech-debt",
+      "title": "CascadeType.ALL on @ManyToOne — risks unintended cascade deletes",
+      "file": "src/main/java/com/example/entity/User.java",
+      "line": 19,
+      "tool_detectable": true,
+      "expected_tools": ["detect_code_smells"],
+      "root_cause": "RC-002"
+    },
+    {
+      "id": "DEBT-GT-003",
+      "severity": "medium",
+      "domain": "tech-debt",
+      "title": "Missing @Version field on User entity — no optimistic locking",
+      "file": "src/main/java/com/example/entity/User.java",
+      "line": 1,
+      "tool_detectable": true,
+      "expected_tools": ["detect_code_smells"],
+      "root_cause": "RC-002"
+    },
+    {
+      "id": "DEBT-GT-004",
+      "severity": "medium",
+      "domain": "tech-debt",
+      "title": "@Query UPDATE without @Modifying annotation",
+      "file": "src/main/java/com/example/repository/UserRepository.java",
+      "line": 12,
+      "tool_detectable": true,
+      "expected_tools": ["detect_code_smells"],
+      "root_cause": "RC-002"
+    },
+    {
+      "id": "DEBT-GT-005",
+      "severity": "medium",
+      "domain": "tech-debt",
+      "title": "@Lazy self-injection pattern — workaround for @Transactional proxy",
+      "file": "src/main/java/com/example/service/OrderService.java",
+      "line": 9,
+      "tool_detectable": true,
+      "expected_tools": ["detect_code_smells"],
+      "root_cause": null
+    },
+    {
+      "id": "OBS-GT-001",
+      "severity": "medium",
+      "domain": "observability",
+      "title": "Swallowed exception — catch block silently returns Optional.empty()",
+      "file": "src/main/java/com/example/service/UserService.java",
+      "line": 26,
+      "tool_detectable": true,
+      "expected_tools": ["check_observability"],
+      "root_cause": null
+    },
+    {
+      "id": "OBS-GT-002",
+      "severity": "medium",
+      "domain": "observability",
+      "title": "Deep nesting (3 levels of if) in save method",
+      "file": "src/main/java/com/example/service/UserService.java",
+      "line": 33,
+      "tool_detectable": true,
+      "expected_tools": ["detect_code_smells"],
+      "root_cause": null
+    },
+    {
+      "id": "CNV-GT-001",
+      "severity": "low",
+      "domain": "conventions",
+      "title": "TODO: add pagination in UserController",
+      "file": "src/main/java/com/example/controller/UserController.java",
+      "line": 21,
+      "tool_detectable": true,
+      "expected_tools": ["check_todos"],
+      "root_cause": null
+    },
+    {
+      "id": "CNV-GT-002",
+      "severity": "low",
+      "domain": "conventions",
+      "title": "TODO: implement order processing logic",
+      "file": "src/main/java/com/example/service/OrderService.java",
+      "line": 22,
+      "tool_detectable": true,
+      "expected_tools": ["check_todos"],
+      "root_cause": null
+    },
+    {
+      "id": "CNV-GT-003",
+      "severity": "low",
+      "domain": "conventions",
+      "title": "FIXME: self-injection workaround in OrderService",
+      "file": "src/main/java/com/example/service/OrderService.java",
+      "line": 19,
+      "tool_detectable": true,
+      "expected_tools": ["check_todos"],
+      "root_cause": null
+    }
+  ]
+}

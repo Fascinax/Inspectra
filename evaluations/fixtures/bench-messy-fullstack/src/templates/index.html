@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+  <style>
+    body { font-family: Arial; background: #f0f0f0; color: #333; }
+    .header { background: #2c3e50; color: white; padding: 15px; }
+    .card { background: white; padding: 20px; margin: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .btn-primary { background: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 4px; }
+    .btn-danger { background: #e74c3c; color: white; padding: 10px 20px; border: none; border-radius: 4px; }
+    .sidebar { background: #34495e; color: white; width: 250px; min-height: 100vh; z-index: 999; }
+    .modal { z-index: 10000; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="/logo.png">
+    <span>Admin Dashboard</span>
+    <button onclick="openMenu()"><i class="fa fa-bars"></i></button>
+  </div>
+
+  <div class="sidebar">
+    <nav>
+      <a href="/users">Users</a>
+      <a href="/products">Products</a>
+      <a href="/orders">Orders</a>
+      <a href="/reports">Reports</a>
+    </nav>
+  </div>
+
+  <main>
+    <div class="card">
+      <h2>Welcome to the Dashboard</h2>
+      <p>Here you can manage your application. Use the sidebar to navigate between sections.</p>
+      <p>Current version: 2.1.3</p>
+    </div>
+
+    <div class="card">
+      <h3>User Statistics</h3>
+      <table>
+        <tr><th>Metric</th><th>Value</th></tr>
+        <tr><td>Total Users</td><td id="totalUsers">Loading...</td></tr>
+        <tr><td>Active Users</td><td id="activeUsers">Loading...</td></tr>
+        <tr><td>New Users This Month</td><td id="newUsers">Loading...</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Quick Actions</h3>
+      <button class="btn-primary" onclick="createUser()">Create New User</button>
+      <button class="btn-danger" onclick="clearCache()">Clear Cache</button>
+      <button onclick="exportData()" style="background: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 4px;">
+        Export Data
+      </button>
+    </div>
+
+    <div class="card">
+      <h3>Add New User</h3>
+      <form>
+        <input type="text" placeholder="Full Name">
+        <input type="email" placeholder="Email">
+        <input type="password" placeholder="Password">
+        <select>
+          <option>Select Role</option>
+          <option>Admin</option>
+          <option>User</option>
+        </select>
+        <button type="submit" class="btn-primary">Save</button>
+      </form>
+    </div>
+  </main>
+</body>
+</html>
