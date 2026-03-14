@@ -70,6 +70,7 @@ Tools are registered in the `inspectra` MCP server. Prompt workflows should call
 | `inspectra_score_findings` | Orchestrator | Compute a domain score |
 | `inspectra_correlate_findings` | Orchestrator | Group findings into hotspots (file, module, dependency, pattern) |
 | `inspectra_infer_root_causes` | Orchestrator | Infer root-cause clusters from hotspot signatures |
+| `inspectra_build_remediation_plan` | Orchestrator | Build prioritized Fix Now / Next Sprint / Backlog batches with score simulation |
 | `inspectra_render_html` | Report Engine | Render HTML report (Obsidian dark theme) |
 | `inspectra_render_pdf` | Report Engine | Export HTML report to PDF (requires puppeteer) |
 | `inspectra_render_trend` | Report Engine | Compute score trend from multiple reports |

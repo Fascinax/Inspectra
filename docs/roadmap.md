@@ -181,12 +181,12 @@ Three tiers compete on the same repos, measured by the same expert panel:
 
 ### Phase 4 — Prioritization Engine
 
-- [ ] Impact scoring per cluster: `severity_ceiling × blast_radius × remediation_leverage / effort`
-- [ ] Remediation plan: group clusters into Fix Now / Next Sprint / Backlog batches
-- [ ] Score simulation: "fixing these 2 root causes brings you from 62/100 to 81/100"
-- [ ] Implement `mcp/src/merger/prioritize.ts` with `RemediationPlan` structure
-- [ ] New MCP tool: `inspectra_build_remediation_plan`
-- [ ] New schema: `schemas/remediation-plan.schema.json`
+- [x] Impact scoring per cluster: `severity_ceiling × blast_radius × remediation_leverage / effort`
+- [x] Remediation plan: group clusters into Fix Now / Next Sprint / Backlog batches
+- [x] Score simulation: "fixing these 2 root causes brings you from 62/100 to 81/100"
+- [x] Implement `mcp/src/merger/prioritize.ts` with `RemediationPlan` structure
+- [x] New MCP tool: `inspectra_build_remediation_plan`
+- [x] New schema: `schemas/remediation-plan.schema.json`
 
 ### Phase 5 — Enhanced Report
 

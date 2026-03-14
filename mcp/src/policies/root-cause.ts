@@ -12,6 +12,18 @@ export type RootCauseCategory =
   | "documentation-debt"
   | "isolated";
 
+export const ROOT_CAUSE_CATEGORIES = [
+  "god-module",
+  "missing-abstraction",
+  "dependency-rot",
+  "test-gap",
+  "convention-drift",
+  "misaligned-architecture",
+  "security-shortcut",
+  "documentation-debt",
+  "isolated",
+] as const satisfies readonly RootCauseCategory[];
+
 export interface RootCausePattern {
   category: RootCauseCategory;
   confidence?: number;

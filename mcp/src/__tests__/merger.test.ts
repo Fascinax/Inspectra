@@ -18,5 +18,6 @@ describe("registerMergerTools", () => {
     expect(registered).toContain("inspectra_score_findings");
     expect(registered).toContain("inspectra_correlate_findings");
     expect(registered).toContain("inspectra_infer_root_causes");
+    expect(registered).toContain("inspectra_build_remediation_plan");
   });
 });

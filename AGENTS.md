@@ -10,7 +10,9 @@ User prompt -> MCP tool scan -> hotspot detection -> optional explorer -> merge 
 2. MCP tools gather deterministic findings across the requested domains.
 3. Hotspot detection identifies files with clustered findings across multiple domains.
 4. A conditional explorer pass reads only hotspot files to uncover deeper root causes.
-5. The workflow scores findings, merges results, and generates Markdown output.
+5. Root-cause inference maps hotspots to known categories (god-module, test-gap, etc.).
+6. The prioritization engine scores each cluster and groups them into Fix Now / Next Sprint / Backlog.
+7. The workflow merges results, simulates score projections, and generates Markdown output.
 
 ## Audit Modes
 
@@ -43,7 +45,9 @@ User prompt -> MCP tool scan -> hotspot detection -> optional explorer -> merge 
 2. MCP tools gather deterministic findings across the relevant domains.
 3. Hotspot detection identifies files with clustered findings across multiple domains.
 4. A conditional explorer pass reads only hotspot files to uncover deeper root causes.
-5. The workflow scores findings, merges results, and generates Markdown output.
+5. Root-cause inference maps hotspots to known categories (god-module, test-gap, etc.).
+6. The prioritization engine scores each cluster and groups them into Fix Now / Next Sprint / Backlog.
+7. The workflow merges results, simulates score projections, and generates Markdown output.
 
 ## Orchestrator
 

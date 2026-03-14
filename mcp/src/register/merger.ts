@@ -13,6 +13,8 @@ import { ParseError } from "../errors.js";
 import { loadIgnoreRules } from "../utils/ignore.js";
 import { detectHotspots } from "../merger/correlate.js";
 import { inferRootCauseClusters } from "../merger/root-cause.js";
+import { ROOT_CAUSE_CATEGORIES } from "../policies/root-cause.js";
+import { buildRemediationPlan } from "../merger/prioritize.js";
 
 const HotspotInputSchema = z.object({
   type: z.enum(["file", "module", "dependency", "pattern"]),
@@ -245,5 +247,76 @@ Error handling:
       const result = inferRootCauseClusters(hotspots, patterns);
       return jsonResponse(result);
     }, "inspectra_infer_root_causes"),
+  );
+
+  const RootCauseClusterInputSchema = z.object({
+      category: z.enum(ROOT_CAUSE_CATEGORIES),
+      source: z.enum(["tool", "llm"]),
+      confidence: z.number().min(0).max(1),
+      rationale: z.string(),
+      hotspot_count: z.number().int().nonnegative(),
+      finding_count: z.number().int().nonnegative(),
+      domain_count: z.number().int().nonnegative(),
+      domains: z.array(z.enum(DOMAINS)),
+      severity_ceiling: z.enum(SEVERITY_LEVELS),
+      hotspots: z.array(HotspotInputSchema),
+    });
+
+    server.registerTool(
+      "inspectra_build_remediation_plan",
+      {
+        title: "Build Remediation Plan",
+        description: `Build a prioritized remediation plan from root-cause clusters.
+
+  Consumes clusters produced by inspectra_infer_root_causes and computes:
+    - An impact score per cluster using: (severity × blast_radius × domain_leverage) / effort
+    - An effort estimate (trivial / small / medium / large / epic) from finding count
+    - A remediation batch (Fix Now / Next Sprint / Backlog)
+    - A score simulation: projected overall score after each batch is resolved
+
+  Batch thresholds:
+    - Fix Now: critical severity_ceiling OR impact_score >= 50
+    - Next Sprint: high severity_ceiling OR impact_score >= 20
+    - Backlog: everything else
+
+  Args:
+    - clustersJson (string): JSON string — array of RootCauseCluster objects from inspectra_infer_root_causes.
+    - currentScore (number): Current overall audit score (0–100), used for score simulation.
+
+  Returns: A RemediationPlan with fix_now / next_sprint / backlog arrays, score projections, and an executive summary.
+
+  Error handling:
+    - Returns isError: true if clustersJson fails Zod validation.
+
+  Examples:
+    1. Build a plan from all inferred clusters:
+       { "clustersJson": "[...clusters from inspectra_infer_root_causes...]", "currentScore": 62 }
+    2. Simulate a perfect base:
+       { "clustersJson": "[]", "currentScore": 100 }`,
+        inputSchema: {
+          clustersJson: z.string().describe("JSON string — array of RootCauseCluster objects from inspectra_infer_root_causes"),
+          currentScore: z.number().min(0).max(100).describe("Current overall audit score (0–100)"),
+          responseFormat: ResponseFormatField,
+        },
+        annotations: READ_ONLY_ANNOTATIONS,
+      },
+      withErrorHandling(async ({ clustersJson, currentScore }) => {
+        let clusters;
+        try {
+          clusters = z.array(RootCauseClusterInputSchema).parse(JSON.parse(clustersJson));
+        } catch (err) {
+          return errorResponse(
+            new ParseError(
+              `Invalid clustersJson: ${err instanceof Error ? err.message : String(err)}`,
+              "Ensure clustersJson is a valid JSON array of RootCauseCluster objects from inspectra_infer_root_causes.",
+            ),
+            "inspectra_build_remediation_plan",
+          );
+        }
+
+        const scoring = await loadScoringRules(policiesDir);
+        const plan = buildRemediationPlan(clusters, currentScore, scoring);
+        return jsonResponse(plan);
+      }, "inspectra_build_remediation_plan"),
   );
 }

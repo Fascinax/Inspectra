@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://inspectra.dev/schemas/remediation-plan.schema.json",
+  "title": "RemediationPlan",
+  "description": "A prioritized remediation plan derived from root-cause clusters. Buckets clusters into Fix Now / Next Sprint / Backlog batches and provides score projections.",
+  "type": "object",
+  "required": ["current_score", "fix_now", "next_sprint", "backlog", "score_after_fix_now", "score_after_all", "summary", "metadata"],
+  "properties": {
+    "current_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Current overall audit score before any remediation."
+    },
+    "fix_now": {
+      "type": "array",
+      "description": "Clusters requiring immediate attention (critical severity or high impact).",
+      "items": { "$ref": "#/$defs/PrioritizedCluster" }
+    },
+    "next_sprint": {
+      "type": "array",
+      "description": "Clusters to address in the next sprint (high severity or moderate impact).",
+      "items": { "$ref": "#/$defs/PrioritizedCluster" }
+    },
+    "backlog": {
+      "type": "array",
+      "description": "Clusters that can be deferred to the backlog.",
+      "items": { "$ref": "#/$defs/PrioritizedCluster" }
+    },
+    "score_after_fix_now": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Projected overall score after resolving all Fix Now clusters."
+    },
+    "score_after_all": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Projected overall score after resolving all clusters."
+    },
+    "summary": {
+      "type": "string",
+      "description": "Human-readable executive summary of the remediation plan."
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["total_clusters", "fix_now_count", "next_sprint_count", "backlog_count"],
+      "properties": {
+        "total_clusters": { "type": "integer", "minimum": 0 },
+        "fix_now_count": { "type": "integer", "minimum": 0 },
+        "next_sprint_count": { "type": "integer", "minimum": 0 },
+        "backlog_count": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "PrioritizedCluster": {
+      "type": "object",
+      "required": ["cluster", "impact_score", "effort", "recommended_batch", "estimated_score_delta"],
+      "properties": {
+        "cluster": {
+          "$ref": "root-cause-cluster.schema.json",
+          "description": "The root-cause cluster being prioritized."
+        },
+        "impact_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Computed impact score (0–100). Higher = more urgent."
+        },
+        "effort": {
+          "type": "string",
+          "enum": ["trivial", "small", "medium", "large", "epic"],
+          "description": "Estimated effort to address the cluster."
+        },
+        "recommended_batch": {
+          "type": "string",
+          "enum": ["fix_now", "next_sprint", "backlog"],
+          "description": "Recommended remediation batch."
+        },
+        "estimated_score_delta": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Estimated overall score improvement if this cluster is resolved."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
