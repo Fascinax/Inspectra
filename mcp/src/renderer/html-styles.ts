@@ -279,6 +279,71 @@ export function renderStyles(): string {
     padding-bottom: 8px;
     border-bottom: 1px solid var(--border);
   }
+  .diagnosis-section,
+  .remediation-section,
+  .root-cause-section,
+  .score-context-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .diagnosis-list {
+    margin-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: var(--text-secondary);
+  }
+  .table-wrap {
+    overflow-x: auto;
+  }
+  .diagnosis-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+  .diagnosis-table th,
+  .diagnosis-table td {
+    text-align: left;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .diagnosis-table th {
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+  }
+  .batch-tag {
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+    font-size: 0.78rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px 8px;
+    white-space: nowrap;
+  }
+  .causal-arrows {
+    margin-top: 14px;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+  }
+  .causal-arrows h3 {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+  .causal-arrows ul,
+  .score-context-list {
+    margin-left: 18px;
+    color: var(--text-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
   .finding {
     background: var(--bg-card);
     border: 1px solid var(--border);

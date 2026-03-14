@@ -73,6 +73,90 @@ export const REPORT_TEMPLATE = `<!DOCTYPE html>
       </div>
     </div>
 
+    {{!-- Executive Diagnosis --}}
+    <div class="section diagnosis-section">
+      <h2>Executive Diagnosis</h2>
+      <ol class="diagnosis-list">
+        {{#each executiveDiagnosisView}}
+        <li>{{this}}</li>
+        {{/each}}
+      </ol>
+    </div>
+
+    {{!-- Remediation Plan --}}
+    <div class="section remediation-section">
+      <h2>Remediation Plan</h2>
+      {{#if hasRemediationRows}}
+      <div class="table-wrap">
+        <table class="diagnosis-table">
+          <thead>
+            <tr>
+              <th>Batch</th>
+              <th>Root Cause</th>
+              <th>Severity</th>
+              <th>Effort</th>
+              <th>Impact</th>
+              <th>Est. Score Delta</th>
+              <th>Dependencies</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each remediationRowsView}}
+            <tr>
+              <td><span class="batch-tag">{{batchLabel}}</span></td>
+              <td>{{label}}</td>
+              <td><span class="tag" style="background:{{severityColor}}22;color:{{severityColor}}">{{severity}}</span></td>
+              <td>{{effort}}</td>
+              <td>{{impact}}</td>
+              <td>+{{scoreDelta}}</td>
+              <td>{{dependencies}}</td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+      {{else}}
+      <p class="no-findings">No remediation rows were generated from the input report.</p>
+      {{/if}}
+    </div>
+
+    {{!-- Root Cause Analysis --}}
+    <div class="section root-cause-section">
+      <h2>Root Cause Analysis</h2>
+      {{#if hasRootCauseClusters}}
+      {{#each rootCauseClustersView}}
+      <div class="finding" style="border-left-color:{{severityColor}}">
+        <div class="finding-header">
+          <span class="sev-dot" style="background:{{severityColor}}"></span>
+          <span class="finding-title">{{label}}</span>
+          <span class="tag" style="background:{{severityColor}}22;color:{{severityColor}}">{{severity}}</span>
+        </div>
+        <div class="finding-desc">{{rationale}}</div>
+        <div class="finding-meta">
+          <span>Blast radius: {{blastRadius}}</span>
+          <span>Contributing findings: {{contributingFindings}}</span>
+        </div>
+      </div>
+      {{/each}}
+      {{#if hasCausalArrows}}
+      <div class="causal-arrows">
+        <h3>Causal Arrows</h3>
+        <ul>
+          {{#each causalArrowsView}}
+          <li>{{this}}</li>
+          {{/each}}
+        </ul>
+      </div>
+      {{/if}}
+      {{else}}
+      <p class="no-findings">No root-cause clusters were provided; this report is based on direct findings only.</p>
+      {{/if}}
+    </div>
+
+    <div class="section">
+      <h2>Domain Breakdown</h2>
+    </div>
+
     {{!-- Domain Grid --}}
     <div class="domain-grid">
       {{#each domainReportsView}}
@@ -139,6 +223,16 @@ export const REPORT_TEMPLATE = `<!DOCTYPE html>
       {{/if}}
     </details>
     {{/each}}
+
+    {{!-- Score Context --}}
+    <div class="section score-context-section">
+      <h2>Score Context</h2>
+      <ul class="score-context-list">
+        {{#each scoreContextView}}
+        <li>{{this}}</li>
+        {{/each}}
+      </ul>
+    </div>
 
     {{!-- Footer --}}
     <footer class="footer">

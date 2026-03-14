@@ -190,11 +190,11 @@ Three tiers compete on the same repos, measured by the same expert panel:
 
 ### Phase 5 — Enhanced Report
 
-- [ ] Diagnosis-first report layout: Executive Diagnosis → Remediation Plan → Root Cause Analysis → Domain Breakdown
-- [ ] Executive Diagnosis: 3 sentences max, 1-3 root causes that matter, expected score after fix, first action
-- [ ] Remediation batches with effort, impact, estimated score improvement, and fix dependencies
-- [ ] Score context: what the number captures and what it doesn't
-- [ ] Update HTML/PDF/Markdown renderers for diagnosis-first layout
+- [x] Diagnosis-first report layout: Executive Diagnosis → Remediation Plan → Root Cause Analysis → Domain Breakdown
+- [x] Executive Diagnosis: 3 sentences max, 1-3 root causes that matter, expected score after fix, first action
+- [x] Remediation batches with effort, impact, estimated score improvement, and fix dependencies
+- [x] Score context: what the number captures and what it doesn't
+- [x] Update HTML/PDF/Markdown renderers for diagnosis-first layout
 
 ### Phase 1 — Architecture Migration to Tier B ✅
 

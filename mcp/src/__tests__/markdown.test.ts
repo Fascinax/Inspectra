@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { renderMarkdown, renderFindingsAsMarkdown } from "../renderer/markdown.js";
 import type { ConsolidatedReport } from "../types.js";
+import type { RootCauseCluster } from "../merger/root-cause.js";
 import { makeFinding, makeDomainReport } from "./fixtures.js";
 
 function makeReport(overrides: Partial<ConsolidatedReport> = {}): ConsolidatedReport {
@@ -17,6 +18,33 @@ function makeReport(overrides: Partial<ConsolidatedReport> = {}): ConsolidatedRe
       profile: "generic",
     },
     ...overrides,
+  };
+}
+
+function makeCluster(): RootCauseCluster {
+  const finding = makeFinding({ id: "SEC-101", severity: "high", domain: "security" });
+  return {
+    category: "security-shortcut",
+    source: "tool",
+    confidence: 0.9,
+    rationale: "Security controls are applied inconsistently across modules.",
+    hotspot_count: 1,
+    finding_count: 1,
+    domain_count: 1,
+    domains: ["security"],
+    severity_ceiling: "high",
+    hotspots: [
+      {
+        type: "file",
+        key: "src/auth.ts",
+        label: "src/auth.ts",
+        finding_count: 1,
+        domain_count: 1,
+        domains: ["security"],
+        severity_ceiling: "high",
+        findings: [finding],
+      },
+    ],
   };
 }
 
@@ -39,6 +67,24 @@ describe("renderMarkdown", () => {
   it("includes domain names", () => {
     const output = renderMarkdown(makeReport());
     expect(output).toContain("Security");
+  });
+
+  it("renders diagnosis-first section headings", () => {
+    const output = renderMarkdown(makeReport());
+    expect(output).toContain("## Executive Diagnosis");
+    expect(output).toContain("## Remediation Plan");
+    expect(output).toContain("## Root Cause Analysis");
+    expect(output).toContain("## Domain Breakdown");
+    expect(output).toContain("## Score Context");
+  });
+
+  it("renders provided root cause clusters in analysis section", () => {
+    const report = makeReport() as ConsolidatedReport & { clusters: RootCauseCluster[] };
+    report.clusters = [makeCluster()];
+
+    const output = renderMarkdown(report);
+    expect(output).toContain("Security Shortcut");
+    expect(output).toContain("Contributing Findings");
   });
 });
 

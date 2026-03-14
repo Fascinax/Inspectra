@@ -45,4 +45,19 @@ describe("renderHtml", () => {
     const output = renderHtml(makeReport());
     expect(output).toContain("<style>");
   });
+
+  it("renders diagnosis-first sections", () => {
+    const output = renderHtml(makeReport());
+    expect(output).toContain("Executive Diagnosis");
+    expect(output).toContain("Remediation Plan");
+    expect(output).toContain("Root Cause Analysis");
+    expect(output).toContain("Domain Breakdown");
+    expect(output).toContain("Score Context");
+  });
+
+  it("renders remediation table columns", () => {
+    const output = renderHtml(makeReport());
+    expect(output).toContain("Est. Score Delta");
+    expect(output).toContain("Dependencies");
+  });
 });
