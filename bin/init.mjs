@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 
 /**
- * Inspectra CLI — audit agent installer.
+ * Inspectra CLI — audit workflow installer.
  *
  * Commands:
- *   inspectra setup              Register MCP server + install agents globally in VS Code (zero project footprint)
+ *   inspectra setup              Register MCP server + install prompts globally in VS Code (zero project footprint)
  *   inspectra setup --claude     Generate CLAUDE.md + .mcp.json for Claude Code in the current directory
  *   inspectra setup --codex      Generate AGENTS.md + .codex/config.toml for OpenAI Codex in the current directory
  *
  * Note: CLAUDE.md and AGENTS.md are generated from hardcoded templates here, not from the repo root files.
  * Keep writeTargetClaudeMd() and writeTargetAgentsMd() in sync with CLAUDE.md / AGENTS.md.
- *   inspectra init <project>     Symlink agents into a project (gitignored) + .vscode/mcp.json
- *   inspectra init <project> --copy   Copy agents into a project (commits with the repo)
+ *   inspectra init <project>     Symlink prompts/resources into a project (gitignored) + .vscode/mcp.json
+ *   inspectra init <project> --copy   Copy prompts/resources into a project (commits with the repo)
  */
 
 import {
@@ -26,8 +26,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const INSPECTRA_ROOT = resolve(__dirname, "..");
 const MCP_SERVER_PATH = join(INSPECTRA_ROOT, "mcp", "dist", "index.js");
 
-const AGENT_ASSETS = [
-  { src: ".github/agents", glob: "*.agent.md" },
+const WORKFLOW_ASSETS = [
   { src: ".github/prompts", glob: "*.prompt.md" },
 ];
 
@@ -140,7 +139,7 @@ function ensureGitignoreEntries(projectRoot, entries) {
   const missing = entries.filter((e) => !content.includes(e));
   if (missing.length === 0) return;
 
-  const block = "\n# Inspectra agents (linked, not committed)\n" + missing.join("\n") + "\n";
+  const block = "\n# Inspectra workflow assets (linked, not committed)\n" + missing.join("\n") + "\n";
   appendFileSync(gitignorePath, block, "utf-8");
   console.log(`  ✓ .gitignore updated (${missing.length} entries)`);
 }
@@ -200,7 +199,7 @@ function writeTargetClaudeMd(targetDir) {
 
 ## Inspectra MCP Tools
 
-This project is configured to use Inspectra, a multi-agent code audit system.
+This project is configured to use Inspectra, a hybrid code audit system.
 The MCP server is registered in \`.mcp.json\` and exposes 42 audit tools.
 
 ## How to Run an Audit
@@ -268,7 +267,7 @@ function writeTargetAgentsMd(targetDir) {
 
 ## Inspectra MCP Tools
 
-This project is configured to use Inspectra, a multi-agent code audit system.
+This project is configured to use Inspectra, a hybrid code audit system.
 The MCP server is registered in \`.codex/config.toml\` and exposes 42 audit tools.
 All tool names are prefixed \`inspectra_\`.
 
@@ -353,12 +352,12 @@ function cmdSetup({ claude = false, codex = false } = {}) {
   console.log(`  ✓ MCP server registered in VS Code MCP config`);
   console.log(`    ${mcpConfigPath}`);
 
-  // 2. Copy agents + prompts to VS Code user prompts directory
+  // 2. Copy workflow prompts to the VS Code user prompts directory
   const userPromptsDir = join(getVSCodeUserDir(), "prompts");
   mkdirSync(userPromptsDir, { recursive: true });
 
   let total = 0, updated = 0, unchanged = 0;
-  for (const asset of AGENT_ASSETS) {
+  for (const asset of WORKFLOW_ASSETS) {
     const srcDir = join(INSPECTRA_ROOT, asset.src);
     const result = copyDir(srcDir, userPromptsDir, asset.glob);
     total += result.total;
@@ -366,17 +365,17 @@ function cmdSetup({ claude = false, codex = false } = {}) {
     unchanged += result.unchanged;
   }
 
-  console.log(`\n  ${updated > 0 ? "↺" : "✓"} ${total} agent/prompt files → ${userPromptsDir}`);
+  console.log(`\n  ${updated > 0 ? "↺" : "✓"} ${total} prompt/resource files → ${userPromptsDir}`);
   console.log(`    ${updated} updated, ${unchanged} already up-to-date`);
 
   if (updated === 0) {
-    console.log(`\n✅ Inspectra is already up-to-date. No changes were made to agent files.`);
+    console.log(`\n✅ Inspectra is already up-to-date. No changes were made to prompt files.`);
   } else {
     console.log(`\n✅ Inspectra updated — ${updated} file(s) changed.`);
     console.log(`   Reload the MCP configuration in VS Code if the server was already running:`);
     console.log(`   Command Palette → MCP: List Servers → restart inspectra`);
   }
-  console.log(`\n   To use: open any project → Copilot Chat → select audit-orchestrator → /audit\n`);
+  console.log(`\n   To use: open any project → Copilot Chat → /audit\n`);
 }
 
 // ─── setup --claude ─────────────────────────────────────────────────────────
@@ -455,8 +454,8 @@ function cmdInitSymlink(targetArg, { claude = false, codex = false } = {}) {
   let total = 0;
   const allGitignoreEntries = [];
 
-  // Symlink agents + prompts
-  for (const asset of AGENT_ASSETS) {
+  // Symlink workflow prompts
+  for (const asset of WORKFLOW_ASSETS) {
     const srcDir = join(INSPECTRA_ROOT, asset.src);
     const destDir = join(target, asset.src);
     const { count, gitignoreEntries } = symlinkDir(srcDir, destDir, asset.glob, target);
@@ -492,8 +491,8 @@ function cmdInitSymlink(targetArg, { claude = false, codex = false } = {}) {
   } else if (codex) {
     console.log("Codex will read AGENTS.md and .codex/config.toml for MCP.");
   } else {
-    console.log("Agents are gitignored — your repo stays clean.");
-    console.log("Open the project in VS Code: agents appear in Copilot dropdown.");
+    console.log("Prompt assets are gitignored — your repo stays clean.");
+    console.log("Open the project in VS Code to use /audit, /audit-pr, and /audit-domain.");
   }
   console.log("");
 }
@@ -510,7 +509,7 @@ function cmdInitCopy(targetArg, { claude = false, codex = false } = {}) {
   console.log(`\nInspectra Init (copy) → ${target}\n`);
 
   let total = 0, updated = 0, unchanged = 0;
-  for (const asset of [...AGENT_ASSETS, ...DATA_ASSETS]) {
+  for (const asset of [...WORKFLOW_ASSETS, ...DATA_ASSETS]) {
     const srcDir = join(INSPECTRA_ROOT, asset.src);
     const destDir = join(target, asset.src);
     const result = copyDir(srcDir, destDir, asset.glob);
@@ -588,15 +587,15 @@ function cmdDoctor() {
     "Run: inspectra setup",
   );
 
-  // 4. Agent files
-  const agentsDir = join(INSPECTRA_ROOT, ".github", "agents");
-  const agentFiles = existsSync(agentsDir)
-    ? readdirSync(agentsDir).filter((f) => f.endsWith(".agent.md"))
+  // 4. Prompt files
+  const promptsDir = join(INSPECTRA_ROOT, ".github", "prompts");
+  const promptFiles = existsSync(promptsDir)
+    ? readdirSync(promptsDir).filter((f) => f.endsWith(".prompt.md"))
     : [];
   check(
-    `Agent files  (${agentFiles.length} found in .github/agents/)`,
-    agentFiles.length > 0,
-    "Agent files are missing. Re-clone the repository or run: inspectra setup",
+    `Prompt files  (${promptFiles.length} found in .github/prompts/)`,
+    promptFiles.length > 0,
+    "Prompt files are missing. Re-clone the repository or run: inspectra setup",
   );
 
   // 5. policies directory
@@ -654,14 +653,14 @@ function cmdDoctor() {
 
 function printHelp() {
   console.log(`
-Inspectra — multi-agent code audit system
+Inspectra — hybrid code audit system
 
 Commands:
-  inspectra setup                    Install agents + MCP globally in VS Code (zero project footprint)
+  inspectra setup                    Install prompts + MCP globally in VS Code (zero project footprint)
   inspectra setup --claude           Generate CLAUDE.md + .mcp.json in current dir for Claude Code
   inspectra setup --codex            Generate AGENTS.md + .codex/config.toml in current dir for Codex
-  inspectra init <project>           Symlink agents into a project (gitignored) + .vscode/mcp.json
-  inspectra init <project> --copy    Copy agents into a project (committed with the repo)
+  inspectra init <project>           Symlink prompts into a project (gitignored) + .vscode/mcp.json
+  inspectra init <project> --copy    Copy prompts into a project (committed with the repo)
   inspectra init <project> --claude  Set up project for Claude Code
   inspectra init <project> --codex   Set up project for OpenAI Codex
   inspectra doctor                   Check environment prerequisites and configuration

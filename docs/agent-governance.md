@@ -1,10 +1,10 @@
-# Agent Governance
+# Workflow Governance
 
-This document describes how Inspectra enforces the [Stripe Minions principles](https://stripe.dev/blog/minions-stripes-one-shot-end-to-end-coding-agents) for reliable multi-agent operations.
+This document describes how Inspectra applies the [Stripe Minions principles](https://stripe.dev/blog/minions-stripes-one-shot-end-to-end-coding-agents) to prompt-driven audit workflows and contributor automation.
 
 ## Enforcement Strategy
 
-Inspectra uses a 3-layer enforcement model. Each layer targets a different category of principles:
+Inspectra uses a 2-layer enforcement model plus audit logging. Each layer targets a different category of principles:
 
 ```markdown
 ┌─────────────────────────────────────────────────────────┐
@@ -12,7 +12,7 @@ Inspectra uses a 3-layer enforcement model. Each layer targets a different categ
 ├─────────────────────────────────────────────────────────┤
 │  Layer 2: Skill (agent-governance)                      │  ← Behavioral guidance
 ├─────────────────────────────────────────────────────────┤
-│  Layer 3: Agent Definitions (.github/agents/*.agent.md) │  ← Per-agent constraints
+│  Runtime: MCP activity log                              │  ← Traceability
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -22,11 +22,11 @@ Inspectra uses a 3-layer enforcement model. Each layer targets a different categ
 
 **File**: `.github/copilot-instructions.md`
 
-Contains the "Agent Governance" section with:
+Contains the governance section with:
 
 - **Hard Blocks** — Actions agents must NEVER perform (git push, modify governance files, install deps)
-- **Agent Scope** — Explicit IN/OUT scope table for each domain agent
-- **Task Decomposition** — One agent, one domain, one report
+- **Domain Scope** — Explicit IN/OUT scope for each audit domain
+- **Task Decomposition** — One workflow step, one concern, one report
 - **The Pit of Success** — Quality in = quality out
 - **Traceability** — Metadata requirements for every report and commit
 - **Standardization** — Consistent agent prompt structure
@@ -48,53 +48,28 @@ Contains detailed behavioral guidance for:
 
 **Why a skill**: Skills are triggered contextually — this fires when working with multi-agent coordination, but doesn't pollute simple code editing sessions with irrelevant agent rules.
 
-### Layer 3 — Enriched Agent Definitions
-
-**Files**: `.github/agents/*.agent.md`
-
-Each agent now has three new sections:
-
-#### Scope Boundaries
-
-- Explicit IN-scope and OUT-of-scope file patterns per agent
-- "If you encounter something outside your scope, ignore it — do NOT report it"
-
-#### Hard Blocks
-
-- Agent-specific prohibitions (e.g., audit-tests: "NEVER execute tests")
-- Generic prohibitions (no git push, no governance file modifications)
-
-#### Quality Checklist
-
-- Pre-return verification checklist specific to each agent
-- Finding ID pattern, evidence, confidence bounds, metadata completeness
-- "If any check fails, fix the root cause and regenerate — do NOT patch the output"
-
-**Why in agents**: Scope and quality constraints are agent-specific. The security agent has different boundaries than the conventions agent.
-
 ## MCP Governance Tools
 
 Inspectra provides two MCP tools for agent traceability:
 
-- **`inspectra_log_activity`** — Records agent actions to a JSONL log (`.inspectra/activity.jsonl`). Every domain agent should log its start/end and key decisions.
-- **`inspectra_read_activity_log`** — Reads and filters activity log entries. The orchestrator uses this to verify which agents ran and what they did.
+- **`inspectra_log_activity`** — Records workflow activity to a JSONL log (`.inspectra/activity.jsonl`). Audit runs and contributor automation should log start/end and key decisions.
+- **`inspectra_read_activity_log`** — Reads and filters activity log entries for traceability.
 
-These tools enforce the **Traceability** principle: every agent action must be auditable after the fact.
+These tools enforce the **Traceability** principle: every workflow action must be auditable after the fact.
 
 ## Principle Coverage Matrix
 
-| Stripe Minions Principle | Layer 1 (Instructions) | Layer 2 (Skill) | Layer 3 (Agents) | MCP Tools |
-| --- | :---: | :---: | :---: | :---: |
-| Rule #1: Never Fix Bad Output | ✓ | ✓✓ | ✓ | |
-| Hard Blocks | ✓✓ | ✓ | ✓ | |
-| Agent Scope | ✓✓ | ✓ | ✓✓ | |
-| Task Decomposition | ✓ | ✓✓ | ✓ | |
-| The Pit of Success | ✓✓ | ✓ | | |
-| Traceability | ✓✓ | ✓ | ✓ | ✓✓ (activity log) |
-| Standardization | ✓✓ | | ✓✓ | |
-| Per-Agent Isolation | ✓✓ | ✓ | ✓ | |
-| Quality Gates | | ✓✓ | ✓ | |
-| Specs / No Ambiguity | | ✓✓ | | |
+| Stripe Minions Principle | Layer 1 (Instructions) | Layer 2 (Skill) | MCP Tools |
+| --- | :---: | :---: | :---: |
+| Rule #1: Never Fix Bad Output | ✓ | ✓✓ | |
+| Hard Blocks | ✓✓ | ✓ | |
+| Domain Scope | ✓✓ | ✓ | |
+| Task Decomposition | ✓ | ✓✓ | |
+| The Pit of Success | ✓✓ | ✓ | |
+| Traceability | ✓✓ | ✓ | ✓✓ |
+| Standardization | ✓✓ | | |
+| Quality Gates | | ✓✓ | |
+| Specs / No Ambiguity | | ✓✓ | |
 
 ✓✓ = primary enforcement layer, ✓ = reinforcing layer
 
@@ -104,7 +79,7 @@ These tools enforce the **Traceability** principle: every agent action must be a
 
 **File**: `.github/prompts/agent-task-spec.prompt.md`
 
-A reusable prompt for writing unambiguous agent task specifications. Follows the "Specs should leave NO ambiguity" principle with a structured template: Task → Input → Output → Scope → Success Criteria → Failure Protocol.
+A reusable prompt for writing unambiguous workflow task specifications. Follows the "Specs should leave NO ambiguity" principle with a structured template: Task → Input → Output → Scope → Success Criteria → Failure Protocol.
 
 ## Adding New Principles
 
@@ -113,7 +88,6 @@ When adding a new governance principle:
 1. Determine which layer it belongs to using this heuristic:
    - **Always on, never negotiable** → Layer 1 (Instructions)
    - **Behavioral, contextual, detailed** → Layer 2 (Skill)
-   - **Agent-specific constraint** → Layer 3 (Agent definition)
    - **Runtime traceability** → MCP Tool
 2. Add the principle to the appropriate files
 3. Update this document's coverage matrix

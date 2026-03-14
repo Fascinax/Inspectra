@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { join, relative, extname, basename } from "node:path";
+import { relative, extname } from "node:path";
 import type { Finding } from "../types.js";
 import { collectSourceFiles, collectAllFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
@@ -23,9 +23,6 @@ const COMMENTED_AUTH_ANNOTATION =
   /\/\/\s*@(?:PreAuthorize|Secured|RolesAllowed)\s*\(/;
 
 // ─── Missing @Valid Detection ───────────────────────────────────────────────
-
-const REQUEST_BODY_PARAM =
-  /(?:@RequestBody)\s+(?:(?:final|Optional<)\s*)?(\w+)/g;
 const VALID_BEFORE_REQUEST_BODY =
   /@Valid\s+@RequestBody|@Validated\s+@RequestBody/;
 
@@ -177,7 +174,8 @@ function checkCommentedAuthAnnotations(
   nextId: () => string,
 ): void {
   for (let i = 0; i < lines.length; i++) {
-    if (COMMENTED_AUTH_ANNOTATION.test(lines[i]!)) {
+    const line = lines[i] ?? "";
+    if (COMMENTED_AUTH_ANNOTATION.test(line)) {
       findings.push({
         id: nextId(),
         severity: "high",
@@ -188,7 +186,7 @@ function checkCommentedAuthAnnotations(
         domain: "security",
         rule: "no-commented-auth",
         confidence: 0.92,
-        evidence: [{ file: relPath, line: i + 1, snippet: lines[i]!.trim().substring(0, MAX_SNIPPET_LENGTH) }],
+        evidence: [{ file: relPath, line: i + 1, snippet: line.trim().substring(0, MAX_SNIPPET_LENGTH) }],
         recommendation:
           "Uncomment the security annotation or replace it with the intended access control. " +
           "Never commit security bypasses.",
@@ -264,7 +262,7 @@ function checkMissingValid(
   if (!/@(?:RestController|Controller)\b/.test(content)) return;
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]!;
+    const line = lines[i] ?? "";
     // Look for @RequestBody without @Valid/@Validated on the same or preceding token
     if (/@RequestBody\b/.test(line) && !VALID_BEFORE_REQUEST_BODY.test(line)) {
       // Check the preceding few characters/tokens on the same line for @Valid
@@ -338,7 +336,7 @@ function checkErrorInfoLeak(
   let handlerStart = 0;
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]!;
+    const line = lines[i] ?? "";
     if (EXCEPTION_HANDLER_ANNOTATION.test(line)) {
       insideHandler = true;
       handlerStart = i;
@@ -413,7 +411,7 @@ function checkFileUploadValidation(
 
 function findLineNumber(lines: string[], pattern: RegExp): number {
   for (let i = 0; i < lines.length; i++) {
-    if (pattern.test(lines[i]!)) return i + 1;
+    if (pattern.test(lines[i] ?? "")) return i + 1;
   }
   return 1;
 }

@@ -14,22 +14,22 @@ export function registerAdapterTools(server: McpServer): void {
     "inspectra_generate_claude_md",
     {
       title: "Generate CLAUDE.md",
-      description: `Generate a CLAUDE.md reference file that exposes Inspectra agents to Claude Code.
+      description: `Generate a CLAUDE.md reference file that exposes Inspectra workflow assets to Claude Code.
 
-Reads all .agent.md files from the .github/agents/ directory (relative to projectDir) and compiles them into a single CLAUDE.md document suitable for use as Claude Code project context.
+    Scans prompt workflow files from .github/prompts/ (relative to projectDir) and compiles them into a single CLAUDE.md document suitable for use as Claude Code project context.
 
 When outputPath is provided the file is written to disk and a compact summary is returned. When omitted the content is returned inline.
 
 Args:
-  - projectDir (string): Absolute path to the project root. Agent files are read from <projectDir>/.github/agents/.
+  - projectDir (string): Absolute path to the project root.
   - outputPath (string, optional): Absolute or relative path where CLAUDE.md should be written. Defaults to <projectDir>/CLAUDE.md when not specified.
   - write (boolean, optional): When true and outputPath is not specified, writes to <projectDir>/CLAUDE.md. Default: false.
 
-Returns: JSON object with { content, agentCount, agentFiles, outputPath? }.
+Returns: JSON object with { content, referenceCount, includedFiles, outputPath? }.
 
 Error handling:
   - Throws if projectDir does not exist or is not a directory.
-  - Returns agentCount: 0 with a minimal CLAUDE.md when no agent files are found.
+  - Returns referenceCount: 0 with a minimal CLAUDE.md when no prompt files are found.
 
 Examples:
   1. Generate CLAUDE.md and write to project root:
@@ -60,9 +60,7 @@ Examples:
     },
     withErrorHandling(async ({ projectDir, outputPath, write }) => {
       const safeDir = await validateProjectDir(projectDir);
-      const agentsDir = join(safeDir, ".github", "agents");
-
-      const result = await generateClaudeMd(agentsDir);
+      const result = await generateClaudeMd(safeDir);
 
       const resolvedOutputPath = outputPath
         ? resolve(outputPath)
@@ -73,16 +71,16 @@ Examples:
       if (resolvedOutputPath) {
         await writeFile(resolvedOutputPath, result.content, "utf-8");
         return jsonResponse({
-          agentCount: result.agentCount,
-          agentFiles: result.agentFiles,
+          referenceCount: result.referenceCount,
+          includedFiles: result.includedFiles,
           outputPath: resolvedOutputPath,
-          message: `CLAUDE.md written to ${resolvedOutputPath} (${result.agentCount} agent(s) included).`,
+          message: `CLAUDE.md written to ${resolvedOutputPath} (${result.referenceCount} workflow reference(s) included).`,
         });
       }
 
       return jsonResponse({
-        agentCount: result.agentCount,
-        agentFiles: result.agentFiles,
+        referenceCount: result.referenceCount,
+        includedFiles: result.includedFiles,
         content: result.content,
       });
     }, "inspectra_generate_claude_md"),
@@ -94,9 +92,9 @@ Examples:
     "inspectra_generate_codex_agents_md",
     {
       title: "Generate Codex AGENTS.md",
-      description: `Generate an AGENTS.md file that exposes Inspectra agents to OpenAI Codex.
+      description: `Generate an AGENTS.md file that exposes Inspectra workflow assets to OpenAI Codex.
 
-Reads all .agent.md files from the .github/agents/ directory (relative to projectDir) and compiles them into a single AGENTS.md document with audit workflow instructions, MCP tools reference, scoring model, and finding contract — suitable for use as Codex project instructions.
+    Scans prompt workflow files from .github/prompts/ (relative to projectDir) and compiles them into a single AGENTS.md document with audit workflow instructions, MCP tools reference, scoring model, and finding contract — suitable for use as Codex project instructions.
 
 When write is true, the file is written to disk at <projectDir>/AGENTS.md (or outputPath if specified).
 
@@ -105,7 +103,7 @@ Args:
   - outputPath (string, optional): Where to write AGENTS.md. Defaults to <projectDir>/AGENTS.md when write: true.
   - write (boolean, optional): Write to disk when true. Default: false.
 
-Returns: JSON object with { content, agentCount, agentFiles, outputPath? }.`,
+Returns: JSON object with { content, referenceCount, includedFiles, outputPath? }.`,
       inputSchema: {
         projectDir: z
           .string()
@@ -128,9 +126,7 @@ Returns: JSON object with { content, agentCount, agentFiles, outputPath? }.`,
     },
     withErrorHandling(async ({ projectDir, outputPath, write }) => {
       const safeDir = await validateProjectDir(projectDir);
-      const agentsDir = join(safeDir, ".github", "agents");
-
-      const result = await generateCodexAgentsMd(agentsDir);
+      const result = await generateCodexAgentsMd(safeDir);
 
       const resolvedOutputPath = outputPath
         ? resolve(outputPath)
@@ -141,16 +137,16 @@ Returns: JSON object with { content, agentCount, agentFiles, outputPath? }.`,
       if (resolvedOutputPath) {
         await writeFile(resolvedOutputPath, result.content, "utf-8");
         return jsonResponse({
-          agentCount: result.agentCount,
-          agentFiles: result.agentFiles,
+          referenceCount: result.referenceCount,
+          includedFiles: result.includedFiles,
           outputPath: resolvedOutputPath,
-          message: `AGENTS.md written to ${resolvedOutputPath} (${result.agentCount} agent(s) included).`,
+          message: `AGENTS.md written to ${resolvedOutputPath} (${result.referenceCount} workflow reference(s) included).`,
         });
       }
 
       return jsonResponse({
-        agentCount: result.agentCount,
-        agentFiles: result.agentFiles,
+        referenceCount: result.referenceCount,
+        includedFiles: result.includedFiles,
         content: result.content,
       });
     }, "inspectra_generate_codex_agents_md"),

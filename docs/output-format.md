@@ -91,7 +91,7 @@ The final merged report produced by the orchestrator.
     "target": "/path/to/project",
     "profile": "java-angular-playwright",
     "duration_ms": 4500,
-    "agents_invoked": ["audit-security", "audit-tests", "audit-architecture", "audit-conventions"]
+    "domains_audited": ["security", "tests", "architecture", "conventions"]
   }
 }
 ```

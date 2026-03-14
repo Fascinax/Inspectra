@@ -12,13 +12,13 @@
 [![npm version](https://img.shields.io/npm/v/inspectra?style=for-the-badge&logo=npm)](https://www.npmjs.com/package/inspectra)
 ![Tests](https://img.shields.io/badge/tests-652%20passing-2ea043?style=for-the-badge)
 
-**Multi-agent code audit system** powered by GitHub Copilot Custom Agents and MCP.
+**Hybrid code audit system** powered by GitHub Copilot and MCP.
 
-Inspectra coordinates specialized audit agents — security, tests, architecture, conventions, performance, documentation, tech-debt, accessibility, api-design, observability, and i18n — to produce structured, scored, and actionable code quality reports.
+Inspectra runs deterministic MCP tools across 12 audit domains, then performs a single structured synthesis pass with optional hotspot exploration to produce structured, scored, and actionable code quality reports.
 
 ## Supported Languages
 
-### Full support (Phase 1 tools + Phase 2 LLM)
+### Full support (deterministic tools + conditional explorer)
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
@@ -34,9 +34,8 @@ Inspectra coordinates specialized audit agents — security, tests, architecture
 ![Ruby](https://img.shields.io/badge/Ruby-CC342D?style=flat-square&logo=ruby&logoColor=white)
 ![Swift](https://img.shields.io/badge/Swift-F05138?style=flat-square&logo=swift&logoColor=white)
 
-> **Full support** = deterministic MCP tool scans (naming, file lengths, complexity, DRY, etc.) + LLM code exploration.
+> **Full support** = deterministic MCP tool scans (naming, file lengths, complexity, DRY, etc.) + conditional hotspot exploration.
 > **Partial support** = LLM exploration only — no tool-detected findings. More languages on the [roadmap](docs/roadmap.md).
-
 
 ---
 
@@ -122,9 +121,8 @@ See [docs/codex-setup.md](docs/codex-setup.md) for detailed instructions.
 inspectra init /path/to/my-project
 ```
 
-This creates symlinked agents in the target project (gitignored automatically):
+This creates symlinked Inspectra workflow assets in the target project (gitignored automatically):
 
-- `.github/agents/` — agents visible in the Copilot dropdown (symlinked, gitignored)
 - `.github/prompts/` — audit prompt shortcuts (symlinked, gitignored)
 - `.vscode/mcp.json` — MCP server auto-starts when the project opens
 - `policies/` + `schemas/` — scoring rules and contracts (copied)
@@ -143,7 +141,7 @@ Same as Option B but files are real copies committed with the repo. Useful for C
 
 Open the target project in VS Code, open Copilot Chat, and type:
 
-- `/audit` : full audit (all 12 domains, agent selected automatically)
+- `/audit` : full audit (all 12 domains, Tier B hybrid workflow)
 - `/audit-pr` : audit scoped to changed files
 
 ---
@@ -152,7 +150,7 @@ Open the target project in VS Code, open Copilot Chat, and type:
 
 ### Running Audits
 
-**Full audit** (all 12 domains):
+**Full audit** (all 12 domains, Tier B):
 
 ```markdown
 /audit
@@ -167,18 +165,10 @@ Open the target project in VS Code, open Copilot Chat, and type:
 **Domain-specific audit**:
 
 ```markdown
-@audit-security Audit security vulnerabilities in this project
-@audit-tests Analyze test coverage and quality
-@audit-architecture Review project architecture and dependencies
-@audit-conventions Check code conventions and style
-@audit-performance Analyze bundle sizes and performance
-@audit-documentation Review documentation completeness
-@audit-tech-debt Identify technical debt hotspots
-@audit-accessibility Check WCAG compliance and ARIA attributes
-@audit-api-design Review REST API conventions
-@audit-observability Check logging, tracing, and health endpoints
-@audit-i18n Verify internationalization setup
+/audit-domain
 ```
+
+Then specify the domain to audit in the prompt, for example: `security`, `tests`, `architecture`, `observability`.
 
 ### Working with Reports
 
@@ -247,11 +237,11 @@ export INSPECTRA_PROFILE=java-backend
 
 ## Project Structure
 
-```
+```text
 inspectra/
 ├─ .github/
-│  ├─ agents/           # 13 Copilot Custom Agent definitions
-│  ├─ prompts/          # /audit and /audit-pr entry points
+│  ├─ agents/           # legacy benchmark/reference agent definitions
+│  ├─ prompts/          # /audit, /audit-pr, /audit-domain, benchmark prompts
 │  ├─ workflows/        # GitHub Actions CI/CD
 │  └─ copilot-instructions.md
 │
@@ -286,19 +276,19 @@ docker compose up inspectra
 
 ## Audit Domains
 
-| Domain | Agent | MCP Tools | Prefix |
-| -------- | ------- | ----------- | -------- |
-| Security | `audit-security` | `inspectra_scan_secrets`, `inspectra_check_deps_vulns`, `inspectra_run_semgrep`, `inspectra_check_maven_deps` | `SEC-` |
-| Tests | `audit-tests` | `inspectra_parse_coverage`, `inspectra_parse_test_results`, `inspectra_detect_missing_tests`, `inspectra_parse_playwright_report`, `inspectra_detect_flaky_tests` | `TST-` |
-| Architecture | `audit-architecture` | `inspectra_check_layering`, `inspectra_analyze_dependencies`, `inspectra_detect_circular_deps` | `ARC-` |
-| Conventions | `audit-conventions` | `inspectra_check_naming`, `inspectra_check_file_lengths`, `inspectra_check_todos`, `inspectra_parse_lint_output`, `inspectra_detect_dry_violations` | `CNV-` |
-| Performance | `audit-performance` | `inspectra_analyze_bundle_size`, `inspectra_check_build_timings`, `inspectra_detect_runtime_metrics` | `PRF-` |
-| Documentation | `audit-documentation` | `inspectra_check_readme_completeness`, `inspectra_check_adr_presence`, `inspectra_detect_doc_code_drift` | `DOC-` |
-| Tech debt | `audit-tech-debt` | `inspectra_analyze_complexity`, `inspectra_age_todos`, `inspectra_check_dependency_staleness` | `DEBT-` |
-| Accessibility | `audit-accessibility` | `inspectra_check_a11y_templates` | `ACC-` |
-| API Design | `audit-api-design` | `inspectra_check_rest_conventions` | `API-` |
-| Observability | `audit-observability` | `inspectra_check_observability` | `OBS-` |
-| i18n | `audit-i18n` | `inspectra_check_i18n` | `INT-` |
+| Domain | Tool Group | MCP Tools | Prefix |
+| -------- | ------------ | ----------- | -------- |
+| Security | Security scan | `inspectra_scan_secrets`, `inspectra_check_deps_vulns`, `inspectra_run_semgrep`, `inspectra_check_maven_deps` | `SEC-` |
+| Tests | Test audit | `inspectra_parse_coverage`, `inspectra_parse_test_results`, `inspectra_detect_missing_tests`, `inspectra_parse_playwright_report`, `inspectra_detect_flaky_tests` | `TST-` |
+| Architecture | Architecture audit | `inspectra_check_layering`, `inspectra_analyze_dependencies`, `inspectra_detect_circular_deps` | `ARC-` |
+| Conventions | Conventions audit | `inspectra_check_naming`, `inspectra_check_file_lengths`, `inspectra_check_todos`, `inspectra_parse_lint_output`, `inspectra_detect_dry_violations` | `CNV-` |
+| Performance | Performance audit | `inspectra_analyze_bundle_size`, `inspectra_check_build_timings`, `inspectra_detect_runtime_metrics` | `PRF-` |
+| Documentation | Documentation audit | `inspectra_check_readme_completeness`, `inspectra_check_adr_presence`, `inspectra_detect_doc_code_drift` | `DOC-` |
+| Tech debt | Tech-debt audit | `inspectra_analyze_complexity`, `inspectra_age_todos`, `inspectra_check_dependency_staleness` | `DEBT-` |
+| Accessibility | Accessibility audit | `inspectra_check_a11y_templates` | `ACC-` |
+| API Design | API design audit | `inspectra_check_rest_conventions` | `API-` |
+| Observability | Observability audit | `inspectra_check_observability` | `OBS-` |
+| i18n | i18n audit | `inspectra_check_i18n` | `INT-` |
 
 ---
 
@@ -317,7 +307,7 @@ docker compose up inspectra
 | `make bootstrap` | Full setup: install, build, test |
 | `make build` | Build the MCP server |
 | `make test` | Run unit tests |
-| `make validate` | Validate schemas + lint agents |
+| `make validate` | Validate schemas + lint prompts |
 | `make smoke` | Smoke test the MCP server |
 | `make init TARGET=/path` | Copy agents into a project |
 | `make help` | List all commands |
@@ -374,12 +364,11 @@ Tests are written with [Vitest](https://vitest.dev/) and live alongside source f
 - **Contributing guide**: See [CONTRIBUTING.md](CONTRIBUTING.md)
 - **Release notes**: See [CHANGELOG.md](CHANGELOG.md)
 - **Add a tool**: See [docs/adding-a-tool.md](docs/adding-a-tool.md)
-- **Add an agent**: See [docs/adding-an-agent.md](docs/adding-an-agent.md)
 - **Architecture guide**: See [docs/architecture.md](docs/architecture.md)
 - **Output formats**: See [docs/output-format.md](docs/output-format.md)
 - **Scoring model**: See [docs/scoring-model.md](docs/scoring-model.md)
 - **Roadmap**: See [docs/roadmap.md](docs/roadmap.md)
-- **Add a domain**: Create a new agent in `.github/agents/`, add tools in `mcp/src/tools/`, update scoring weights
+- **Add a domain**: Add tools in `mcp/src/tools/`, expose them via prompts, and update scoring weights
 - **Add a profile**: Create a YAML file in `policies/profiles/`
 
 ### Available Profiles

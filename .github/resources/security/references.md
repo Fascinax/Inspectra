@@ -1,8 +1,8 @@
 # Security Audit — Reference Material
 
-> This file is the authoritative reference companion for the `audit-security` agent.
-> It contains standards, mappings, and compliance tables that the agent uses during audits.
-> The agent file (`.github/agents/audit-security.agent.md`) points here for full details.
+> This file is the authoritative reference companion for the security audit workflow.
+> It contains standards, mappings, and compliance tables used during audits.
+> Prompt workflows and audit documentation point here for full details.
 
 ---
 

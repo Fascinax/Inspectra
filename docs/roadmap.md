@@ -2,9 +2,9 @@
 
 ## Current State (v0.7.3)
 
-Inspectra is a functional multi-agent code audit system with:
+Inspectra is a functional hybrid code audit system with:
 
-- 13 Copilot Custom Agents (orchestrator + 12 domain agents) with enriched Phase 2 prompts
+- Tier B as the default audit workflow: tools + structured synthesis + conditional explorer
 - 42 MCP tools across 12 domains (security, tests, architecture, conventions, performance, documentation, tech-debt, accessibility, api-design, observability, i18n, ux-consistency)
 - JSON Schema contracts for all outputs (12-domain finding validation)
 - Scoring engine with weighted domains (12 domains) and grade system
@@ -138,26 +138,27 @@ See [ADR-007: Diagnostic Intelligence Layer](adr/007-diagnostic-intelligence-lay
 Three tiers compete on the same repos, measured by the same expert panel:
 
 | Tier | Architecture | Cost | Description |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **A** | 1 orchestrator, all tools, 1 LLM synthesis | Lowest | No sub-agents, no Phase 2. Single pass. |
-| **B** | Tools + structured domain analysis + conditional explorer | Medium | 1 explorer agent fires only on hotspot signals. |
-| **C** | Current: 12 agents × (Phase 1 tools + Phase 2 LLM) | Highest | Full multi-agent deep exploration. |
+| **B** | Tools + structured domain analysis + conditional explorer | Medium | Default architecture after ADR-008. |
+| **C** | Legacy: 12 agents × (Phase 1 tools + Phase 2 LLM) | Highest | Kept only for benchmark reproducibility. |
 
-- [ ] Establish ground truth: expert-written issue lists for 3-5 target repos (`evaluations/ground-truth/`)
-- [ ] Tier A prompt: `.github/prompts/audit-tier-a.prompt.md` — single-pass orchestrator with all tools
-- [ ] Tier B prompt: `.github/prompts/audit-tier-b.prompt.md` — hybrid with conditional explorer
-- [ ] Tier C: current system (no changes needed)
-- [ ] Evaluation harness: `evaluations/benchmark-harness.ts` — runs all tiers, collects metrics
-- [ ] Run benchmark: 3 tiers × 3-5 repos × 3 runs = 27-45 audit runs
-- [ ] Expert review: blind scoring on precision, recall, root cause hit rate, actionability (1-5)
-- [ ] Analysis and verdict: `evaluations/benchmark-results.md`
-- [ ] Architectural decision: commit to winning tier for the diagnostic layer foundation
+- [x] Establish ground truth: expert-written issue lists for 3-5 target repos (`evaluations/ground-truth/`)
+- [x] Tier A prompt: `.github/prompts/audit-tier-a.prompt.md` — single-pass orchestrator with all tools
+- [x] Tier B prompt: `.github/prompts/audit.prompt.md` — hybrid with conditional explorer
+- [x] Tier C runtime removed; benchmark evidence retained in `evaluations/results/`
+- [x] Evaluation harness: `evaluations/benchmark-harness.ts` — runs all tiers, collects metrics
+- [x] Run benchmark: 2 fixtures × 3 tiers × 1 run = 6 audit runs (bench-ts-express + bench-java-spring)
+- [x] Automated scoring via benchmark harness (precision, recall, root cause hit rate, actionability)
+- [x] Analysis and verdict: `evaluations/benchmark-results.md`
+- [x] Architectural decision: **Tier B (Hybrid) selected** — see verdict below
 
-**Decision gates:**
-- Tier A ≈ Tier C on quality → **simplify radically**, keep tools + single synthesis
-- Tier B > A but ≈ C → **adopt hybrid**, 1 orchestrator + 1 conditional explorer
-- Tier C >> B >> A → **current arch justified**, proceed with ADR-007 as designed
-- All ≈ on quality, C costs 10x more → **cost efficiency wins**, simplify
+**Verdict (2026-03-14):** Gate 2 triggered — Tier B > A but ≈ C → **adopt hybrid**.
+
+- Tier C never outperformed Tier B on any metric (identical on Java, worse on Express)
+- Tier B achieved 1.0 root cause hit rate across both fixtures
+- Tier B averaged 0.55 precision vs 0.40 for Tier A, with only -3% recall difference
+- Full analysis: [`evaluations/benchmark-results.md`](../evaluations/benchmark-results.md)
 
 ### Phase 3 — Correlation Engine (gated by benchmark — applies to winning tier)
 
@@ -195,9 +196,23 @@ Three tiers compete on the same repos, measured by the same expert panel:
 - [ ] Score context: what the number captures and what it doesn't
 - [ ] Update HTML/PDF/Markdown renderers for diagnosis-first layout
 
+### Phase 1 — Architecture Migration to Tier B ✅
+
+- [x] Benchmark verdict: Tier B (Hybrid) selected — [benchmark-results.md](../evaluations/benchmark-results.md)
+- [x] Promote Tier B workflow as default `/audit` prompt
+- [x] Update `audit-smart.prompt.md` to use Tier B workflow (single prompt + conditional explorer)
+- [x] Update `audit-pr.prompt.md` to use Tier B workflow for PR-scoped audits
+- [x] Update `/audit-domain` to use tool groups directly
+
+### Phase 2 — Tool Quality Fixes (identified by benchmark)
+
+- [ ] Fix `inspectra_check_observability`: detect health endpoints + swallowed exceptions in Express/Node
+- [ ] Fix `inspectra_detect_code_smells`: ensure `@Query` without `@Modifying` detection triggers correctly
+- [ ] Reduce false positive rate on Express (current: 0.27 precision for Tier B)
+
 ### Orchestrator Evolution
 
-- [ ] Architecture adapted to benchmark winner (may be 1 prompt, hybrid, or multi-agent)
+- [x] Architecture adapted to benchmark winner: Tier B (Hybrid) — 1 prompt + 1 conditional explorer
 - [ ] Orchestrator produces root cause clusters, not just flat top-10 findings
 - [ ] Backward-compatible: `clusters` and `remediation_plan` are optional fields in consolidated report schema
 

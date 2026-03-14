@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://inspectra.dev/schemas/consolidated-report.schema.json",
   "title": "Inspectra Consolidated Report",
-  "description": "Final merged report produced by the orchestrator after all domain agents complete.",
+  "description": "Final merged report produced after all selected domain reports are collected.",
   "type": "object",
   "required": ["overall_score", "grade", "domain_reports", "top_findings", "summary", "metadata"],
   "properties": {
@@ -75,10 +75,10 @@
           "minimum": 0,
           "description": "Total audit execution time."
         },
-        "agents_invoked": {
+        "domains_audited": {
           "type": "array",
           "items": { "type": "string" },
-          "description": "Names of all agents that contributed."
+          "description": "Names of all domains included in the merged report."
         }
       }
     }

@@ -42,7 +42,7 @@ function makeReport(overrides: Partial<ConsolidatedReport> = {}): ConsolidatedRe
       target: "/projects/my-app",
       profile: "generic",
       duration_ms: 4200,
-      agents_invoked: ["audit-security", "audit-tests"],
+      domains_audited: ["security", "tests"],
     },
     ...overrides,
   };

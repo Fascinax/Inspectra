@@ -80,7 +80,7 @@ function makeConsolidatedReport(overrides: Partial<ConsolidatedReport> = {}): Co
       target: "/projects/my-app",
       profile: "generic",
       duration_ms: 4500,
-      agents_invoked: ["audit-security", "audit-tests"],
+      domains_audited: ["security", "tests"],
     },
     ...overrides,
   };

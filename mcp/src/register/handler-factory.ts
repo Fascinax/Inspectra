@@ -1,11 +1,9 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { Finding } from "../types.js";
-import type { ProfileConfig } from "../policies/loader.js";
-import { findingsResponse, withErrorHandling } from "./response.js";
-import type { ResponseFormat } from "./response.js";
+import { loadProfile, type ProfileConfig } from "../policies/loader.js";
+import { findingsResponse, withErrorHandling, type ResponseFormat } from "./response.js";
 import { validateProjectDir } from "../utils/paths.js";
 import { loadProjectConfig, resolveConfig } from "../utils/project-config.js";
-import { loadProfile } from "../policies/loader.js";
 
 interface StandardInput {
   projectDir: string;

@@ -11,7 +11,6 @@ export { checkMagicNumbers } from "./conventions-cleancode-magic.js";
 // The implementations below are dead code kept to avoid a large diff during the
 // transition sprint. They will be deleted once the specialist modules are stable.
 // TODO: remove dead code after next test pass (sprint cleanup).
-/* eslint-disable */
 import { readFile } from "node:fs/promises";
 import { relative, extname } from "node:path";
 import type { Finding } from "../types.js";

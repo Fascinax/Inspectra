@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { relative, extname } from "node:path";
+import { relative } from "node:path";
 import type { Finding } from "../types.js";
 import { collectSourceFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
@@ -157,7 +157,11 @@ export async function checkRestConventions(projectDir: string, ignoreDirs?: stri
   // Check for missing versioning (only if project has routes but no versioned routes)
   const routeFiles = new Set(allRoutes.map((r) => r.file));
   if (allRoutes.length >= 3 && !hasAnyVersioned) {
-    const representativeFile = allRoutes[0]!.file;
+    const representativeRoute = allRoutes[0];
+    if (!representativeRoute) {
+      return findings;
+    }
+
     findings.push({
       id: nextId(),
       severity: "low",
@@ -168,7 +172,7 @@ export async function checkRestConventions(projectDir: string, ignoreDirs?: stri
       domain: "api-design",
       rule: "missing-api-versioning",
       confidence: 0.85,
-      evidence: [{ file: representativeFile, line: allRoutes[0]!.line }],
+      evidence: [{ file: representativeRoute.file, line: representativeRoute.line }],
       recommendation: "Prefix all API routes with a version segment: /api/v1/… Change router.get('/users') to router.get('/api/v1/users').",
       effort: "medium",
       tags: ["api-design", "rest", "versioning"],

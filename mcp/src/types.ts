@@ -118,7 +118,7 @@ export const ConsolidatedReportSchema = z
         target: z.string().min(1).describe("Repository or path that was audited"),
         profile: z.string().min(1).describe("Policy profile used for scoring"),
         duration_ms: z.number().int().nonnegative().optional().describe("Total audit duration in milliseconds"),
-        agents_invoked: z.array(z.string()).optional().describe("List of agents that participated"),
+        domains_audited: z.array(z.string()).optional().describe("List of domains included in the merged report"),
       })
       .strict()
       .describe("Consolidated report metadata"),

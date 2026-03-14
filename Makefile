@@ -25,13 +25,13 @@ dev: ## Watch mode for MCP server
 
 # ─── Validation ──────────────────────────────────────────────────────────────
 
-validate: validate-schemas lint-agents ## Run all validations
+validate: validate-schemas lint-prompts ## Run all validations
 
 validate-schemas: ## Validate example files against JSON schemas
 	bash scripts/validate-schemas.sh
 
-lint-agents: ## Lint agent and prompt files
-	bash scripts/lint-agents.sh
+lint-prompts: ## Lint prompt files
+	bash scripts/lint-prompts.sh
 
 smoke: build ## Smoke test the MCP server
 	bash scripts/smoke-test-mcp.sh
@@ -41,7 +41,7 @@ smoke: build ## Smoke test the MCP server
 bootstrap: ## Full setup: install, build, test
 	bash scripts/bootstrap.sh
 
-init: ## Copy agents & config to a target project (TARGET=/path)
+init: ## Copy Inspectra workflow assets & config to a target project (TARGET=/path)
 	node bin/init.mjs '$(TARGET)'
 
 # ─── Help ────────────────────────────────────────────────────────────────────

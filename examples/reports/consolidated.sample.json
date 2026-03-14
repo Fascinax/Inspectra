@@ -267,6 +267,6 @@
     "target": "/projects/sample-app",
     "profile": "generic",
     "duration_ms": 3200,
-    "agents_invoked": ["audit-security", "audit-tests", "audit-architecture", "audit-conventions"]
+    "domains_audited": ["security", "tests", "architecture", "conventions"]
   }
 }

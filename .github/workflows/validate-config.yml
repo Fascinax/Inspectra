@@ -83,15 +83,15 @@ jobs:
               print(f"OK: {file}")
           PY
 
-  lint-agents:
+  lint-prompts:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check agent files have YAML frontmatter
+      - name: Check prompt files have YAML frontmatter
         run: |
           exit_code=0
-          for f in .github/agents/*.agent.md; do
+          for f in .github/prompts/*.prompt.md; do
             if ! head -1 "$f" | grep -q "^---$"; then
               echo "ERROR: $f is missing YAML frontmatter"
               exit_code=1

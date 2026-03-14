@@ -1,6 +1,6 @@
 # ─── Stripe Minions: Hard Blocks ────────────────────────────────────────────
-# Prevent agents from modifying governance files without human approval
-PROTECTED_DIRS=".github/agents schemas policies"
+# Prevent automation from modifying governance files without human approval
+PROTECTED_DIRS="schemas policies"
 for dir in $PROTECTED_DIRS; do
   if git diff --cached --name-only | grep -q "^$dir/"; then
     echo "⛔ HARD BLOCK: Changes to $dir/ require explicit human approval."
@@ -9,9 +9,9 @@ for dir in $PROTECTED_DIRS; do
   fi
 done
 
-# ─── Stripe Minions: Per-Agent Isolation Guard ──────────────────────────────
-# Detect commits that touch files from multiple agent domains
-# This prevents cross-domain contamination from agent-assisted work
+# ─── Stripe Minions: Domain Isolation Guard ─────────────────────────────────
+# Detect commits that touch files from multiple audit domains
+# This prevents cross-domain contamination during automation-assisted work
 STAGED_FILES=$(git diff --cached --name-only)
 DOMAIN_COUNT=0
 
@@ -25,7 +25,7 @@ echo "$STAGED_FILES" | grep -q "mcp/src/tools/tech-debt\|mcp/src/register/tech-d
 
 if [ "$DOMAIN_COUNT" -gt 1 ]; then
   echo "⚠️  ISOLATION WARNING: This commit touches $DOMAIN_COUNT domain tool files."
-  echo "   Stripe Minions principle: one agent, one domain, one commit."
+  echo "   Stripe Minions principle: one domain, one concern, one commit when practical."
   echo "   If this is a cross-cutting refactor, commit with: git commit --no-verify"
   exit 1
 fi

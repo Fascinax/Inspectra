@@ -120,7 +120,7 @@ codex exec "Run inspectra_scan_secrets on /path/to/project and report findings."
 | Setup command | `inspectra setup` | `inspectra setup --claude` | `inspectra setup --codex` |
 | MCP config | `.vscode/mcp.json` | `.mcp.json` (JSON) | `.codex/config.toml` (TOML) |
 | Project context | `.github/copilot-instructions.md` | `CLAUDE.md` | `AGENTS.md` |
-| Agent definitions | `.github/agents/*.agent.md` | Via MCP tools | Via MCP tools |
+| Workflow prompts | `.github/prompts/*.prompt.md` | Audit entry points | Audit entry points |
 | Entry point | Copilot Chat → `/audit` | Ask Claude | Ask Codex or `codex exec` |
 | Orchestration | Agent handoffs | Claude + MCP tools | Codex + MCP tools |
 | Verify MCP | MCP: List Servers | — | `/mcp` in TUI |

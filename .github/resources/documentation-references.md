@@ -1,7 +1,7 @@
 ﻿# Documentation Audit — Reference Material
 
-> This file is the authoritative reference companion for the `audit-documentation` agent.
-> It covers all three pillars of documentation quality used by the agent:
+> This file is the authoritative reference companion for the documentation audit workflow.
+> It covers all three pillars of documentation quality used by Inspectra:
 >
 > | Pillar | Authority | Coverage |
 > | -------- | ---------- | --------- |
@@ -9,8 +9,8 @@
 > | **Architecture Decision Records** | Michael Nygard (Cognitect 2011), Oliver Kopp / Olaf Zimmermann (MADR), Joel Parker Henderson | Original format, MADR 4.0.0, when to write, lifecycle, audit signals |
 > | **Documentation architecture** | Daniele Procida (Diátaxis) | Four quadrant model (tutorials, how-to, reference, explanation), anti-patterns, coverage audit |
 >
-> The agent file (`.github/agents/audit-documentation.agent.md`) points here for full details.
-> Agents MUST consult this file during Phase 2 LLM exploration before classifying documentation findings.
+> Prompt workflows and audit documentation point here for full details.
+> Exploratory analysis should consult this file before classifying documentation findings.
 
 ---
 

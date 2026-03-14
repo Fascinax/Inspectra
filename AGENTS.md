@@ -1,42 +1,55 @@
 # Agents
 
-Inspectra uses GitHub Copilot Custom Agents to perform structured code audits.
+Inspectra uses MCP tools and prompt workflows to perform structured code audits. `AGENTS.md` exists for Codex-compatible project instructions, not to declare runtime domain agents.
 
-## Agent Overview
+## Workflow Overview
 
-| Agent | Domain | Tools | Finding Prefix |
-| ------- | -------- | ------- | --------------- |
-| [audit-orchestrator](.github/agents/audit-orchestrator.agent.md) | Coordination | `inspectra_merge_domain_reports`, `inspectra_score_findings` | - |
-| [audit-security](.github/agents/audit-security.agent.md) | Security | `inspectra_scan_secrets`, `inspectra_check_deps_vulns`, `inspectra_run_semgrep`, `inspectra_check_maven_deps`, `inspectra_check_security_config` | `SEC-` |
-| [audit-tests](.github/agents/audit-tests.agent.md) | Tests | `inspectra_parse_coverage`, `inspectra_parse_test_results`, `inspectra_detect_missing_tests`, `inspectra_parse_playwright_report`, `inspectra_detect_flaky_tests`, `inspectra_check_test_quality` | `TST-` |
-| [audit-architecture](.github/agents/audit-architecture.agent.md) | Architecture | `inspectra_check_layering`, `inspectra_analyze_dependencies`, `inspectra_detect_circular_deps` | `ARC-` |
-| [audit-conventions](.github/agents/audit-conventions.agent.md) | Conventions | `inspectra_check_naming`, `inspectra_check_file_lengths`, `inspectra_check_todos`, `inspectra_parse_lint_output`, `inspectra_detect_dry_violations`, `inspectra_check_function_lengths`, `inspectra_check_param_counts`, `inspectra_check_magic_numbers` | `CNV-` |
-| [audit-performance](.github/agents/audit-performance.agent.md) | Performance | `inspectra_analyze_bundle_size`, `inspectra_check_build_timings`, `inspectra_detect_runtime_metrics` | `PRF-` |
-| [audit-documentation](.github/agents/audit-documentation.agent.md) | Documentation | `inspectra_check_readme_completeness`, `inspectra_check_adr_presence`, `inspectra_detect_doc_code_drift`, `inspectra_detect_env_example_drift` | `DOC-` |
-| [audit-tech-debt](.github/agents/audit-tech-debt.agent.md) | Tech debt | `inspectra_analyze_complexity`, `inspectra_age_todos`, `inspectra_check_dependency_staleness`, `inspectra_check_dead_exports`, `inspectra_detect_deprecated_apis`, `inspectra_detect_code_smells` | `DEBT-` |
-| [audit-accessibility](.github/agents/audit-accessibility.agent.md) | Accessibility | `inspectra_check_a11y_templates` | `ACC-` |
-| [audit-api-design](.github/agents/audit-api-design.agent.md) | API Design | `inspectra_check_rest_conventions` | `API-` |
-| [audit-observability](.github/agents/audit-observability.agent.md) | Observability | `inspectra_check_observability` | `OBS-` |
-| [audit-i18n](.github/agents/audit-i18n.agent.md) | i18n | `inspectra_check_i18n` | `INT-` |
-| [audit-ux-consistency](.github/agents/audit-ux-consistency.agent.md) | UX Consistency | `inspectra_check_ux_consistency` | `UX-` |
+User prompt -> MCP tool scan -> hotspot detection -> optional explorer -> merge -> report
+
+1. The prompt workflow receives the audit request and selects the relevant tool groups.
+2. MCP tools gather deterministic findings across the requested domains.
+3. Hotspot detection identifies files with clustered findings across multiple domains.
+4. A conditional explorer pass reads only hotspot files to uncover deeper root causes.
+5. The workflow scores findings, merges results, and generates Markdown output.
+
+## Audit Modes
+
+- Full audit (`/audit`): runs Tier B across all 12 domains.
+- PR audit (`/audit-pr`): runs the Tier B workflow only on changed files.
+- Targeted audit (`/audit-domain`): runs only the requested domain tool group.
+
+## Domain Tool Groups
+
+| Domain | Tool Group | Finding Prefix |
+| ------- | ---------- | --------------- |
+| Security | `inspectra_scan_secrets`, `inspectra_check_deps_vulns`, `inspectra_run_semgrep`, `inspectra_check_maven_deps`, `inspectra_check_security_config` | `SEC-` |
+| Tests | `inspectra_parse_coverage`, `inspectra_parse_test_results`, `inspectra_detect_missing_tests`, `inspectra_parse_playwright_report`, `inspectra_detect_flaky_tests`, `inspectra_check_test_quality` | `TST-` |
+| Architecture | `inspectra_check_layering`, `inspectra_analyze_dependencies`, `inspectra_detect_circular_deps` | `ARC-` |
+| Conventions | `inspectra_check_naming`, `inspectra_check_file_lengths`, `inspectra_check_todos`, `inspectra_parse_lint_output`, `inspectra_detect_dry_violations`, `inspectra_check_function_lengths`, `inspectra_check_param_counts`, `inspectra_check_magic_numbers` | `CNV-` |
+| Performance | `inspectra_analyze_bundle_size`, `inspectra_check_build_timings`, `inspectra_detect_runtime_metrics` | `PRF-` |
+| Documentation | `inspectra_check_readme_completeness`, `inspectra_check_adr_presence`, `inspectra_detect_doc_code_drift`, `inspectra_detect_env_example_drift` | `DOC-` |
+| Tech debt | `inspectra_analyze_complexity`, `inspectra_age_todos`, `inspectra_check_dependency_staleness`, `inspectra_check_dead_exports`, `inspectra_detect_deprecated_apis`, `inspectra_detect_code_smells` | `DEBT-` |
+| Accessibility | `inspectra_check_a11y_templates` | `ACC-` |
+| API Design | `inspectra_check_rest_conventions` | `API-` |
+| Observability | `inspectra_check_observability` | `OBS-` |
+| i18n | `inspectra_check_i18n` | `INT-` |
+| UX Consistency | `inspectra_check_ux_consistency` | `UX-` |
 
 ## How It Works
 
-User prompt -> Orchestrator -> domain agents (tool scan + LLM exploration) -> merge -> report
+User prompt -> MCP tool scan -> hotspot detection -> optional explorer -> merge -> report
 
-1. The orchestrator receives the audit request and decides which domains to audit.
-2. It delegates to domain agents via handoffs.
-3. Each domain agent runs a **two-phase hybrid audit**:
-   - **Phase 1 — Tool Scan**: Call MCP tools for deterministic detection (`source: "tool"`, `confidence ≥ 0.8`, IDs 001–499).
-   - **Phase 2 — LLM Exploration**: Read and analyze code to find deeper issues tools can't detect (`source: "llm"`, `confidence ≤ 0.7`, IDs 501+).
-4. Each domain agent returns a domain report JSON combining both phases.
-5. The orchestrator merges reports, validates source/confidence rules, deduplicates, scores, and generates Markdown output.
+1. The prompt workflow receives the audit request and decides which domains or tool groups to run.
+2. MCP tools gather deterministic findings across the relevant domains.
+3. Hotspot detection identifies files with clustered findings across multiple domains.
+4. A conditional explorer pass reads only hotspot files to uncover deeper root causes.
+5. The workflow scores findings, merges results, and generates Markdown output.
 
 ## Orchestrator
 
-- Full audit (`/audit`): invokes all 12 domain agents.
-- PR audit (`/audit-pr`): invokes only agents relevant to changed files.
-- Targeted audit: invokes only the requested domain.
+- Full audit (`/audit`): runs Tier B across all 12 domains.
+- PR audit (`/audit-pr`): runs the Tier B workflow only on changed files.
+- Targeted audit (`/audit-domain`): runs only the requested domain's tool group.
 
 ## Domain Reports
 

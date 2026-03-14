@@ -1,9 +1,10 @@
 # ADR-008: Benchmark Before Architecture
 
-**Status:** Proposed  
-**Date:** 2026-03-11  
+**Status:** Accepted  
+**Date:** 2026-03-14  
 **Deciders:** Core maintainers  
-**Supersedes:** ADR-007 (Diagnostic Intelligence Layer — still valid as design target, but gated by benchmark results)
+**Supersedes:** ADR-007 (Diagnostic Intelligence Layer — still valid as design target, built on Tier B foundation)  
+**Verdict:** Tier B (Hybrid) — see [benchmark-results.md](../../evaluations/benchmark-results.md)
 
 ## Context
 
@@ -31,7 +32,7 @@ Before investing in a diagnostic layer (ADR-007), we need empirical evidence tha
 
 #### Tier A — Baseline Simple
 
-```
+```text
 1 orchestrator prompt
     → calls ALL deterministic MCP tools (scan_secrets, check_todos, etc.)
     → collects tool findings
@@ -40,6 +41,7 @@ No sub-agents. No handoffs. No Phase 2 exploration.
 ```
 
 **Properties:**
+
 - Deterministic tool layer is identical to current Phase 1
 - Single LLM call for synthesis (replaces 12 agent handoffs + Phase 2 + merge)
 - Fastest, cheapest, most reproducible
@@ -47,7 +49,7 @@ No sub-agents. No handoffs. No Phase 2 exploration.
 
 #### Tier B — Hybrid
 
-```
+```text
 1 orchestrator prompt
     → calls ALL deterministic MCP tools
     → 1 LLM analysis pass per domain group (security, tests, arch, etc.)
@@ -59,6 +61,7 @@ No sub-agents. No handoffs. No Phase 2 exploration.
 ```
 
 **Properties:**
+
 - Tool layer identical to Tier A
 - Domain analysis happens in one prompt with structured sections (not 12 separate agents)
 - Explorer agent is conditional — only fires on high-signal hotspots
@@ -66,7 +69,7 @@ No sub-agents. No handoffs. No Phase 2 exploration.
 
 #### Tier C — Deep Multi-Agent (current architecture)
 
-```
+```text
 1 orchestrator
     → 12 domain agent handoffs
     → each agent: Phase 1 (tools) + Phase 2 (LLM code exploration)
@@ -74,6 +77,7 @@ No sub-agents. No handoffs. No Phase 2 exploration.
 ```
 
 **Properties:**
+
 - Current system
 - Highest token cost, highest latency
 - Most findings, most variance
@@ -84,7 +88,7 @@ No sub-agents. No handoffs. No Phase 2 exploration.
 #### Primary metrics (quality)
 
 | Metric | Description | How measured |
-|---|---|---|
+| --- | --- | --- |
 | **Precision** | % of findings that a senior dev confirms as real issues | Expert review panel on blind reports |
 | **Recall** | % of known issues in the target repo that were detected | Pre-seeded ground truth + expert additions |
 | **Root cause hit rate** | % of reports where the top-3 findings identify an actual root cause (not just symptoms) | Expert review: "would you plan fixes from this?" |
@@ -94,7 +98,7 @@ No sub-agents. No handoffs. No Phase 2 exploration.
 #### Secondary metrics (cost)
 
 | Metric | Description |
-|---|---|
+| --- | --- |
 | **Token count** | Total input + output tokens across all LLM calls |
 | **Latency** | Wall-clock time from audit start to final report |
 | **Variance** | Standard deviation of scores/findings across 3 runs on the same repo |
@@ -102,7 +106,7 @@ No sub-agents. No handoffs. No Phase 2 exploration.
 
 #### The key ratio
 
-```
+```text
 diagnostic_value = (precision × recall × actionability) / (token_cost × variance)
 ```
 
@@ -113,7 +117,7 @@ If Tier A achieves 80% of Tier C's diagnostic value at 15% of the cost and 30% o
 Minimum 3 repos, ideally 5:
 
 | Repo | Stack | Why |
-|---|---|---|
+| --- | --- | --- |
 | **sample-project** (internal fixture) | TypeScript/Express | Controlled, known ground truth |
 | **Real project 1** | Java/Spring + Angular | Tests multi-stack profile |
 | **Real project 2** | TypeScript/Node | Tests single-stack depth |
@@ -133,10 +137,10 @@ For each, we establish a **ground truth document**: the 5-10 real issues a senio
 ### Implementation plan
 
 | Step | Deliverable | Depends on |
-|---|---|---|
+| --- | --- | --- |
 | 1. Ground truth docs | `evaluations/ground-truth/<repo>.json` for each target repo | Expert time |
 | 2. Tier A prompt | `.github/prompts/audit-tier-a.prompt.md` — single-pass orchestrator | Existing MCP tools |
-| 3. Tier B prompt | `.github/prompts/audit-tier-b.prompt.md` — hybrid with conditional explorer | Existing MCP tools |
+| 3. Tier B prompt | `.github/prompts/audit.prompt.md` — hybrid with conditional explorer | Existing MCP tools |
 | 4. Eval harness | `evaluations/benchmark-harness.ts` — runs all tiers, collects metrics | Tier A + B prompts |
 | 5. Run benchmark | 3 tiers × 3-5 repos × 3 runs = 27-45 audit runs | Everything above |
 | 6. Analysis | `evaluations/benchmark-results.md` — comparison table + verdict | Expert review |
@@ -165,7 +169,7 @@ After the benchmark:
 
 - Benchmark requires expert reviewers (2-3 senior devs, ~4 hours each)
 - 27-45 audit runs cost tokens and time
-- Tier A and B prompts need to be written (but are simpler than the current system)
+- Tier A was new and Tier B required a migration of the default `/audit` workflow
 - May invalidate significant existing work if simpler tiers win
 - Delays ADR-007 implementation until benchmark completes
 

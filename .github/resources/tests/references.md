@@ -1,8 +1,8 @@
 # Tests Quality Audit — Reference Material
 
-> This file is the authoritative reference companion for the `audit-tests` agent.
+> This file is the authoritative reference companion for the tests audit workflow.
 > It contains testing principles, antipattern catalogs, coverage thresholds, and stack-aware detection strategies.
-> The agent file (`.github/agents/audit-tests.agent.md`) points here for full details.
+> Prompt workflows and audit documentation point here for full details.
 
 ---
 

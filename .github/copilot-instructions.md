@@ -2,11 +2,10 @@
 
 ## Project Overview
 
-Inspectra is a multi-agent code audit system. It uses specialized Copilot agents coordinated by an orchestrator to perform structured audits across 12 domains: security, tests, architecture, conventions, performance, documentation, tech-debt, accessibility, api-design, observability, i18n, and ux-consistency.
+Inspectra is a hybrid code audit system. The default workflow runs deterministic MCP tools across 12 domains, performs optional hotspot exploration, then synthesizes the results in a single prompt across security, tests, architecture, conventions, performance, documentation, tech-debt, accessibility, api-design, observability, i18n, and ux-consistency.
 
 ## Architecture
 
-- **Agents** (`.github/agents/`): Copilot Custom Agents with domain expertise.
 - **MCP Server** (`mcp/`): TypeScript server exposing audit tools via Model Context Protocol.
 - **Schemas** (`schemas/`): JSON Schema contracts for findings and reports.
 - **Policies** (`policies/`): Scoring rules, severity matrix, and stack-specific profiles.
@@ -18,7 +17,7 @@ Inspectra is a multi-agent code audit system. It uses specialized Copilot agents
 
 ### Output Format
 
-All agents MUST return structured JSON following the schemas in `schemas/`. Never return free-form text as the primary output. The orchestrator is the only agent that produces the final Markdown report.
+All audit workflows and domain reports MUST return structured JSON following the schemas in `schemas/`. Never return free-form text as the primary output. The merge/report stage is the only place that produces the final Markdown report.
 
 ### Finding Contract
 
@@ -46,7 +45,7 @@ Every finding MUST include:
 
 ### MCP Tools
 
-Tools are registered in the `inspectra` MCP server. Agents should call them by prefixed name (e.g., `inspectra_scan_secrets`). Available tools:
+Tools are registered in the `inspectra` MCP server. Prompt workflows should call them by prefixed name (e.g., `inspectra_scan_secrets`). Available tools:
 
 | Tool | Domain | Purpose |
 | ------ | -------- | --------- |
@@ -80,8 +79,8 @@ Tools are registered in the `inspectra` MCP server. Agents should call them by p
 | `inspectra_check_observability` | Observability | Detect missing logging, tracing, health endpoints |
 | `inspectra_check_i18n` | i18n | Detect hardcoded strings and missing i18n setup |
 | `inspectra_check_ux_consistency` | UX Consistency | Detect design system violations and visual inconsistencies |
-| `inspectra_generate_claude_md` | Adapter | Generate CLAUDE.md from agent definitions |
-| `inspectra_generate_codex_agents_md` | Adapter | Generate Codex AGENTS.md from agent definitions |
+| `inspectra_generate_claude_md` | Adapter | Generate CLAUDE.md from Inspectra workflow assets |
+| `inspectra_generate_codex_agents_md` | Adapter | Generate Codex AGENTS.md from Inspectra workflow assets |
 
 ### Technology Stack
 
@@ -99,7 +98,7 @@ Every tool response includes:
 { "findings": [...], "total": 87, "count": 20, "has_more": true, "next_offset": 20 }
 ```
 
-**Agents MUST paginate when `has_more` is `true`:**
+**Workflows MUST paginate when `has_more` is `true`:**
 
 1. Call the tool with default parameters → receive findings 0–19, `has_more: true`, `next_offset: 20`
 2. Call the tool again with `offset: 20` → receive findings 20–39
@@ -114,12 +113,12 @@ Failing to paginate means findings beyond the first page are silently dropped fr
 
 ## Agent Governance (Stripe Minions Principles)
 
-These rules apply to ALL agents and ALL contributors working with agents.
+These rules apply to prompt workflows, automation, and contributors working with Inspectra.
 Ref: https://stripe.dev/blog/minions-stripes-one-shot-end-to-end-coding-agents
 
 ### Rule #1 — Never Fix Bad Output
 
-When an agent produces incorrect, incomplete, or malformed output:
+When a workflow produces incorrect, incomplete, or malformed output:
 
 1. **Diagnose** — Identify the root cause (bad input? wrong tool? schema mismatch?)
 2. **Reset** — Discard the bad output entirely
@@ -130,64 +129,64 @@ Do NOT patch, massage, or manually edit bad agent output. That hides the real pr
 
 ### Hard Blocks
 
-Agents MUST NEVER:
+Automation MUST NEVER:
 - Run `git push`, `git push --force`, or any remote-mutating git operation
 - Delete files outside the target project scope
-- Modify `.github/agents/`, `schemas/`, or `policies/` directories without explicit human approval
+- Modify `schemas/` or `policies/` directories without explicit human approval
 - Install new dependencies (`npm install`, `pip install`) without human confirmation
 - Execute arbitrary shell commands that modify system state
 - Produce partial reports when MCP tools are unavailable (fail fast, fail loud)
 
-### Agent Scope
+### Domain Scope
 
-Each domain agent has a strict scope:
+Each audit domain has a strict scope:
 
-| Agent | IN scope | OUT of scope |
+| Domain | IN scope | OUT of scope |
 | ------- | ---------- | ------------- |
-| audit-security | Source code, config files, dependency manifests | Test fixtures, example files, docs |
-| audit-tests | Test files, coverage reports, test configs | Application source logic |
-| audit-architecture | Import graphs, module structure, dependency trees | Individual code quality |
-| audit-conventions | All source files for naming/style | Architectural decisions |
-| audit-performance | Build configs, bundle outputs, runtime code | Functional correctness |
-| audit-documentation | README, docs/, ADRs, inline API docs | Code logic |
-| audit-tech-debt | All source files for complexity, staleness metrics | Feature correctness |
-| audit-accessibility | HTML/Angular/JSX/TSX templates | Non-template source code, runtime behavior |
-| audit-api-design | Route definitions, controller files | Business logic, database queries |
-| audit-observability | Service files, config, error handling | Functional correctness, UI code |
-| audit-i18n | Templates, i18n config, translation files | Backend logic, non-user-facing strings |
-| audit-ux-consistency | Stylesheets, templates (inline styles), design tokens, theme files | Test files, generated files, docs, backend logic, accessibility |
+| security | Source code, config files, dependency manifests | Test fixtures, example files, docs |
+| tests | Test files, coverage reports, test configs | Application source logic |
+| architecture | Import graphs, module structure, dependency trees | Individual code quality |
+| conventions | All source files for naming/style | Architectural decisions |
+| performance | Build configs, bundle outputs, runtime code | Functional correctness |
+| documentation | README, docs/, ADRs, inline API docs | Code logic |
+| tech-debt | All source files for complexity, staleness metrics | Feature correctness |
+| accessibility | HTML/Angular/JSX/TSX templates | Non-template source code, runtime behavior |
+| api-design | Route definitions, controller files | Business logic, database queries |
+| observability | Service files, config, error handling | Functional correctness, UI code |
+| i18n | Templates, i18n config, translation files | Backend logic, non-user-facing strings |
+| ux-consistency | Stylesheets, templates (inline styles), design tokens, theme files | Test files, generated files, docs, backend logic, accessibility |
 
-If an agent encounters something outside its scope, it MUST ignore it — not report it.
+If a workflow step encounters something outside its scope, it MUST ignore it — not report it.
 
 ### Task Decomposition
 
-- A focused agent is a correct agent
-- One agent, one domain, one report
-- Agents should NOT be given "epics" — break down into single-purpose tasks
-- The orchestrator is the ONLY entity that composes multiple agent results
+- A focused workflow is a correct workflow
+- One domain, one report
+- Workflows should NOT be given "epics" — break down into single-purpose tasks
+- The merge step is the ONLY entity that composes multiple domain results
 
 ### The Pit of Success
 
 - High-quality input tokens produce high-quality output
-- Always provide structured, schema-validated data to agents
-- Never pass raw/unvalidated user input to domain agents — the orchestrator normalizes first
+- Always provide structured, schema-validated data to workflow steps
+- Never pass raw/unvalidated user input into domain synthesis — normalize first
 - Code quality in the repo directly affects audit quality (clean code is easier to audit)
 
 ### Traceability
 
-Every agent action must be traceable:
+Every workflow action must be traceable:
 - All domain reports include `metadata.agent`, `metadata.timestamp`, `metadata.tools_used`
 - Every finding has `evidence` with file paths and line numbers
-- The orchestrator records which agents were invoked and their individual results
-- Git commits from agent-assisted work must include the agent name in the commit message trailer
+- The merge step records which domains were audited and their individual results
+- Git commits from automation-assisted work should make the workflow clear in the commit message
 
 ### Standardization
 
-- All agents follow the same prompt structure: Mission → What You Audit → Workflow → Output Format → Severity Guide → MCP Prerequisite → Rules
-- All agents return JSON matching `schemas/domain-report.schema.json`
+- Prompt workflows should follow a predictable structure: mission, scope, workflow, output, and rules
+- All domain outputs return JSON matching `schemas/domain-report.schema.json`
 - All finding IDs follow `DOMAIN_PREFIX-XXX` pattern
 - Tool names are always prefixed with `inspectra_`
-- Agents should not surprise you — predictable structure, predictable output
+- Workflows should not surprise you — predictable structure, predictable output
 
 ### Per-Agent Isolation
 

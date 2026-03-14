@@ -1,6 +1,6 @@
 # Inspectra
 
-Multi-agent code audit system using MCP tools. 13 agents across 12 domains, coordinated by an orchestrator.
+Hybrid code audit system using MCP tools. Tier B is the default workflow: deterministic tools across 12 domains, optional hotspot exploration, then merged scoring.
 
 ## Quick Reference
 
@@ -13,8 +13,7 @@ npm run lint       # tsc --noEmit + ESLint
 
 ## Project Structure
 
-- `.github/agents/` — 13 Copilot agent definitions (`.agent.md`)
-- `.github/prompts/` — `/audit` and `/audit-pr` entry points
+- `.github/prompts/` — `/audit`, `/audit-pr`, `/audit-domain`, and benchmark entry points
 - `mcp/src/` — MCP server (TypeScript, ES2022, Node 20+)
   - `tools/` — domain tool implementations (one file per domain)
   - `register/` — tool registration with input/output schemas
@@ -75,7 +74,7 @@ All finding tools return paginated responses (default page size: 20). Every resp
 
 ## Do NOT
 
-- Modify `schemas/`, `policies/`, or `.github/agents/` without explicit approval
+- Modify `schemas/` or `policies/` without explicit approval
 - Run `git push` or any remote-mutating command
 - Install new dependencies without confirmation
 - Use hardcoded scoring weights — always read from `policies/scoring-rules.yml`

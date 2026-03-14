@@ -1,6 +1,5 @@
 import { relative, extname } from "node:path";
-import type { Finding } from "../types.js";
-import type { ProfileConfig } from "../types.js";
+import type { Finding, ProfileConfig } from "../types.js";
 import { collectAllFiles } from "../utils/files.js";
 import { createIdSequence } from "../utils/id.js";
 

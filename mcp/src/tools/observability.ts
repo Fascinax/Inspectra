@@ -18,10 +18,6 @@ const LOGGER_CALL =
 const TRACING_SETUP =
   /(?:@opentelemetry|opentelemetry|jaegerClient|zipkin|NodeTracerProvider|trace\.getTracer|initTracer)/i;
 
-/** Metrics setup (Prometheus, micrometer, etc.) */
-const METRICS_SETUP =
-  /(?:prometheus|prom-client|Counter\s*\(\s*{|Histogram\s*\(\s*{|MeterProvider|meterRegistry)/i;
-
 const SOURCE_EXTENSIONS = [".ts", ".js", ".java"];
 
 /**
@@ -39,7 +35,6 @@ export async function checkObservability(projectDir: string, ignoreDirs?: string
 
   let hasHealthEndpoint = false;
   let hasTracingSetup = false;
-  let hasMetricsSetup = false;
   let swallowedCatchCount = 0;
   const swallowedCatchSamples: Array<{ file: string; line: number }> = [];
 
@@ -54,7 +49,6 @@ export async function checkObservability(projectDir: string, ignoreDirs?: string
         hasHealthEndpoint = healthDetectors.some((d) => d.hasHealthEndpoint(content));
       }
       if (TRACING_SETUP.test(content)) hasTracingSetup = true;
-      if (METRICS_SETUP.test(content)) hasMetricsSetup = true;
 
       // Detect swallowed catch blocks
       CATCH_BLOCK.lastIndex = 0;
@@ -106,7 +100,11 @@ export async function checkObservability(projectDir: string, ignoreDirs?: string
 
   // Missing health endpoint
   if (!hasHealthEndpoint && files.length > 0) {
-    const entryFile = files.find((f) => /index\.(ts|js)$/.test(f)) ?? files[0]!;
+    const entryFile = files.find((f) => /index\.(ts|js)$/.test(f)) ?? files[0];
+    if (!entryFile) {
+      return findings;
+    }
+
     findings.push({
       id: nextId(),
       severity: "medium",

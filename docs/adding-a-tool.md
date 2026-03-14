@@ -81,18 +81,9 @@ Three handler factories are available:
 - `createConfigHandler(toolName, fn)` — same + loads `.inspectrarc.yml` and passes `ignoreDirs` to `fn(dir, ignoreDirs)`.
 - `createProfiledHandler(toolName, policiesDir, fn)` — same + loads a profile and passes it to `fn(dir, profileConfig)`.
 
-### 4. Update the Agent Profile
+### 4. Expose the Tool Through Prompt Workflows
 
-Add the new tool to the relevant agent's `tools` list in `.github/agents/`:
-
-```yaml
-tools:
-  - read
-  - search
-  - inspectra/inspectra_scan_secrets
-  - inspectra/inspectra_check_deps_vulns
-  - inspectra/my-new-check        # ← add here
-```
+Update the relevant prompt under `.github/prompts/` so the new tool is considered by `/audit`, `/audit-pr`, or `/audit-domain` when it applies.
 
 ### 5. Update copilot-instructions.md
 

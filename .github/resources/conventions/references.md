@@ -1,8 +1,8 @@
 # Conventions & Clean Code Audit — Reference Material
 
-> This file is the authoritative reference companion for the `audit-conventions` agent.
+> This file is the authoritative reference companion for the conventions audit workflow.
 > It contains clean code principles, code smell catalogs, rule mappings, and stack-aware detection strategies.
-> The agent file (`.github/agents/audit-conventions.agent.md`) points here for full details.
+> Prompt workflows and audit documentation point here for full details.
 
 ---
 

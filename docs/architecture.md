@@ -2,7 +2,7 @@
 
 ## System Overview
 
-Inspectra is a multi-agent code audit system built on GitHub Copilot Custom Agents and the Model Context Protocol (MCP).
+Inspectra is a hybrid code audit system built on GitHub Copilot prompt workflows and the Model Context Protocol (MCP).
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -12,16 +12,15 @@ Inspectra is a multi-agent code audit system built on GitHub Copilot Custom Agen
                        │
                        ▼
 ┌─────────────────────────────────────────────────────────┐
-│               Audit Orchestrator Agent                  │
-│          (.github/agents/audit-orchestrator)             │
+│              Prompt Workflow (Tier B Hybrid)            │
 │                                                         │
-│  ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌─────────┐ │
-│  │ Security  │ │   Tests   │ │   Archi   │ │  Conv   │ │
-│  │   Agent   │ │   Agent   │ │   Agent   │ │  Agent  │ │
-│  └─────┬─────┘ └─────┬─────┘ └─────┬─────┘ └────┬────┘ │
-└────────┼──────────────┼─────────────┼────────────┼──────┘
-         │              │             │            │
-         ▼              ▼             ▼            ▼
+│  1. Run MCP tools                                       │
+│  2. Detect hotspots                                     │
+│  3. Explore hotspot files conditionally                 │
+│  4. Score, merge, and render                            │
+└──────────────────────────────┬──────────────────────────┘
+                               │
+                               ▼
 ┌─────────────────────────────────────────────────────────┐
 │                  MCP Server (inspectra)                  │
 │                                                         │
@@ -55,18 +54,17 @@ Inspectra is a multi-agent code audit system built on GitHub Copilot Custom Agen
 ## Data Flow
 
 1. User triggers an audit via a prompt file or issue assignment.
-2. The orchestrator agent receives the request and determines scope.
-3. The orchestrator delegates to domain-specific agents.
-4. Each domain agent calls MCP tools to gather data.
-5. Each domain agent returns a **domain report** (JSON conforming to `domain-report.schema.json`).
-6. The orchestrator calls `inspectra_merge_domain_reports` to combine results.
-7. The orchestrator produces the final **consolidated report** in Markdown.
+2. The prompt workflow determines scope and runs the relevant MCP tools.
+3. Tool findings are grouped into domains and analyzed for hotspots.
+4. Hotspot files may receive a focused explorer pass.
+5. The workflow calls `inspectra_score_findings` and `inspectra_merge_domain_reports`.
+6. The final **consolidated report** is produced in Markdown, HTML, PDF, JSON, or SARIF.
 
 ## Key Design Decisions
 
-### Agents Don't Contain Business Logic
+### Prompts Don't Contain Business Logic
 
-Agents are prompt-driven coordinators. The actual analysis logic lives in MCP tools (TypeScript). This separation means:
+Prompt workflows coordinate the audit. The actual analysis logic lives in MCP tools (TypeScript). This separation means:
 
 - Tools can be tested independently.
 - Tools can be reused across agents.
@@ -119,22 +117,20 @@ To retrieve all findings when truncation occurs, use the `offset` pagination par
 
 ---
 
-## Troubleshooting
+### Troubleshooting
 
-### Subagent Tools Show as "Disabled"
+### MCP Tools Show as "Disabled"
 
-**Symptom:** Domain agents invoked via orchestrator handoff report that `inspectra_*` tools are "disabled by user" or "not available", even though the MCP server is running.
+**Symptom:** The prompt workflow cannot call `inspectra_*` tools even though the MCP server is running.
 
-**Root cause:** VS Code Copilot's MCP tool toggle panel is per-session and applies independently to subagents. When the orchestrator delegates to a domain agent, that subagent inherits its own tool availability state, which may differ from the orchestrator's session.
+**Root cause:** VS Code Copilot's MCP tool toggle panel is per-session. If a tool is unchecked, the prompt workflow cannot use it.
 
 **Fix:**
 
 1. Open VS Code → Command Palette → "MCP: List Servers" → verify `inspectra` shows ✅
 2. In the Copilot chat panel, click the tool icon (🔧) to open the tool selector
-3. Ensure **all** `inspectra_*` tools are checked — any unchecked tool will be unavailable to all agents (including subagents)
+3. Ensure **all** `inspectra_*` tools are checked
 4. If a tool was unchecked due to a previous error, re-check it and retry the audit
-
-**Fallback:** The orchestrator can call `inspectra_*` tools directly (without delegating to a subagent). If a domain agent consistently fails, the orchestrator can perform Phase 1 tool scanning itself and skip Phase 2 LLM exploration for that domain.
 
 ### Tool Responses Stored to Disk (workspaceStorage)
 

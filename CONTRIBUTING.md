@@ -2,14 +2,14 @@
 
 Thanks for helping improve Inspectra.
 
-This project combines Copilot Custom Agents, an MCP server, JSON Schema contracts, and policy-driven scoring. Small, focused pull requests are the easiest way to contribute safely.
+This project combines Copilot prompt workflows, an MCP server, JSON Schema contracts, and policy-driven scoring. Small, focused pull requests are the easiest way to contribute safely.
 
 ## Before You Start
 
 - Use Node.js 20+ and npm 10+
 - Read the architecture overview in [docs/architecture.md](docs/architecture.md)
-- Read the agent governance guide in [docs/agent-governance.md](docs/agent-governance.md)
-- Keep changes scoped to one concern when possible: tool, agent, renderer, policy, or documentation
+- Read the workflow governance guide in [docs/agent-governance.md](docs/agent-governance.md)
+- Keep changes scoped to one concern when possible: tool, prompt workflow, renderer, policy, or documentation
 
 ## Local Setup
 
@@ -30,7 +30,7 @@ npm test
 | `npm test` | Run the Vitest suite |
 | `npm run test:coverage` | Run tests with coverage |
 | `npm run validate:schemas` | Validate examples against JSON schemas |
-| `make validate` | Run schema validation and agent linting |
+| `make validate` | Run schema validation and prompt linting |
 | `make smoke` | Smoke-test the MCP server |
 | `make bootstrap` | Install, build, and test in one pass |
 
@@ -43,7 +43,6 @@ npm test
 - `mcp/src/merger/` — report merge, deduplication, scoring
 - `schemas/` — JSON Schema contracts for findings and reports
 - `policies/` — scoring, severity, deduplication, and stack profiles
-- `.github/agents/` — domain agent definitions
 - `.github/prompts/` — reusable audit entry points
 - `docs/` — contributor and product documentation
 
@@ -60,18 +59,9 @@ npm test
 
 See [docs/adding-a-tool.md](docs/adding-a-tool.md) for the detailed flow.
 
-### Adding or Updating an Agent
-
-1. Keep each agent scoped to a single domain
-2. Return schema-compliant JSON only
-3. Keep tool-detected and LLM-detected findings within the documented ID and confidence ranges
-4. Update any supporting documentation if the domain surface changes
-
-See [docs/adding-an-agent.md](docs/adding-an-agent.md) for the detailed flow.
-
 ### Updating Policies or Schemas
 
-Changes under `policies/`, `schemas/`, or `.github/agents/` have broad impact. Open an issue or discussion first unless the change is a targeted bug fix with clear justification.
+Changes under `policies/` or `schemas/` have broad impact. Open an issue or discussion first unless the change is a targeted bug fix with clear justification.
 
 ## Quality Bar
 
@@ -94,7 +84,7 @@ npm run build
 npm run lint
 npm test
 npm run validate:schemas
-bash scripts/lint-agents.sh
+bash scripts/lint-prompts.sh
 ```
 
 If your change affects rendering, configuration, or setup flows, also run the relevant smoke or manual verification step.

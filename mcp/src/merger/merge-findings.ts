@@ -49,7 +49,7 @@ export function mergeReports(
       timestamp: new Date().toISOString(),
       target,
       profile,
-      agents_invoked: domainReports.map((r) => r.metadata.agent),
+      domains_audited: domainReports.map((r) => r.domain),
     },
   };
 }

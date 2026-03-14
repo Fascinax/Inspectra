@@ -101,8 +101,8 @@ function buildContext(report: ConsolidatedReport) {
     severities,
     hasTopFindings: report.top_findings.length > 0,
     topFindingsView: report.top_findings.map(buildFindingView),
-    hasAgents: !!report.metadata.agents_invoked?.length,
-    agentsText: report.metadata.agents_invoked?.join(", ") ?? "",
+    hasDomains: !!report.metadata.domains_audited?.length,
+    domainsText: report.metadata.domains_audited?.join(", ") ?? "",
     domainReportsView: report.domain_reports.map((dr) => {
       const findingsView = dr.findings.map(buildFindingView);
       const critCount = dr.findings.filter((f) => f.severity === "critical").length;

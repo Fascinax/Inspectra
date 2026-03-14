@@ -76,8 +76,9 @@ export async function checkDeadExports(projectDir: string): Promise<Finding[]> {
   // Phase 2: Gather all file contents for import checking
   const allContents = new Map<string, string>();
   for (const filePath of sourceFiles) {
-    if (exportMap.has(filePath)) {
-      allContents.set(filePath, exportMap.get(filePath)!.content);
+    const exportEntry = exportMap.get(filePath);
+    if (exportEntry) {
+      allContents.set(filePath, exportEntry.content);
     } else {
       try {
         allContents.set(filePath, await readFile(filePath, "utf-8"));
@@ -232,111 +233,6 @@ export async function detectDeprecatedApis(projectDir: string): Promise<Finding[
   }
 
   return findings;
-}
-
-/* ------------------------------------------------------------------ */
-/*  detectCodeSmells                                                   */
-/* ------------------------------------------------------------------ */
-
-const GOD_CLASS_METHOD_THRESHOLD = 10;
-const GOD_CLASS_LINE_THRESHOLD = 500;
-const DEEP_NESTING_THRESHOLD = 4;
-
-interface ClassSpan {
-  name: string;
-  startLine: number;
-  lineCount: number;
-  methodCount: number;
-}
-
-/**
- * Extracts classes from TS/JS/Java source and counts their methods and lines.
- */
-function extractClasses(content: string): ClassSpan[] {
-  const lines = content.split("\n");
-  const classes: ClassSpan[] = [];
-  const classStartPattern = /(?:export\s+)?(?:abstract\s+)?(?:public\s+)?class\s+(\w+)/;
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i] ?? "";
-    const match = classStartPattern.exec(line);
-    if (!match) continue;
-
-    const name = match[1] ?? "Unknown";
-    const bodyEnd = findMatchingBrace(lines, i);
-    if (bodyEnd <= i) continue;
-
-    // Count methods inside the class body
-    let methodCount = 0;
-    const methodPattern = /^\s+(?:(?:public|private|protected|static|async|abstract|readonly|override)\s+)*(\w+)\s*\([^)]*\)\s*(?::\s*\S+)?\s*\{/;
-    const javaMethodPattern = /^\s+(?:(?:public|private|protected|static|final|abstract|synchronized)\s+)*\w[\w<>,\s]*\s+(\w+)\s*\([^)]*\)\s*(?:throws\s+\w[\w,\s]*)?\s*\{/;
-
-    for (let j = i + 1; j < bodyEnd; j++) {
-      const bodyLine = lines[j] ?? "";
-      if (methodPattern.test(bodyLine) || javaMethodPattern.test(bodyLine)) {
-        methodCount++;
-      }
-    }
-
-    classes.push({
-      name,
-      startLine: i + 1,
-      lineCount: bodyEnd - i + 1,
-      methodCount,
-    });
-  }
-
-  return classes;
-}
-
-function findMatchingBrace(lines: string[], startIndex: number): number {
-  let depth = 0;
-  let foundOpen = false;
-
-  for (let i = startIndex; i < lines.length; i++) {
-    const line = lines[i] ?? "";
-    for (const char of line) {
-      if (char === "{") { depth++; foundOpen = true; }
-      else if (char === "}") {
-        depth--;
-        if (foundOpen && depth === 0) return i;
-      }
-    }
-  }
-  return startIndex;
-}
-
-/**
- * Finds the maximum nesting depth of braces/indentation in a file.
- * Returns line number and depth of the deepest nesting.
- */
-function findDeepNesting(content: string): { line: number; depth: number; snippet: string } | null {
-  const lines = content.split("\n");
-  let maxDepth = 0;
-  let maxLine = 0;
-  let maxSnippet = "";
-  let currentDepth = 0;
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i] ?? "";
-    // Skip comments and blank lines
-    if (/^\s*(?:\/\/|\/\*|\*|#)/.test(line) || line.trim() === "") continue;
-
-    for (const char of line) {
-      if (char === "{") currentDepth++;
-      else if (char === "}") currentDepth--;
-    }
-
-    if (currentDepth > maxDepth) {
-      maxDepth = currentDepth;
-      maxLine = i + 1;
-      maxSnippet = line.trim().substring(0, MAX_SNIPPET_LENGTH);
-    }
-  }
-
-  return maxDepth > DEEP_NESTING_THRESHOLD
-    ? { line: maxLine, depth: maxDepth, snippet: maxSnippet }
-    : null;
 }
 
 /**

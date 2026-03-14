@@ -1,8 +1,8 @@
 # API Design Audit — Reference Material
 
-> This file is the authoritative reference companion for the `audit-api-design` agent.
+> This file is the authoritative reference companion for the API design audit workflow.
 > It contains REST principles, rule catalogs, error contracts, OpenAPI quality rules, and detection strategies.
-> The agent file (`.github/agents/audit-api-design.agent.md`) points here for full details.
+> Prompt workflows and audit documentation point here for full details.
 > Detailed raw rule catalogs: `api-design-rules.md` (REST) and `openapi-quality-rules.md` (OpenAPI).
 
 ---

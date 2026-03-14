@@ -7,8 +7,6 @@ import { createIdSequence } from "../utils/id.js";
 const JAVA_EXTENSION = ".java";
 const ENTITY_ANNOTATION = /@Entity\b/;
 const DATA_ANNOTATION = /@Data\b/;
-const CASCADE_ALL_ON_MANY_TO_ONE =
-  /@ManyToOne[^)]*CascadeType\.ALL|CascadeType\.ALL[^)]*@ManyToOne/;
 const CASCADE_ALL_PATTERN = /CascadeType\.ALL/;
 const MANY_TO_ONE_PATTERN = /@ManyToOne/;
 const VERSION_ANNOTATION = /@Version\b/;
@@ -35,7 +33,7 @@ export async function detectJpaAntiPatterns(projectDir: string): Promise<Finding
   const files = await collectAllFiles(projectDir);
   const javaFiles = files.filter((f) => extname(f) === JAVA_EXTENSION);
 
-  const entityFiles: Array<{ path: string; relPath: string; content: string }> = [];
+  const entityFiles: Array<{ relPath: string; content: string }> = [];
 
   for (const filePath of javaFiles) {
     try {
@@ -43,7 +41,7 @@ export async function detectJpaAntiPatterns(projectDir: string): Promise<Finding
       const relPath = relative(projectDir, filePath);
 
       if (ENTITY_ANNOTATION.test(content)) {
-        entityFiles.push({ path: filePath, relPath, content });
+        entityFiles.push({ relPath, content });
       }
 
       checkLazySelfInjection(content, relPath, findings, nextId);

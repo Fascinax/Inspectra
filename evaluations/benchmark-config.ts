@@ -2,7 +2,7 @@
  * Benchmark configuration for ADR-008 architecture evaluation.
  *
  * Defines fixture repos, tier definitions, metric thresholds,
- * and scoring weights for comparing Tier A / B / C audit architectures.
+ * and scoring weights for comparing the runnable Tier A / B audit architectures.
  */
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -80,14 +80,8 @@ export const BENCHMARK_CONFIG: BenchmarkConfig = {
     {
       id: "B",
       name: "Hybrid",
-      promptPath: ".github/prompts/audit-tier-b.prompt.md",
-      description: "All MCP tools + structured analysis + conditional explorer for hotspots.",
-    },
-    {
-      id: "C",
-      name: "Deep Multi-Agent",
       promptPath: ".github/prompts/audit.prompt.md",
-      description: "Current architecture: 12 domain agents with Phase 1 + Phase 2.",
+      description: "Default architecture: all MCP tools + structured analysis + conditional explorer for hotspots.",
     },
   ],
 

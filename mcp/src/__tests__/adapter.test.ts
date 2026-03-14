@@ -10,6 +10,12 @@ function makeTempDir(): string {
   return dir;
 }
 
+function writePrompt(projectDir: string, name: string): void {
+  const promptsDir = join(projectDir, ".github", "prompts");
+  mkdirSync(promptsDir, { recursive: true });
+  writeFileSync(join(promptsDir, name), "---\ndescription: sample\n---\n", "utf-8");
+}
+
 describe("generateClaudeMd", () => {
   let tempDir: string;
 
@@ -21,163 +27,30 @@ describe("generateClaudeMd", () => {
     rmSync(tempDir, { recursive: true, force: true });
   });
 
-  it("returns empty-agent output when directory does not exist", async () => {
-    const result = await generateClaudeMd(join(tempDir, "nonexistent"));
-    expect(result.agentCount).toBe(0);
-    expect(result.agentFiles).toEqual([]);
+  it("returns workflow-only output when prompts directory does not exist", async () => {
+    const result = await generateClaudeMd(tempDir);
+    expect(result.referenceCount).toBe(0);
+    expect(result.includedFiles).toEqual([]);
     expect(result.content).toContain("Inspectra");
-    expect(result.content).toContain("No agents found.");
+    expect(result.content).toContain("No prompt shortcuts found.");
   });
 
-  it("returns empty-agent output when directory has no .agent.md files", async () => {
-    writeFileSync(join(tempDir, "README.md"), "# readme");
-    writeFileSync(join(tempDir, "notes.txt"), "notes");
+  it("lists prompt files when present", async () => {
+    writePrompt(tempDir, "audit.prompt.md");
+    writePrompt(tempDir, "audit-pr.prompt.md");
 
     const result = await generateClaudeMd(tempDir);
-    expect(result.agentCount).toBe(0);
-    expect(result.agentFiles).toEqual([]);
+    expect(result.referenceCount).toBe(2);
+    expect(result.includedFiles).toEqual(["audit-pr.prompt.md", "audit.prompt.md"]);
+    expect(result.content).toContain("## Prompt Shortcuts");
+    expect(result.content).toContain("audit.prompt.md");
   });
 
-  it("reads a single agent file and produces CLAUDE.md content", async () => {
-    writeFileSync(
-      join(tempDir, "audit-security.agent.md"),
-      "---\nname: audit-security\n---\n# Mission\nAudit security stuff.\n\n## Rules\n- Rule 1",
-    );
-
+  it("includes the workflow and MCP tools sections", async () => {
     const result = await generateClaudeMd(tempDir);
-    expect(result.agentCount).toBe(1);
-    expect(result.agentFiles).toEqual(["audit-security.agent.md"]);
-    expect(result.content).toContain("## Agent: Security");
-    expect(result.content).toContain("Audit security stuff.");
-    expect(result.content).toContain("Rule 1");
-  });
-
-  it("reads multiple agent files sorted alphabetically", async () => {
-    writeFileSync(
-      join(tempDir, "audit-tests.agent.md"),
-      "---\nname: audit-tests\n---\nTest audit content.",
-    );
-    writeFileSync(
-      join(tempDir, "audit-security.agent.md"),
-      "---\nname: audit-security\n---\nSecurity audit content.",
-    );
-    writeFileSync(
-      join(tempDir, "audit-architecture.agent.md"),
-      "---\nname: audit-architecture\n---\nArch audit content.",
-    );
-
-    const result = await generateClaudeMd(tempDir);
-    expect(result.agentCount).toBe(3);
-    expect(result.agentFiles).toEqual([
-      "audit-architecture.agent.md",
-      "audit-security.agent.md",
-      "audit-tests.agent.md",
-    ]);
-  });
-
-  it("strips YAML frontmatter from agent content", async () => {
-    writeFileSync(
-      join(tempDir, "audit-i18n.agent.md"),
-      "---\nname: audit-i18n\ndescription: i18n agent\n---\n# i18n Agent\nContent after frontmatter.",
-    );
-
-    const result = await generateClaudeMd(tempDir);
-    expect(result.content).not.toContain("description: i18n agent");
-    expect(result.content).toContain("Content after frontmatter.");
-  });
-
-  it("derives agent name correctly from filename", async () => {
-    writeFileSync(
-      join(tempDir, "audit-api-design.agent.md"),
-      "---\nname: audit-api-design\n---\nAPI design checks.",
-    );
-
-    const result = await generateClaudeMd(tempDir);
-    expect(result.content).toContain("## Agent: Api Design");
-  });
-
-  it("includes header with auto-generation notice", async () => {
-    writeFileSync(
-      join(tempDir, "audit-security.agent.md"),
-      "---\nname: audit-security\n---\nContent.",
-    );
-
-    const result = await generateClaudeMd(tempDir);
-    expect(result.content).toContain("# Inspectra — Claude Code Reference");
-    expect(result.content).toContain("Auto-generated");
-    expect(result.content).toContain("inspectra_generate_claude_md");
-  });
-
-  it("lists all agent files in Available Agents section", async () => {
-    writeFileSync(
-      join(tempDir, "audit-security.agent.md"),
-      "---\nname: audit-security\n---\nContent.",
-    );
-    writeFileSync(
-      join(tempDir, "audit-tests.agent.md"),
-      "---\nname: audit-tests\n---\nContent.",
-    );
-
-    const result = await generateClaudeMd(tempDir);
-    expect(result.content).toContain("- `audit-security.agent.md`");
-    expect(result.content).toContain("- `audit-tests.agent.md`");
-  });
-
-  it("includes source path reference for each agent section", async () => {
-    writeFileSync(
-      join(tempDir, "audit-observability.agent.md"),
-      "---\nname: audit-observability\n---\nObs content.",
-    );
-
-    const result = await generateClaudeMd(tempDir);
-    expect(result.content).toContain("> Source: `.github/agents/audit-observability.agent.md`");
-  });
-
-  it("ignores files that are not .agent.md", async () => {
-    writeFileSync(
-      join(tempDir, "audit-security.agent.md"),
-      "---\nname: audit-security\n---\nContent.",
-    );
-    writeFileSync(join(tempDir, "README.md"), "# Not an agent");
-    writeFileSync(join(tempDir, "notes.agent.txt"), "Not an agent either");
-
-    const result = await generateClaudeMd(tempDir);
-    expect(result.agentCount).toBe(1);
-    expect(result.agentFiles).toEqual(["audit-security.agent.md"]);
-  });
-
-  it("includes MCP tools table in generated content", async () => {
-    const result = await generateClaudeMd(join(tempDir, "nonexistent"));
+    expect(result.content).toContain("## Workflow Overview");
     expect(result.content).toContain("## MCP Tools");
-    expect(result.content).toContain("| Tool | Domain | Purpose |");
     expect(result.content).toContain("inspectra_scan_secrets");
-    expect(result.content).toContain("inspectra_check_a11y_templates");
-    expect(result.content).toContain("inspectra_check_i18n");
-  });
-
-  it("includes scoring model section", async () => {
-    const result = await generateClaudeMd(join(tempDir, "nonexistent"));
-    expect(result.content).toContain("## Scoring Model");
-    expect(result.content).toContain("security 24%");
-    expect(result.content).toContain("accessibility 8%");
-    expect(result.content).toContain("i18n 5%");
-    expect(result.content).toContain("Grades:");
-  });
-
-  it("includes finding contract section", async () => {
-    const result = await generateClaudeMd(join(tempDir, "nonexistent"));
-    expect(result.content).toContain("## Finding Contract");
-    expect(result.content).toContain("Tool findings: IDs 001-499");
-    expect(result.content).toContain("LLM findings: IDs 501+");
-    expect(result.content).toContain("confidence");
-  });
-
-  it("includes audit workflow instructions", async () => {
-    const result = await generateClaudeMd(join(tempDir, "nonexistent"));
-    expect(result.content).toContain("## How to Run an Audit");
-    expect(result.content).toContain("Full audit");
-    expect(result.content).toContain("Targeted audit");
-    expect(result.content).toContain("PR audit");
   });
 });
 
@@ -185,72 +58,33 @@ describe("generateCodexAgentsMd", () => {
   let tempDir: string;
 
   beforeEach(() => {
-    tempDir = join(tmpdir(), `inspectra-test-codex-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-    mkdirSync(tempDir, { recursive: true });
+    tempDir = makeTempDir();
   });
 
   afterEach(() => {
     rmSync(tempDir, { recursive: true, force: true });
   });
 
-  it("returns empty-agent output when directory does not exist", async () => {
-    const result = await generateCodexAgentsMd(join(tempDir, "nonexistent"));
-    expect(result.agentCount).toBe(0);
-    expect(result.agentFiles).toEqual([]);
+  it("returns workflow-only output when prompts directory does not exist", async () => {
+    const result = await generateCodexAgentsMd(tempDir);
+    expect(result.referenceCount).toBe(0);
+    expect(result.includedFiles).toEqual([]);
     expect(result.content).toContain("Inspectra");
-    expect(result.content).toContain("No agents found.");
+    expect(result.content).toContain("No prompt shortcuts found.");
   });
 
-  it("reads agent files and produces Codex AGENTS.md content", async () => {
-    writeFileSync(
-      join(tempDir, "audit-security.agent.md"),
-      "---\nname: audit-security\n---\n# Mission\nAudit security stuff.",
-    );
+  it("lists prompt files when present", async () => {
+    writePrompt(tempDir, "audit-domain.prompt.md");
 
     const result = await generateCodexAgentsMd(tempDir);
-    expect(result.agentCount).toBe(1);
-    expect(result.agentFiles).toEqual(["audit-security.agent.md"]);
-    expect(result.content).toContain("## Agent: Security");
-    expect(result.content).toContain("Audit security stuff.");
+    expect(result.referenceCount).toBe(1);
+    expect(result.includedFiles).toEqual(["audit-domain.prompt.md"]);
+    expect(result.content).toContain("## Prompt Shortcuts");
   });
 
-  it("includes Codex-specific header", async () => {
-    const result = await generateCodexAgentsMd(join(tempDir, "nonexistent"));
+  it("includes codex-specific workflow guidance", async () => {
+    const result = await generateCodexAgentsMd(tempDir);
     expect(result.content).toContain("# Inspectra — Codex Project Instructions");
-    expect(result.content).toContain("Auto-generated");
-    expect(result.content).toContain("inspectra_generate_codex_agents_md");
-  });
-
-  it("includes /mcp TUI reference in workflow instructions", async () => {
-    const result = await generateCodexAgentsMd(join(tempDir, "nonexistent"));
-    expect(result.content).toContain("## How to Run an Audit");
     expect(result.content).toContain("/mcp");
-  });
-
-  it("includes MCP tools table", async () => {
-    const result = await generateCodexAgentsMd(join(tempDir, "nonexistent"));
-    expect(result.content).toContain("## MCP Tools");
-    expect(result.content).toContain("inspectra_scan_secrets");
-    expect(result.content).toContain("inspectra_check_i18n");
-  });
-
-  it("includes scoring model and finding contract", async () => {
-    const result = await generateCodexAgentsMd(join(tempDir, "nonexistent"));
-    expect(result.content).toContain("## Scoring Model");
-    expect(result.content).toContain("security 24%");
-    expect(result.content).toContain("## Finding Contract");
-    expect(result.content).toContain("Tool findings: IDs 001-499");
-  });
-
-  it("reads multiple agent files sorted alphabetically", async () => {
-    writeFileSync(join(tempDir, "audit-tests.agent.md"), "---\nname: tests\n---\nTests content.");
-    writeFileSync(join(tempDir, "audit-security.agent.md"), "---\nname: security\n---\nSecurity content.");
-
-    const result = await generateCodexAgentsMd(tempDir);
-    expect(result.agentCount).toBe(2);
-    expect(result.agentFiles).toEqual([
-      "audit-security.agent.md",
-      "audit-tests.agent.md",
-    ]);
   });
 });

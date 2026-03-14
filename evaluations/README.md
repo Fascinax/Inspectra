@@ -5,15 +5,15 @@ Empirical evaluation of three audit architectures, as defined in [ADR-008](../do
 ## Tiers
 
 | Tier | Architecture | Prompt |
-|------|-------------|--------|
+| --- | --- | --- |
 | **A** | Single-pass: all MCP tools → 1 LLM synthesis | `.github/prompts/audit-tier-a.prompt.md` |
-| **B** | Hybrid: all tools + conditional explorer on hotspot files | `.github/prompts/audit-tier-b.prompt.md` |
-| **C** | Current: 12 domain agents with Phase 1 + Phase 2 | `.github/prompts/audit.prompt.md` |
+| **B** | Hybrid: all tools + conditional explorer on hotspot files | `.github/prompts/audit.prompt.md` |
+| **C** | Archived baseline from ADR-008 results | Historical results only |
 
 ## Fixtures
 
 | Fixture | Stack | Seeded Issues | Ground Truth |
-|---------|-------|--------------|--------------|
+| --- | --- | --- | --- |
 | `bench-ts-express` | TypeScript/Express | 21 | `ground-truth/bench-ts-express.json` |
 | `bench-java-spring` | Java/Spring Boot | 20 | `ground-truth/bench-java-spring.json` |
 | `bench-angular-app` | Angular 18 | 19 | `ground-truth/bench-angular-app.json` |
@@ -24,7 +24,7 @@ Each fixture is a self-contained project under `fixtures/` with intentionally se
 ## Metrics
 
 | Metric | Definition | Target |
-|--------|-----------|--------|
+| --- | --- | --- |
 | Precision | TP / (TP + FP) — fraction of reported findings that are real | ≥ 0.6 |
 | Recall | TP / ground truth — fraction of real issues detected | ≥ 0.5 |
 | Tool Recall | Recall limited to tool-detectable issues | — |
@@ -40,7 +40,7 @@ Each fixture is a self-contained project under `fixtures/` with intentionally se
 
 Open a Copilot chat and run one of the tier prompts against a fixture repo. For example, for Tier A on bench-ts-express:
 
-```
+```text
 @workspace /audit-tier-a
 
 Target: evaluations/fixtures/bench-ts-express
@@ -79,6 +79,7 @@ npx tsx evaluations/benchmark-runner.ts --evaluate --audit-file runs/tier-a-expr
 ```
 
 This computes all metrics and writes:
+
 - `evaluations/results/A-bench-ts-express-<timestamp>.json` — full metrics
 - `evaluations/results/A-bench-ts-express-<timestamp>-missed.md` — missed issues report
 
@@ -103,9 +104,13 @@ From ADR-008:
 3. **If Tier C > both** on root cause hit rate → keep multi-agent but optimize token budget
 4. **If all tiers ≈ equal** → adopt simplest (Tier A) per Occam's razor
 
+## Current Verdict
+
+ADR-008 is now decided: **Tier B is the default architecture**. Tier C remains in this benchmark suite only as a historical comparison baseline from previously captured results.
+
 ## File Structure
 
-```
+```text
 evaluations/
 ├── README.md                  ← this file
 ├── benchmark-config.ts        ← fixture/tier/threshold definitions

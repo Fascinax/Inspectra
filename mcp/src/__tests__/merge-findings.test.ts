@@ -9,7 +9,7 @@ describe("mergeReports", () => {
 
     expect(result.metadata.target).toBe("my-project");
     expect(result.metadata.profile).toBe("java-angular-playwright");
-    expect(result.metadata.agents_invoked).toContain("audit-security");
+    expect(result.metadata.domains_audited).toContain("security");
   });
 
   it("computes overall_score from domain scores", () => {

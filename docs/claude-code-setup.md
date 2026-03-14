@@ -111,8 +111,8 @@ Audit only the files changed in this PR using Inspectra.
 | Setup command | `inspectra setup` | `inspectra setup --claude` |
 | MCP config | `.vscode/mcp.json` (`servers` format) | `.mcp.json` (`mcpServers` format) |
 | Project context | `.github/copilot-instructions.md` | `CLAUDE.md` |
-| Agent definitions | `.github/agents/*.agent.md` | Embedded in `CLAUDE.md` (via MCP tools) |
-| Entry point | Copilot Chat → select agent → `/audit` | Ask Claude to run an audit |
+| Workflow prompts | `.github/prompts/*.prompt.md` | Audit entry points |
+| Entry point | Copilot Chat → `/audit` | Ask Claude to run an audit |
 | Orchestration | Copilot agent handoffs | Claude reads instructions + calls MCP tools |
 
 ## Troubleshooting
@@ -143,7 +143,7 @@ This checks Node.js version, MCP build, VS Code settings, agent files, policies,
 
 ## Generating CLAUDE.md via MCP Tool
 
-If you want to generate a more detailed `CLAUDE.md` that includes full agent definitions, use the MCP tool directly:
+If you want to generate a more detailed `CLAUDE.md` that includes the legacy agent reference material, use the MCP tool directly:
 
 ```markdown
 Call inspectra_generate_claude_md with projectDir set to the Inspectra root and write: true.
