@@ -213,8 +213,8 @@ Three tiers compete on the same repos, measured by the same expert panel:
 ### Orchestrator Evolution
 
 - [x] Architecture adapted to benchmark winner: Tier B (Hybrid) — 1 prompt + 1 conditional explorer
-- [ ] Orchestrator produces root cause clusters, not just flat top-10 findings (Phase 3b prerequisite met)
-- [ ] Backward-compatible: `clusters` and `remediation_plan` are optional fields in consolidated report schema
+- [x] Orchestrator produces root cause clusters, not just flat top-10 findings (Phase 3b prerequisite met)
+- [x] Backward-compatible: `clusters` and `remediation_plan` are optional fields in consolidated report schema
 
 ---
 

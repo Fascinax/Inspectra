@@ -87,14 +87,26 @@ Examples:
         policies.ignoreRules = await loadIgnoreRules(resolve(projectDir));
       }
       const consolidated = mergeReports(domainReports, target, profile, policies);
-      const reportJson = JSON.stringify(consolidated, null, 2);
+      const mergedFindings = consolidated.domain_reports.flatMap((report) => report.findings);
+      const hotspotResult = detectHotspots(mergedFindings);
+      const rootCausePatterns = await loadRootCausePatterns(policiesDir);
+      const rootCauseResult = inferRootCauseClusters(hotspotResult.hotspots, rootCausePatterns);
+      const remediationPlan = buildRemediationPlan(rootCauseResult.clusters, consolidated.overall_score, policies.scoring);
+
+      const enrichedReport = {
+        ...consolidated,
+        clusters: rootCauseResult.clusters,
+        remediation_plan: remediationPlan,
+      };
+
+      const reportJson = JSON.stringify(enrichedReport, null, 2);
       await setLatestReport(reportJson);
       if (projectDir) {
         const inspectraDir = join(resolve(projectDir), ".inspectra");
         await mkdir(inspectraDir, { recursive: true });
         await writeFile(join(inspectraDir, "consolidated-report.json"), reportJson, "utf-8");
       }
-      return reportResponse(consolidated, responseFormat);
+      return reportResponse(enrichedReport, responseFormat);
     }, "inspectra_merge_domain_reports"),
   );
 

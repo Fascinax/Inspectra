@@ -33,6 +33,15 @@
       "maxItems": 10,
       "description": "Top 10 highest-priority findings across all domains."
     },
+    "clusters": {
+      "type": "array",
+      "items": { "$ref": "root-cause-cluster.schema.json" },
+      "description": "Optional root-cause clusters inferred from correlated hotspots."
+    },
+    "remediation_plan": {
+      "$ref": "remediation-plan.schema.json",
+      "description": "Optional prioritized remediation plan derived from root-cause clusters."
+    },
     "statistics": {
       "type": "object",
       "properties": {

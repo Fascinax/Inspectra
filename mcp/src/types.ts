@@ -83,6 +83,76 @@ export const DomainReportSchema = z
   .strict()
   .describe("A single domain audit report");
 
+const RootCauseCategorySchema = z.enum([
+  "god-module",
+  "missing-abstraction",
+  "dependency-rot",
+  "test-gap",
+  "convention-drift",
+  "misaligned-architecture",
+  "security-shortcut",
+  "documentation-debt",
+  "isolated",
+]);
+
+const HotspotSchema = z
+  .object({
+    type: z.enum(["file", "module", "dependency", "pattern"]),
+    key: z.string().min(1),
+    label: z.string().min(1),
+    finding_count: z.number().int().nonnegative(),
+    domain_count: z.number().int().nonnegative(),
+    domains: z.array(z.string().min(1)).min(1),
+    severity_ceiling: z.enum(SEVERITY_LEVELS),
+    findings: z.array(FindingSchema).min(1),
+  })
+  .strict();
+
+const RootCauseClusterSchema = z
+  .object({
+    category: RootCauseCategorySchema,
+    source: z.enum(["tool", "llm"]),
+    confidence: z.number().min(0).max(1),
+    rationale: z.string().max(1000),
+    hotspot_count: z.number().int().nonnegative(),
+    finding_count: z.number().int().nonnegative(),
+    domain_count: z.number().int().nonnegative(),
+    domains: z.array(z.enum(DOMAINS)).min(1),
+    severity_ceiling: z.enum(SEVERITY_LEVELS),
+    hotspots: z.array(HotspotSchema).min(1),
+  })
+  .strict();
+
+const PrioritizedClusterSchema = z
+  .object({
+    cluster: RootCauseClusterSchema,
+    impact_score: z.number().int().min(0).max(100),
+    effort: z.enum(EFFORT_LEVELS),
+    recommended_batch: z.enum(["fix_now", "next_sprint", "backlog"]),
+    estimated_score_delta: z.number().min(0),
+  })
+  .strict();
+
+const RemediationPlanSchema = z
+  .object({
+    current_score: z.number().min(0).max(100),
+    fix_now: z.array(PrioritizedClusterSchema),
+    next_sprint: z.array(PrioritizedClusterSchema),
+    backlog: z.array(PrioritizedClusterSchema),
+    score_after_fix_now: z.number().min(0).max(100),
+    score_after_all: z.number().min(0).max(100),
+    summary: z.string().min(1),
+    metadata: z
+      .object({
+        total_clusters: z.number().int().nonnegative(),
+        fix_now_count: z.number().int().nonnegative(),
+        next_sprint_count: z.number().int().nonnegative(),
+        backlog_count: z.number().int().nonnegative(),
+      })
+      .strict(),
+  })
+  .strict();
+
 export const ConsolidatedReportSchema = z
   .object({
     overall_score: z.number().int().min(0).max(100).describe("Weighted overall score (0-100)"),
@@ -90,6 +160,11 @@ export const ConsolidatedReportSchema = z
     summary: z.string().min(1).max(2000).describe("Executive summary of the full audit"),
     domain_reports: z.array(DomainReportSchema).describe("Individual domain reports"),
     top_findings: z.array(FindingSchema).max(10).describe("Top 10 most critical findings"),
+    clusters: z
+      .array(RootCauseClusterSchema)
+      .optional()
+      .describe("Optional root-cause clusters inferred from correlated hotspots."),
+    remediation_plan: RemediationPlanSchema.optional().describe("Optional prioritized remediation plan derived from root-cause clusters."),
     statistics: z
       .object({
         total_findings: z.number().int().nonnegative().describe("Total number of findings"),

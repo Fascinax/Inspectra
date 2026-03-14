@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { mergeReports } from "../merger/merge-findings.js";
 import { makeFinding, makeDomainReport } from "./fixtures.js";
+import type { RootCauseCluster } from "../merger/root-cause.js";
+import type { RemediationPlan } from "../merger/prioritize.js";
 
 describe("mergeReports", () => {
   it("produces a consolidated report with correct metadata", () => {
@@ -87,5 +89,59 @@ describe("mergeReports", () => {
     const reports = [makeDomainReport({ score: 95, findings: [] })];
     const result = mergeReports(reports, "proj", "default");
     expect(result.summary).toMatch(/Grade A/);
+  });
+
+  it("supports optional diagnostic fields on consolidated output", () => {
+    const reports = [makeDomainReport({ findings: [makeFinding({ id: "SEC-123", rule: "r-diag" })] })];
+    const base = mergeReports(reports, "proj", "default");
+
+    const cluster: RootCauseCluster = {
+      category: "security-shortcut",
+      source: "tool",
+      confidence: 0.9,
+      rationale: "Security controls are inconsistent.",
+      hotspot_count: 1,
+      finding_count: 1,
+      domain_count: 1,
+      domains: ["security"],
+      severity_ceiling: "high",
+      hotspots: [
+        {
+          type: "file",
+          key: "src/auth.ts",
+          label: "src/auth.ts",
+          finding_count: 1,
+          domain_count: 1,
+          domains: ["security"],
+          severity_ceiling: "high",
+          findings: [makeFinding({ id: "SEC-123", rule: "r-diag" })],
+        },
+      ],
+    };
+
+    const remediationPlan: RemediationPlan = {
+      current_score: base.overall_score,
+      fix_now: [],
+      next_sprint: [],
+      backlog: [],
+      score_after_fix_now: base.overall_score,
+      score_after_all: base.overall_score,
+      summary: "No immediate fixes.",
+      metadata: {
+        total_clusters: 1,
+        fix_now_count: 0,
+        next_sprint_count: 0,
+        backlog_count: 1,
+      },
+    };
+
+    const enriched = {
+      ...base,
+      clusters: [cluster],
+      remediation_plan: remediationPlan,
+    };
+
+    expect(enriched.clusters).toHaveLength(1);
+    expect(enriched.remediation_plan.metadata.total_clusters).toBe(1);
   });
 });
