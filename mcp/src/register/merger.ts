@@ -11,6 +11,7 @@ import { DomainReportSchema, FindingSchema } from "../types.js";
 import { setLatestReport } from "./resources.js";
 import { ParseError } from "../errors.js";
 import { loadIgnoreRules } from "../utils/ignore.js";
+import { detectHotspots } from "../merger/correlate.js";
 
 /**
  * Registers the merger and scoring MCP tools on the given server instance.
@@ -127,5 +128,56 @@ Examples:
       const score = scoreDomain(findings, scoring);
       return jsonResponse({ score });
     }, "inspectra_score_findings"),
+  );
+
+  server.registerTool(
+    "inspectra_correlate_findings",
+    {
+      title: "Correlate Findings into Hotspots",
+      description: `Analyze a flat list of findings and group them into actionable hotspots.
+
+Four hotspot types are detected:
+  - **file**: a single file accumulates 3+ findings from 2+ different domains
+  - **module**: a directory accumulates 5+ findings across 2+ files
+  - **dependency**: a dependency manifest (package.json, pom.xml, …) has 2+ findings from 2+ domains
+  - **pattern**: the same rule fires 5+ times across 2+ different files
+
+Results are sorted by severity ceiling (highest first), then by finding count, giving a ranked list of the most problematic areas in the codebase. Use this after merging domain reports to surface root-cause candidates for the LLM synthesis step.
+
+Args:
+  - findingsJson (string): JSON string — array of Finding objects (from one or more domain reports).
+
+Returns: A CorrelationResult with a ranked \`hotspots\` array and metadata counts per hotspot type.
+
+Error handling:
+  - Returns isError: true if findingsJson fails Zod validation.
+
+Examples:
+  1. Correlate all findings from a merged report:
+     { "findingsJson": "[...all findings from consolidated report...]" }
+  2. Correlate only a single domain's findings:
+     { "findingsJson": "[...security domain findings only...]" }`,
+      inputSchema: {
+        findingsJson: z.string().describe("JSON string — array of Finding objects to correlate"),
+        responseFormat: ResponseFormatField,
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    withErrorHandling(async ({ findingsJson }) => {
+      let findings;
+      try {
+        findings = z.array(FindingSchema).parse(JSON.parse(findingsJson));
+      } catch (err) {
+        return errorResponse(
+          new ParseError(
+            `Invalid findingsJson: ${err instanceof Error ? err.message : String(err)}`,
+            "Ensure findingsJson is a valid JSON array of finding objects. Each finding must have: id, severity, domain, rule, confidence, and evidence[]. See schemas/finding.schema.json.",
+          ),
+          "inspectra_correlate_findings",
+        );
+      }
+      const result = detectHotspots(findings);
+      return jsonResponse(result);
+    }, "inspectra_correlate_findings"),
   );
 }

@@ -162,13 +162,13 @@ Three tiers compete on the same repos, measured by the same expert panel:
 
 ### Phase 3 — Correlation Engine (gated by benchmark — applies to winning tier)
 
-- [ ] Hotspot detection: group findings by file, module, dependency, or pattern convergence
+- [x] Hotspot detection: group findings by file, module, dependency, or pattern convergence
   - File hotspot: 3+ findings from 2+ domains on the same file
   - Module hotspot: 5+ findings across files in a shared directory
   - Dependency hotspot: multiple findings tracing to the same external dependency
   - Pattern hotspot: same rule triggered 5+ times across different files
-- [ ] Implement `mcp/src/merger/correlate.ts` with `Hotspot` and clustering logic
-- [ ] New MCP tool: `inspectra_correlate_findings`
+- [x] Implement `mcp/src/merger/correlate.ts` with `Hotspot` and clustering logic
+- [x] New MCP tool: `inspectra_correlate_findings`
 
 ### Phase 3b — Root Cause Inference
 
@@ -213,7 +213,7 @@ Three tiers compete on the same repos, measured by the same expert panel:
 ### Orchestrator Evolution
 
 - [x] Architecture adapted to benchmark winner: Tier B (Hybrid) — 1 prompt + 1 conditional explorer
-- [ ] Orchestrator produces root cause clusters, not just flat top-10 findings
+- [ ] Orchestrator produces root cause clusters, not just flat top-10 findings (Phase 3b prerequisite met)
 - [ ] Backward-compatible: `clusters` and `remediation_plan` are optional fields in consolidated report schema
 
 ---

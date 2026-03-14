@@ -68,6 +68,7 @@ Tools are registered in the `inspectra` MCP server. Prompt workflows should call
 | `inspectra_detect_code_smells` | Tech Debt | Flag God classes, deep nesting, JPA anti-patterns, and missing DB migrations |
 | `inspectra_merge_domain_reports` | Orchestrator | Merge and score reports |
 | `inspectra_score_findings` | Orchestrator | Compute a domain score |
+| `inspectra_correlate_findings` | Orchestrator | Group findings into hotspots (file, module, dependency, pattern) |
 | `inspectra_render_html` | Report Engine | Render HTML report (Obsidian dark theme) |
 | `inspectra_render_pdf` | Report Engine | Export HTML report to PDF (requires puppeteer) |
 | `inspectra_render_trend` | Report Engine | Compute score trend from multiple reports |

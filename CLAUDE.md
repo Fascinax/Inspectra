@@ -64,6 +64,7 @@ Observability: `check_observability`
 i18n: `check_i18n`
 UX Consistency: `check_ux_consistency`
 Orchestrator: `merge_domain_reports`, `score_findings`
+Orchestrator: `merge_domain_reports`, `score_findings`, `correlate_findings`
 Report: `render_html`, `render_pdf`, `render_trend`, `compare_reports`
 Governance: `log_activity`, `read_activity_log`
 Adapter: `generate_claude_md`, `generate_codex_agents_md`
