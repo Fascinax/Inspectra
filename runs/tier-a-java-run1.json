@@ -1,0 +1,901 @@
+{
+  "tier": "A",
+  "fixture": "bench-java-spring",
+  "findings": [
+    {
+      "id": "SEC-001",
+      "severity": "high",
+      "title": "Potential secret detected: no-hardcoded-secret-unquoted",
+      "description": "A pattern matching 'no-hardcoded-secret-unquoted' was found. This could expose sensitive credentials.",
+      "domain": "security",
+      "rule": "no-hardcoded-secret-unquoted",
+      "confidence": 0.45,
+      "evidence": [
+        {
+          "file": "src/main/resources/application.properties",
+          "line": 3,
+          "snippet": "spring.datasource.password=Pr0d_S3cret!2024"
+        }
+      ],
+      "recommendation": "Move this value to an environment variable or a secrets manager.",
+      "effort": "small",
+      "tags": [
+        "secret",
+        "credentials"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "SEC-002",
+      "severity": "high",
+      "title": "Potential secret detected: no-connection-string",
+      "description": "A pattern matching 'no-connection-string' was found. This could expose sensitive credentials.",
+      "domain": "security",
+      "rule": "no-connection-string",
+      "confidence": 0.7,
+      "evidence": [
+        {
+          "file": "src/main/resources/application.properties",
+          "line": 1,
+          "snippet": "spring.datasource.url=jdbc:postgresql://prod-db:5432/appdb"
+        }
+      ],
+      "recommendation": "Move this value to an environment variable or a secrets manager.",
+      "effort": "small",
+      "tags": [
+        "secret",
+        "credentials"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "SEC-400",
+      "severity": "critical",
+      "title": "All requests permitted without authentication",
+      "description": "Spring Security is configured with anyRequest().permitAll(), effectively disabling authentication for all endpoints. Any client can access any endpoint without credentials.",
+      "domain": "security",
+      "rule": "no-permit-all",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/config/SecurityConfig.java",
+          "line": 24
+        }
+      ],
+      "recommendation": "Replace .anyRequest().permitAll() with specific matchers: e.g. .requestMatchers(\"/public/**\").permitAll().anyRequest().authenticated()",
+      "effort": "medium",
+      "tags": [
+        "owasp:A01",
+        "CWE-862",
+        "spring-security",
+        "authentication"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "SEC-401",
+      "severity": "high",
+      "title": "CSRF protection is disabled",
+      "description": "Spring Security CSRF protection is explicitly disabled. This exposes the application to cross-site request forgery attacks unless the API is purely stateless with token-based auth.",
+      "domain": "security",
+      "rule": "no-csrf-disable",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/config/SecurityConfig.java",
+          "line": 22
+        }
+      ],
+      "recommendation": "If the API uses session-based auth or cookies, re-enable CSRF. If purely stateless with JWT/Bearer tokens and no cookies, CSRF disable may be acceptable — add a comment documenting the rationale.",
+      "effort": "small",
+      "tags": [
+        "owasp:A01",
+        "CWE-352",
+        "spring-security",
+        "csrf"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "SEC-402",
+      "severity": "high",
+      "title": "CORS allows wildcard origin with credentials",
+      "description": "CORS is configured to allow origin '*' together with allowCredentials(true). Modern browsers block this combination, but misconfigured proxies or older clients may still honor it, enabling credential theft via cross-origin requests.",
+      "domain": "security",
+      "rule": "no-cors-wildcard-credentials",
+      "confidence": 0.92,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/config/SecurityConfig.java",
+          "line": 33
+        }
+      ],
+      "recommendation": "Replace the wildcard origin with an explicit allowlist of trusted origins. Use an environment variable to configure allowed origins per environment.",
+      "effort": "small",
+      "tags": [
+        "owasp:A01",
+        "CWE-942",
+        "cors",
+        "credentials"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "SEC-403",
+      "severity": "medium",
+      "title": "Missing @Valid on @RequestBody parameter",
+      "description": "A @RequestBody parameter lacks @Valid or @Validated annotation. Without it, Bean Validation constraints on the DTO are silently ignored, allowing malformed input to reach the service layer.",
+      "domain": "security",
+      "rule": "missing-valid-annotation",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/controller/UserController.java",
+          "line": 36,
+          "snippet": "public ResponseEntity<User> createUser(@RequestBody User user) {"
+        }
+      ],
+      "recommendation": "Add @Valid before @RequestBody: public ResponseEntity<?> create(@Valid @RequestBody MyDTO dto)",
+      "effort": "small",
+      "tags": [
+        "owasp:A03",
+        "CWE-20",
+        "input-validation",
+        "spring"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "SEC-404",
+      "severity": "high",
+      "title": "Exception message leaked to client",
+      "description": "An @ExceptionHandler returns e.getMessage() or e.toString() directly to the client. Internal exceptions (NullPointerException, JDBC errors, etc.) expose implementation details such as table names, stack info, and database error messages.",
+      "domain": "security",
+      "rule": "error-info-leak",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/controller/UserController.java",
+          "line": 42,
+          "snippet": "return ResponseEntity.internalServerError().body(e.getMessage());"
+        }
+      ],
+      "recommendation": "Return a generic error message to clients (e.g., \"An internal error occurred\"). Log the full exception server-side for debugging.",
+      "effort": "small",
+      "tags": [
+        "owasp:A04",
+        "CWE-209",
+        "error-handling",
+        "info-leak"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "SEC-405",
+      "severity": "medium",
+      "title": "All Actuator endpoints exposed",
+      "description": "management.endpoints.web.exposure.include=* exposes all Spring Boot Actuator endpoints, including sensitive ones like /env, /configprops, /heapdump, and /shutdown. Without authentication, this is an information leak.",
+      "domain": "security",
+      "rule": "actuator-expose-all",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "file": "src/main/resources/application.properties",
+          "line": 5
+        }
+      ],
+      "recommendation": "Limit exposure to safe endpoints: management.endpoints.web.exposure.include=health,info,prometheus. If broader exposure is needed, ensure Spring Security protects the management port.",
+      "effort": "small",
+      "tags": [
+        "owasp:A05",
+        "CWE-200",
+        "spring-boot",
+        "actuator"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "TST-100",
+      "severity": "medium",
+      "title": "No test file for src\\main\\java\\com\\example\\Application.java",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.7,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/Application.java"
+        }
+      ],
+      "recommendation": "Create a corresponding test file.",
+      "effort": "medium",
+      "tags": [
+        "missing-test"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "TST-101",
+      "severity": "medium",
+      "title": "No test file for src\\main\\java\\com\\example\\controller\\ProductController.java",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.7,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/controller/ProductController.java"
+        }
+      ],
+      "recommendation": "Create a corresponding test file.",
+      "effort": "medium",
+      "tags": [
+        "missing-test"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "TST-102",
+      "severity": "medium",
+      "title": "No test file for src\\main\\java\\com\\example\\controller\\UserController.java",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.7,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/controller/UserController.java"
+        }
+      ],
+      "recommendation": "Create a corresponding test file.",
+      "effort": "medium",
+      "tags": [
+        "missing-test"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "TST-103",
+      "severity": "medium",
+      "title": "No test file for src\\main\\java\\com\\example\\entity\\Department.java",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.7,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/entity/Department.java"
+        }
+      ],
+      "recommendation": "Create a corresponding test file.",
+      "effort": "medium",
+      "tags": [
+        "missing-test"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "TST-104",
+      "severity": "medium",
+      "title": "No test file for src\\main\\java\\com\\example\\entity\\Product.java",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.7,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/entity/Product.java"
+        }
+      ],
+      "recommendation": "Create a corresponding test file.",
+      "effort": "medium",
+      "tags": [
+        "missing-test"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "TST-105",
+      "severity": "medium",
+      "title": "No test file for src\\main\\java\\com\\example\\entity\\User.java",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.7,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/entity/User.java"
+        }
+      ],
+      "recommendation": "Create a corresponding test file.",
+      "effort": "medium",
+      "tags": [
+        "missing-test"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "TST-106",
+      "severity": "medium",
+      "title": "No test file for src\\main\\java\\com\\example\\service\\OrderService.java",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.7,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/service/OrderService.java"
+        }
+      ],
+      "recommendation": "Create a corresponding test file.",
+      "effort": "medium",
+      "tags": [
+        "missing-test"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "TST-107",
+      "severity": "medium",
+      "title": "No test file for src\\main\\java\\com\\example\\service\\ProductService.java",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.7,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/service/ProductService.java"
+        }
+      ],
+      "recommendation": "Create a corresponding test file.",
+      "effort": "medium",
+      "tags": [
+        "missing-test"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "TST-108",
+      "severity": "medium",
+      "title": "No test file for src\\main\\java\\com\\example\\service\\UserService.java",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.7,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/service/UserService.java"
+        }
+      ],
+      "recommendation": "Create a corresponding test file.",
+      "effort": "medium",
+      "tags": [
+        "missing-test"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "TST-109",
+      "severity": "medium",
+      "title": "No test file for src\\main\\java\\com\\example\\config\\SecurityConfig.java",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.7,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/config/SecurityConfig.java"
+        }
+      ],
+      "recommendation": "Create a corresponding test file.",
+      "effort": "medium",
+      "tags": [
+        "missing-test"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "TST-110",
+      "severity": "medium",
+      "title": "No test file for src\\main\\java\\com\\example\\repository\\ProductRepository.java",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.7,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/repository/ProductRepository.java"
+        }
+      ],
+      "recommendation": "Create a corresponding test file.",
+      "effort": "medium",
+      "tags": [
+        "missing-test"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "TST-111",
+      "severity": "medium",
+      "title": "No test file for src\\main\\java\\com\\example\\repository\\UserRepository.java",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.7,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/repository/UserRepository.java"
+        }
+      ],
+      "recommendation": "Create a corresponding test file.",
+      "effort": "medium",
+      "tags": [
+        "missing-test"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "ARC-001",
+      "severity": "high",
+      "title": "Layer violation: presentation → domain",
+      "description": "File in 'presentation' layer imports from 'domain' layer. Dependencies should flow inward (presentation → application → domain ← infrastructure).",
+      "domain": "architecture",
+      "rule": "no-layer-violation",
+      "confidence": 0.8,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/controller/ProductController.java",
+          "snippet": "import ... from '/org/springframework/data/domain/Page'"
+        }
+      ],
+      "recommendation": "Invert the dependency using an interface in the domain layer.",
+      "effort": "large",
+      "tags": [
+        "layering",
+        "clean-architecture"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "CNV-100",
+      "severity": "low",
+      "title": "TODO comment: add pagination",
+      "domain": "conventions",
+      "rule": "unresolved-todo",
+      "confidence": 1,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/controller/UserController.java",
+          "line": 21,
+          "snippet": "// TODO: add pagination"
+        }
+      ],
+      "recommendation": "Resolve the TODO/FIXME or create a tracked issue.",
+      "effort": "small",
+      "tags": [
+        "tech-debt",
+        "todo"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "CNV-101",
+      "severity": "medium",
+      "title": "FIXME comment: this self-injection is a workaround for @Transactional proxy",
+      "domain": "conventions",
+      "rule": "unresolved-todo",
+      "confidence": 1,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/service/OrderService.java",
+          "line": 17,
+          "snippet": "// FIXME: this self-injection is a workaround for @Transactional proxy"
+        }
+      ],
+      "recommendation": "Resolve the TODO/FIXME or create a tracked issue.",
+      "effort": "small",
+      "tags": [
+        "tech-debt",
+        "fixme"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "CNV-102",
+      "severity": "low",
+      "title": "TODO comment: implement order processing logic",
+      "domain": "conventions",
+      "rule": "unresolved-todo",
+      "confidence": 1,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/service/OrderService.java",
+          "line": 22,
+          "snippet": "// TODO: implement order processing logic"
+        }
+      ],
+      "recommendation": "Resolve the TODO/FIXME or create a tracked issue.",
+      "effort": "small",
+      "tags": [
+        "tech-debt",
+        "todo"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "DOC-001",
+      "severity": "high",
+      "title": "README.md is missing",
+      "description": "Project has no root README, which makes onboarding and usage harder.",
+      "domain": "documentation",
+      "rule": "readme-required",
+      "confidence": 1,
+      "evidence": [
+        {
+          "file": "README.md"
+        }
+      ],
+      "recommendation": "Add a README with setup, usage, and testing instructions.",
+      "effort": "small",
+      "tags": [
+        "readme",
+        "onboarding"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "DOC-100",
+      "severity": "low",
+      "title": "No ADR documents found",
+      "description": "No architecture decision records detected in docs/adr or docs/adrs.",
+      "domain": "documentation",
+      "rule": "adr-missing",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "file": "docs/adr"
+        }
+      ],
+      "recommendation": "Add ADRs for major architecture and technology decisions.",
+      "effort": "small",
+      "tags": [
+        "adr",
+        "architecture-docs"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "DEBT-450",
+      "severity": "medium",
+      "title": "Deep nesting (5 levels) in src\\main\\java\\com\\example\\service\\UserService.java",
+      "description": "src\\main\\java\\com\\example\\service\\UserService.java has code nested 5 levels deep. Deep nesting makes code hard to follow and test.",
+      "domain": "tech-debt",
+      "rule": "deep-nesting",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/service/UserService.java",
+          "line": 35,
+          "snippet": "if (user.getPassword() != null && user.getPassword().length() >= 8) {"
+        }
+      ],
+      "recommendation": "Flatten nesting with early returns (guard clauses), extract inner blocks into named functions, or use strategy/command patterns to eliminate deep conditionals.",
+      "effort": "medium",
+      "tags": [
+        "code-smell",
+        "nesting",
+        "readability"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "DEBT-400",
+      "severity": "high",
+      "title": "@Lazy self-injection (circular dependency): src\\main\\java\\com\\example\\service\\OrderService.java",
+      "description": "@Lazy is used to break a circular dependency at injection time. This is a code smell indicating the classes have a bidirectional dependency that should be resolved through extraction of shared logic into a separate service.",
+      "domain": "tech-debt",
+      "rule": "lazy-self-injection",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/service/OrderService.java",
+          "line": 9
+        }
+      ],
+      "recommendation": "Extract the shared logic into a dedicated service to break the cycle. Alternatively, use event-driven communication or the mediator pattern.",
+      "effort": "large",
+      "tags": [
+        "circular-dependency",
+        "spring",
+        "lazy",
+        "anti-pattern"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "DEBT-401",
+      "severity": "medium",
+      "title": "Missing @Modifying on mutating @Query: src\\main\\java\\com\\example\\repository\\UserRepository.java",
+      "description": "A @Query with UPDATE, DELETE, or INSERT requires @Modifying annotation. Without it, Spring Data JPA treats it as a SELECT, causing a runtime exception.",
+      "domain": "tech-debt",
+      "rule": "jpa-missing-modifying",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/repository/UserRepository.java",
+          "line": 11,
+          "snippet": "@Query(\"UPDATE User u SET u.active = false WHERE u.loginAttempts > 5\")"
+        }
+      ],
+      "recommendation": "Add @Modifying (and optionally @Transactional) above the @Query annotation.",
+      "effort": "trivial",
+      "tags": [
+        "jpa",
+        "spring-data",
+        "repository"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "DEBT-402",
+      "severity": "medium",
+      "title": "No @Version for optimistic locking: src\\main\\java\\com\\example\\entity\\Department.java",
+      "description": "This JPA entity has no @Version field. Without optimistic locking, concurrent updates silently overwrite each other (lost update problem).",
+      "domain": "tech-debt",
+      "rule": "jpa-missing-version",
+      "confidence": 0.8,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/entity/Department.java"
+        }
+      ],
+      "recommendation": "Add a @Version field: @Version private Long version; JPA will automatically throw OptimisticLockException on conflicting updates.",
+      "effort": "small",
+      "tags": [
+        "jpa",
+        "concurrency",
+        "optimistic-locking"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "DEBT-403",
+      "severity": "high",
+      "title": "@Data on JPA entity: src\\main\\java\\com\\example\\entity\\User.java",
+      "description": "@Data (Lombok) on a JPA @Entity generates equals(), hashCode(), and toString() on ALL fields, including lazy-loaded relationships. This triggers unintended lazy loading, LazyInitializationException outside sessions, and StackOverflowError on bidirectional toString().",
+      "domain": "tech-debt",
+      "rule": "jpa-data-on-entity",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/entity/User.java",
+          "line": 7
+        }
+      ],
+      "recommendation": "Replace @Data with @Getter and @Setter. Implement equals()/hashCode() manually using business keys or entity ID only. Exclude lazy fields from toString().",
+      "effort": "medium",
+      "tags": [
+        "jpa",
+        "lombok",
+        "entity",
+        "anti-pattern"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "DEBT-404",
+      "severity": "high",
+      "title": "CascadeType.ALL on @ManyToOne: src\\main\\java\\com\\example\\entity\\User.java",
+      "description": "CascadeType.ALL on a @ManyToOne relationship means child operations cascade to the parent. Deleting or modifying the child can unintentionally delete/modify the parent entity.",
+      "domain": "tech-debt",
+      "rule": "jpa-cascade-all-many-to-one",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/entity/User.java",
+          "line": 18,
+          "snippet": ""
+        }
+      ],
+      "recommendation": "Remove CascadeType.ALL from @ManyToOne. Use specific cascades (PERSIST, MERGE) only on @OneToMany (parent → children) where it makes semantic sense.",
+      "effort": "small",
+      "tags": [
+        "jpa",
+        "cascade",
+        "entity",
+        "anti-pattern"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "DEBT-405",
+      "severity": "medium",
+      "title": "No @Version for optimistic locking: src\\main\\java\\com\\example\\entity\\User.java",
+      "description": "This JPA entity has no @Version field. Without optimistic locking, concurrent updates silently overwrite each other (lost update problem).",
+      "domain": "tech-debt",
+      "rule": "jpa-missing-version",
+      "confidence": 0.8,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/entity/User.java"
+        }
+      ],
+      "recommendation": "Add a @Version field: @Version private Long version; JPA will automatically throw OptimisticLockException on conflicting updates.",
+      "effort": "small",
+      "tags": [
+        "jpa",
+        "concurrency",
+        "optimistic-locking"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "DEBT-450",
+      "severity": "medium",
+      "title": "JPA entities found but no database migration tool detected",
+      "description": "The project uses JPA @Entity classes but neither Liquibase nor Flyway is configured. Without a migration tool, schema changes are untracked, making rollbacks and team collaboration risky. Relying on hibernate.ddl-auto=update in production leads to data loss.",
+      "domain": "tech-debt",
+      "rule": "jpa-no-migration-tool",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "file": "pom.xml",
+          "snippet": "No liquibase/flyway dependency found"
+        }
+      ],
+      "recommendation": "Add Liquibase or Flyway to your build (e.g. spring-boot-starter-liquibase). Create an initial changelog from your current schema, then track all DDL changes as versioned migrations.",
+      "effort": "medium",
+      "tags": [
+        "jpa",
+        "database",
+        "migration",
+        "liquibase",
+        "flyway"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "API-001",
+      "severity": "high",
+      "title": "HttpSession used in REST controller: src\\main\\java\\com\\example\\controller\\UserController.java",
+      "description": "A REST controller injects HttpSession or calls getSession(). REST APIs should be stateless — using server-side sessions breaks horizontal scalability and requires sticky sessions for load balancing.",
+      "domain": "api-design",
+      "rule": "stateful-rest-controller",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/controller/UserController.java",
+          "line": 28
+        }
+      ],
+      "recommendation": "Replace session usage with stateless authentication (JWT, OAuth2 tokens). Store user context in the token payload, not the server session.",
+      "effort": "large",
+      "tags": [
+        "api-design",
+        "rest",
+        "stateless",
+        "scalability"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "API-002",
+      "severity": "medium",
+      "title": "Unpaginated list endpoint: src\\main\\java\\com\\example\\controller\\UserController.java",
+      "description": "A controller returns List/Collection without pagination (no Pageable parameter or Page return type). With growing data, this causes memory spikes and slow responses.",
+      "domain": "api-design",
+      "rule": "unpaginated-list-endpoint",
+      "confidence": 0.8,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/controller/UserController.java",
+          "line": 23
+        }
+      ],
+      "recommendation": "Accept a Pageable parameter and return Page<T> instead of List<T>. Example: Page<UserDTO> getUsers(Pageable pageable)",
+      "effort": "medium",
+      "tags": [
+        "api-design",
+        "rest",
+        "pagination",
+        "performance"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "OBS-001",
+      "severity": "medium",
+      "title": "1 catch block(s) swallow exceptions without logging",
+      "description": "Found 1 catch block(s) that neither log nor re-throw the caught exception. Silent failures prevent operators from diagnosing production issues.",
+      "domain": "observability",
+      "rule": "swallowed-exception",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/service/UserService.java",
+          "line": 26
+        }
+      ],
+      "recommendation": "Add at least logger.error(err) or logger.warn(err) inside every catch block, or re-throw after logging.",
+      "effort": "small",
+      "tags": [
+        "observability",
+        "logging",
+        "error-handling"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "OBS-002",
+      "severity": "low",
+      "title": "No distributed tracing setup detected",
+      "description": "No OpenTelemetry, Jaeger, or Zipkin tracing initialization was found. Distributed tracing is essential for diagnosing latency issues in multi-service architectures.",
+      "domain": "observability",
+      "rule": "missing-tracing",
+      "confidence": 0.8,
+      "evidence": [
+        {
+          "file": "."
+        }
+      ],
+      "recommendation": "Instrument with OpenTelemetry: npm install @opentelemetry/sdk-node @opentelemetry/auto-instrumentations-node and create a tracing.ts bootstrap file.",
+      "effort": "medium",
+      "tags": [
+        "observability",
+        "tracing",
+        "opentelemetry"
+      ],
+      "source": "tool"
+    }
+  ],
+  "root_causes_reported": [
+    {
+      "id": "RC-004",
+      "title": "No enforced test coverage discipline",
+      "symptoms": []
+    },
+    {
+      "id": "RC-002",
+      "title": "Security controls are configured inconsistently",
+      "symptoms": []
+    },
+    {
+      "id": "RC-007",
+      "title": "SRP violations and maintainability hotspots are accumulating",
+      "symptoms": []
+    },
+    {
+      "id": "RC-005",
+      "title": "Code quality guardrails are not enforced",
+      "symptoms": []
+    },
+    {
+      "id": "RC-003",
+      "title": "Module boundaries are not enforced",
+      "symptoms": []
+    },
+    {
+      "id": "RC-001",
+      "title": "No secret management strategy",
+      "symptoms": []
+    },
+    {
+      "id": "RC-006",
+      "title": "Documentation is not maintained with code changes",
+      "symptoms": []
+    },
+    {
+      "id": "RC-009",
+      "title": "Dependency governance is weak",
+      "symptoms": []
+    },
+    {
+      "id": "RC-010",
+      "title": "REST API conventions are not standardized",
+      "symptoms": []
+    },
+    {
+      "id": "RC-008",
+      "title": "tech-debt:jpa-missing-modifying",
+      "symptoms": []
+    },
+    {
+      "id": "RC-011",
+      "title": "Operational observability baseline is incomplete",
+      "symptoms": []
+    },
+    {
+      "id": "RC-012",
+      "title": "observability:missing-tracing",
+      "symptoms": []
+    }
+  ]
+}

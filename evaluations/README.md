@@ -74,8 +74,6 @@ Copy the JSON findings output into a file with this shape:
 }
 ```
 
-### Step 3: Evaluate
-
 ```bash
 npx tsx evaluations/benchmark-runner.ts --evaluate --audit-file runs/tier-a-express-run1.json
 ```

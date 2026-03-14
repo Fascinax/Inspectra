@@ -1,0 +1,855 @@
+{
+  "tier": "C",
+  "fixture": "bench-ts-express",
+  "findings": [
+    {
+      "id": "SEC-001",
+      "severity": "high",
+      "title": "Hardcoded JWT secret in application config",
+      "description": "The application embeds a JWT secret directly in source control. Anyone with repository access can mint or validate tokens offline, which undermines token integrity and complicates secret rotation.",
+      "domain": "security",
+      "rule": "hardcoded-secret",
+      "confidence": 0.98,
+      "evidence": [
+        {
+          "file": "evaluations/fixtures/bench-ts-express/src/config.ts",
+          "line": 4,
+          "snippet": "jwtSecret: \"super-secret-jwt-key-do-not-share-2024\","
+        }
+      ],
+      "recommendation": "Move the JWT secret to an environment variable or managed secret store, rotate the exposed secret, and ensure production secrets are injected at deploy time rather than committed to source.",
+      "effort": "small",
+      "tags": [
+        "owasp:A02",
+        "CWE-798"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "SEC-002",
+      "severity": "high",
+      "title": "Database connection string with embedded credentials is hardcoded",
+      "description": "The PostgreSQL connection string includes a username and password in committed source code. This exposes database credentials and can lead to direct database compromise if the codebase is leaked or shared.",
+      "domain": "security",
+      "rule": "hardcoded-secret",
+      "confidence": 0.99,
+      "evidence": [
+        {
+          "file": "evaluations/fixtures/bench-ts-express/src/config.ts",
+          "line": 5,
+          "snippet": "dbConnectionString: \"postgresql://admin:p4ssw0rd_prod@db.internal:5432/myapp\","
+        }
+      ],
+      "recommendation": "Remove credentials from source control, rotate the exposed database password, and load the connection string from environment-specific secret configuration.",
+      "effort": "small",
+      "tags": [
+        "owasp:A02",
+        "CWE-798"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "SEC-003",
+      "severity": "high",
+      "title": "Internal API key is committed in auth service",
+      "description": "A live-looking internal API key is stored as a class field in production code. Hardcoded API credentials are reusable by an attacker and typically bypass normal access controls once disclosed.",
+      "domain": "security",
+      "rule": "hardcoded-secret",
+      "confidence": 0.97,
+      "evidence": [
+        {
+          "file": "evaluations/fixtures/bench-ts-express/src/services/auth.service.ts",
+          "line": 15,
+          "snippet": "private readonly internalApiKey = \"api_key: sk-live-prod-key-98xj2mNq4vR7pL\";"
+        }
+      ],
+      "recommendation": "Remove the API key from code, rotate it, and inject it through a secret manager or environment variable with least-privilege scoping.",
+      "effort": "small",
+      "tags": [
+        "owasp:A02",
+        "CWE-798"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "SEC-501",
+      "severity": "critical",
+      "title": "User-management routes are exposed without authentication or authorization",
+      "description": "The Express router mounts create, update, read, and delete user endpoints with no authentication or authorization middleware. The inline TODO confirms the protection is missing. This creates a direct public exploit path to modify or delete user records.",
+      "domain": "security",
+      "rule": "missing-authentication",
+      "confidence": 0.69,
+      "evidence": [
+        {
+          "file": "evaluations/fixtures/bench-ts-express/src/routes/users.ts",
+          "line": 7,
+          "snippet": "// TODO: add authentication middleware"
+        },
+        {
+          "file": "evaluations/fixtures/bench-ts-express/src/routes/users.ts",
+          "line": 8,
+          "snippet": "router.get(\"/getUser/:id\", controller.getById.bind(controller));"
+        },
+        {
+          "file": "evaluations/fixtures/bench-ts-express/src/routes/users.ts",
+          "line": 11,
+          "snippet": "router.delete(\"/deleteUser/:id\", controller.remove.bind(controller));"
+        }
+      ],
+      "recommendation": "Add authentication middleware before all user routes and enforce authorization checks per action, especially for update and delete operations.",
+      "effort": "medium",
+      "tags": [
+        "owasp:A01",
+        "CWE-862"
+      ],
+      "source": "llm"
+    },
+    {
+      "id": "SEC-502",
+      "severity": "high",
+      "title": "User update endpoint allows mass assignment of sensitive fields",
+      "description": "The controller forwards the entire request body into the update service, and the service merges that body directly into the stored user object. An attacker can set arbitrary fields such as role or id because there is no DTO allowlist or field-level validation.",
+      "domain": "security",
+      "rule": "mass-assignment",
+      "confidence": 0.68,
+      "evidence": [
+        {
+          "file": "evaluations/fixtures/bench-ts-express/src/controllers/user.controller.ts",
+          "line": 36,
+          "snippet": "const updated = await userService.update(req.params.id!, req.body);"
+        },
+        {
+          "file": "evaluations/fixtures/bench-ts-express/src/services/user.service.ts",
+          "line": 30,
+          "snippet": "users[idx] = { ...users[idx]!, ...data };"
+        }
+      ],
+      "recommendation": "Introduce explicit DTO validation and allowlist only safe mutable fields. Reject privileged fields such as id and role from client-controlled update payloads.",
+      "effort": "medium",
+      "tags": [
+        "owasp:A01",
+        "CWE-915"
+      ],
+      "source": "llm"
+    },
+    {
+      "id": "SEC-503",
+      "severity": "medium",
+      "title": "Authentication tokens are predictable and verified without signatures",
+      "description": "The auth service issues tokens as plain string prefixes based on the user id and accepts any token that starts with that prefix. Tokens are not signed, do not expire, and are not validated cryptographically, so a forged token can satisfy verification if this service is used for access control.",
+      "domain": "security",
+      "rule": "jwt-misconfiguration",
+      "confidence": 0.62,
+      "evidence": [
+        {
+          "file": "evaluations/fixtures/bench-ts-express/src/services/auth.service.ts",
+          "line": 23,
+          "snippet": "return `token_${user.id}`;"
+        },
+        {
+          "file": "evaluations/fixtures/bench-ts-express/src/services/auth.service.ts",
+          "line": 52,
+          "snippet": "return token.startsWith(\"token_\");"
+        }
+      ],
+      "recommendation": "Use signed JWTs or opaque server-side session tokens, validate signatures and expiry on every request, and remove the prefix-based token check.",
+      "effort": "medium",
+      "tags": [
+        "owasp:A02",
+        "owasp:A07",
+        "CWE-347"
+      ],
+      "source": "llm"
+    },
+    {
+      "id": "SEC-504",
+      "severity": "low",
+      "title": "HTTP security headers are not configured",
+      "description": "The application only enables JSON parsing and mounts routes. There is no evidence of helmet or equivalent middleware setting baseline headers such as CSP, HSTS, X-Frame-Options, and X-Content-Type-Options, leaving the app without standard defense-in-depth protections.",
+      "domain": "security",
+      "rule": "missing-security-headers",
+      "confidence": 0.56,
+      "evidence": [
+        {
+          "file": "evaluations/fixtures/bench-ts-express/src/index.ts",
+          "line": 6,
+          "snippet": "const app = express();"
+        },
+        {
+          "file": "evaluations/fixtures/bench-ts-express/src/index.ts",
+          "line": 7,
+          "snippet": "app.use(express.json());"
+        }
+      ],
+      "recommendation": "Add helmet or equivalent header middleware and define an explicit policy for CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, and Permissions-Policy.",
+      "effort": "small",
+      "tags": [
+        "owasp:A05",
+        "CWE-16"
+      ],
+      "source": "llm"
+    },
+    {
+      "id": "TST-100",
+      "severity": "medium",
+      "title": "No test file for src/config.ts",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "file": "src/config.ts",
+          "line": 2
+        }
+      ],
+      "recommendation": "Add a focused test for configuration parsing and exported defaults, or explicitly document and exclude this module from test expectations if it is intentionally static.",
+      "effort": "small",
+      "tags": [
+        "missing-test"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "TST-101",
+      "severity": "medium",
+      "title": "No test file for src/controllers/product.controller.ts",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "file": "src/controllers/product.controller.ts",
+          "line": 6
+        }
+      ],
+      "recommendation": "Add controller tests covering list, create, and the 404 branch in getById with mocked request and response objects.",
+      "effort": "medium",
+      "tags": [
+        "missing-test",
+        "express",
+        "controller"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "TST-102",
+      "severity": "medium",
+      "title": "No test file for src/controllers/user.controller.ts",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "file": "src/controllers/user.controller.ts",
+          "line": 6
+        }
+      ],
+      "recommendation": "Add controller tests for success, 404, 400 validation failures, and 500 error handling paths.",
+      "effort": "medium",
+      "tags": [
+        "missing-test",
+        "express",
+        "controller"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "TST-103",
+      "severity": "medium",
+      "title": "No test file for src/middleware/logger.ts",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "file": "src/middleware/logger.ts",
+          "line": 5
+        }
+      ],
+      "recommendation": "Add middleware tests that verify next is called and logging behavior stays stable for normal and slow requests.",
+      "effort": "medium",
+      "tags": [
+        "missing-test",
+        "express",
+        "middleware"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "TST-104",
+      "severity": "medium",
+      "title": "No test file for src/routes/products.ts",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "file": "src/routes/products.ts",
+          "line": 7
+        }
+      ],
+      "recommendation": "Add route-level tests that verify the products router wires each HTTP method and path to the expected controller handler.",
+      "effort": "small",
+      "tags": [
+        "missing-test",
+        "express",
+        "routes"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "TST-105",
+      "severity": "medium",
+      "title": "No test file for src/routes/users.ts",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "file": "src/routes/users.ts",
+          "line": 8
+        }
+      ],
+      "recommendation": "Add route-level tests that verify the users router registers each endpoint and protects against accidental path regressions.",
+      "effort": "small",
+      "tags": [
+        "missing-test",
+        "express",
+        "routes"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "TST-106",
+      "severity": "medium",
+      "title": "No test file for src/services/auth.service.ts",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "file": "src/services/auth.service.ts",
+          "line": 14
+        }
+      ],
+      "recommendation": "Add service tests for successful authentication, null returns for each guard clause, and token verification behavior.",
+      "effort": "medium",
+      "tags": [
+        "missing-test",
+        "service",
+        "auth"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "TST-107",
+      "severity": "medium",
+      "title": "No test file for src/services/user.service.ts",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "file": "src/services/user.service.ts",
+          "line": 11
+        }
+      ],
+      "recommendation": "Add service tests for create, findAll, findById, update success and miss cases, and delete success and miss cases.",
+      "effort": "medium",
+      "tags": [
+        "missing-test",
+        "service"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "TST-108",
+      "severity": "medium",
+      "title": "No test file for src/utils/helpers.ts",
+      "domain": "tests",
+      "rule": "missing-test-file",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "file": "src/utils/helpers.ts",
+          "line": 1
+        }
+      ],
+      "recommendation": "Add utility tests for currency formatting, slugification, truncation, capitalization, retry backoff, and debounce timing behavior.",
+      "effort": "medium",
+      "tags": [
+        "missing-test",
+        "utils"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "TST-501",
+      "severity": "medium",
+      "title": "ProductService tests cover only happy paths and miss the not-found branch",
+      "domain": "tests",
+      "rule": "missing-error-path-coverage",
+      "confidence": 0.58,
+      "evidence": [
+        {
+          "file": "tests/product.service.test.ts",
+          "line": 5
+        },
+        {
+          "file": "src/services/product.service.ts",
+          "line": 13
+        }
+      ],
+      "recommendation": "Extend the existing ProductService suite with a case for an unknown id that asserts findById returns undefined, and add coverage for the empty list returned by findAll.",
+      "effort": "small",
+      "tags": [
+        "vitest",
+        "istqb",
+        "missing-error-path-coverage",
+        "happy-path-only"
+      ],
+      "source": "llm"
+    },
+    {
+      "id": "TST-502",
+      "severity": "medium",
+      "title": "ProductService tests are coupled through shared module-level state",
+      "domain": "tests",
+      "rule": "test-coupling",
+      "confidence": 0.63,
+      "evidence": [
+        {
+          "file": "src/services/product.service.ts",
+          "line": 7
+        },
+        {
+          "file": "tests/product.service.test.ts",
+          "line": 5
+        }
+      ],
+      "recommendation": "Reset product storage between tests or refactor ProductService to accept an injected store so each test case runs against isolated state.",
+      "effort": "medium",
+      "tags": [
+        "vitest",
+        "frst-isolated",
+        "test-coupling"
+      ],
+      "source": "llm"
+    },
+    {
+      "id": "ARC-501",
+      "severity": "medium",
+      "title": "Object composition is fragmented across controllers and routes",
+      "description": "Controllers construct their own services and route modules construct their own controllers, so dependency wiring is spread across feature files instead of a single composition root. This creates hidden coupling, makes replacements harder, and bypasses explicit dependency injection boundaries.",
+      "domain": "architecture",
+      "rule": "direct-instantiation-bypasses-composition-root",
+      "confidence": 0.67,
+      "evidence": [
+        {
+          "file": "src/controllers/user.controller.ts",
+          "line": 4,
+          "snippet": "const userService = new UserService();"
+        },
+        {
+          "file": "src/controllers/product.controller.ts",
+          "line": 4,
+          "snippet": "const productService = new ProductService();"
+        },
+        {
+          "file": "src/routes/users.ts",
+          "line": 5,
+          "snippet": "const controller = new UserController();"
+        },
+        {
+          "file": "src/routes/products.ts",
+          "line": 5,
+          "snippet": "const controller = new ProductController();"
+        }
+      ],
+      "recommendation": "Move object construction to the application bootstrap layer and inject controller dependencies explicitly. Route modules should register already-constructed handlers rather than creating controller instances themselves.",
+      "effort": "medium",
+      "tags": [
+        "dependency-injection",
+        "composition-root",
+        "coupling"
+      ],
+      "source": "llm"
+    },
+    {
+      "id": "ARC-502",
+      "severity": "medium",
+      "title": "HTTP controller contains business validation rules",
+      "description": "The user controller enforces age rules directly in the transport layer before invoking the service. This mixes HTTP handling with business policy, making the rule harder to reuse consistently from other entry points and weakening the controller-service boundary.",
+      "domain": "architecture",
+      "rule": "controller-business-logic-leak",
+      "confidence": 0.63,
+      "evidence": [
+        {
+          "file": "src/controllers/user.controller.ts",
+          "line": 21,
+          "snippet": "const { name, email, age, role } = req.body;"
+        },
+        {
+          "file": "src/controllers/user.controller.ts",
+          "line": 22,
+          "snippet": "if (age < 18) {"
+        },
+        {
+          "file": "src/controllers/user.controller.ts",
+          "line": 26,
+          "snippet": "if (age > 120) {"
+        }
+      ],
+      "recommendation": "Move validation of domain rules into an application service or dedicated validator/use-case so controllers remain thin adapters responsible only for request parsing and response mapping.",
+      "effort": "small",
+      "tags": [
+        "controller",
+        "separation-of-concerns",
+        "application-layer"
+      ],
+      "source": "llm"
+    },
+    {
+      "id": "ARC-503",
+      "severity": "medium",
+      "title": "Controllers expose service data structures directly as HTTP contracts",
+      "description": "Controllers serialize service return values straight to JSON without any DTO or response mapping layer. That couples the external API contract to internal service data structures, which increases the cost of evolving service internals independently from the HTTP surface.",
+      "domain": "architecture",
+      "rule": "leaky-abstraction-http-contract-coupled-to-service-model",
+      "confidence": 0.61,
+      "evidence": [
+        {
+          "file": "src/controllers/user.controller.ts",
+          "line": 11,
+          "snippet": "res.json(user);"
+        },
+        {
+          "file": "src/controllers/user.controller.ts",
+          "line": 30,
+          "snippet": "const user = await userService.create({ name, email, age, role });"
+        },
+        {
+          "file": "src/controllers/product.controller.ts",
+          "line": 9,
+          "snippet": "res.json(products);"
+        },
+        {
+          "file": "src/controllers/product.controller.ts",
+          "line": 15,
+          "snippet": "res.json(product);"
+        }
+      ],
+      "recommendation": "Introduce explicit response DTOs or presenter mapping at the controller boundary so HTTP payloads remain stable even if service-layer models change.",
+      "effort": "medium",
+      "tags": [
+        "controller",
+        "dto",
+        "api-boundary",
+        "abstraction"
+      ],
+      "source": "llm"
+    },
+    {
+      "id": "CNV-300",
+      "severity": "high",
+      "title": "Function too long: requestLogger (62 lines)",
+      "domain": "conventions",
+      "rule": "function-too-long",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "file": "src\\middleware\\logger.ts",
+          "line": 6,
+          "snippet": "requestLogger() — 62 lines"
+        }
+      ],
+      "recommendation": "Extract request parsing, log formatting, and response handling into smaller helpers so each function stays focused and testable.",
+      "effort": "medium",
+      "tags": [
+        "clean-code",
+        "function-length",
+        "maintainability"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "CNV-101",
+      "severity": "medium",
+      "title": "FIXME comment left in request logger middleware",
+      "domain": "conventions",
+      "rule": "unresolved-todo",
+      "confidence": 1,
+      "evidence": [
+        {
+          "file": "src\\middleware\\logger.ts",
+          "line": 4,
+          "snippet": "// FIXME: this middleware leaks memory on high traffic"
+        }
+      ],
+      "recommendation": "Resolve the FIXME or convert it into a tracked issue with an owner and deadline instead of leaving it inline.",
+      "effort": "small",
+      "tags": [
+        "todo",
+        "fixme",
+        "tech-debt"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "CNV-408",
+      "severity": "low",
+      "title": "Magic number 18 used as an age threshold",
+      "domain": "conventions",
+      "rule": "magic-number",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "file": "src\\controllers\\user.controller.ts",
+          "line": 22,
+          "snippet": "if (age < 18) {"
+        }
+      ],
+      "recommendation": "Replace 18 with a named constant such as MINIMUM_USER_AGE so the business rule is explicit and reusable.",
+      "effort": "trivial",
+      "tags": [
+        "magic-number",
+        "readability",
+        "clean-code"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "CNV-100",
+      "severity": "low",
+      "title": "TODO comment left in logging middleware",
+      "domain": "conventions",
+      "rule": "unresolved-todo",
+      "confidence": 1,
+      "evidence": [
+        {
+          "file": "src\\middleware\\logger.ts",
+          "line": 3,
+          "snippet": "// TODO: replace with proper logging library (winston or pino)"
+        }
+      ],
+      "recommendation": "Either implement the intended logging abstraction or move the work to tracked backlog instead of leaving an inline TODO.",
+      "effort": "small",
+      "tags": [
+        "todo",
+        "maintainability",
+        "tech-debt"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "API-001",
+      "severity": "medium",
+      "title": "User read route uses a verb path.",
+      "description": "GET /getUser/:id names an action instead of a resource.",
+      "domain": "api-design",
+      "rule": "verb-based-resource-name",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "file": "src/routes/users.ts",
+          "line": 8
+        }
+      ],
+      "recommendation": "Use GET /users/:id.",
+      "effort": "small",
+      "source": "tool"
+    },
+    {
+      "id": "API-002",
+      "severity": "low",
+      "title": "User read route is not kebab-case.",
+      "description": "The getUser segment mixes casing in the URL.",
+      "domain": "api-design",
+      "rule": "non-kebab-case-path",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "file": "src/routes/users.ts",
+          "line": 8
+        }
+      ],
+      "recommendation": "Rename the segment to lowercase kebab-case.",
+      "effort": "small",
+      "source": "tool"
+    },
+    {
+      "id": "API-003",
+      "severity": "medium",
+      "title": "User create route uses a verb path.",
+      "description": "POST /createUser names an action instead of a resource.",
+      "domain": "api-design",
+      "rule": "verb-based-resource-name",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "file": "src/routes/users.ts",
+          "line": 9
+        }
+      ],
+      "recommendation": "Use POST /users.",
+      "effort": "small",
+      "source": "tool"
+    },
+    {
+      "id": "API-004",
+      "severity": "low",
+      "title": "User create route is not kebab-case.",
+      "description": "The createUser segment mixes casing in the URL.",
+      "domain": "api-design",
+      "rule": "non-kebab-case-path",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "file": "src/routes/users.ts",
+          "line": 9
+        }
+      ],
+      "recommendation": "Rename the segment to lowercase kebab-case.",
+      "effort": "small",
+      "source": "tool"
+    },
+    {
+      "id": "API-005",
+      "severity": "medium",
+      "title": "User update route uses a verb path.",
+      "description": "PUT /updateUser/:id names an action instead of a resource.",
+      "domain": "api-design",
+      "rule": "verb-based-resource-name",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "file": "src/routes/users.ts",
+          "line": 10
+        }
+      ],
+      "recommendation": "Use PUT /users/:id.",
+      "effort": "small",
+      "source": "tool"
+    },
+    {
+      "id": "API-006",
+      "severity": "low",
+      "title": "User update route is not kebab-case.",
+      "description": "The updateUser segment mixes casing in the URL.",
+      "domain": "api-design",
+      "rule": "non-kebab-case-path",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "file": "src/routes/users.ts",
+          "line": 10
+        }
+      ],
+      "recommendation": "Rename the segment to lowercase kebab-case.",
+      "effort": "small",
+      "source": "tool"
+    },
+    {
+      "id": "API-007",
+      "severity": "medium",
+      "title": "User delete route uses a verb path.",
+      "description": "DELETE /deleteUser/:id names an action instead of a resource.",
+      "domain": "api-design",
+      "rule": "verb-based-resource-name",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "file": "src/routes/users.ts",
+          "line": 11
+        }
+      ],
+      "recommendation": "Use DELETE /users/:id.",
+      "effort": "small",
+      "source": "tool"
+    },
+    {
+      "id": "API-008",
+      "severity": "low",
+      "title": "User delete route is not kebab-case.",
+      "description": "The deleteUser segment mixes casing in the URL.",
+      "domain": "api-design",
+      "rule": "non-kebab-case-path",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "file": "src/routes/users.ts",
+          "line": 11
+        }
+      ],
+      "recommendation": "Rename the segment to lowercase kebab-case.",
+      "effort": "small",
+      "source": "tool"
+    },
+    {
+      "id": "API-009",
+      "severity": "low",
+      "title": "Routes lack a version prefix.",
+      "description": "The API mounts under /api without a version like /v1.",
+      "domain": "api-design",
+      "rule": "missing-api-versioning",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "file": "src/routes/products.ts",
+          "line": 7
+        }
+      ],
+      "recommendation": "Prefix routes with /api/v1 or /v1.",
+      "effort": "medium",
+      "source": "tool"
+    },
+    {
+      "id": "API-501",
+      "severity": "high",
+      "title": "Errors do not use problem details.",
+      "description": "Controllers return bare error objects instead of RFC 9457 fields.",
+      "domain": "api-design",
+      "rule": "non-problem-details-errors",
+      "confidence": 0.67,
+      "evidence": [
+        {
+          "file": "src/controllers/user.controller.ts",
+          "line": 13,
+          "snippet": "res.status(404).json({ error: \"not found\" });"
+        },
+        {
+          "file": "src/controllers/product.controller.ts",
+          "line": 17,
+          "snippet": "res.status(404).json({ error: \"Product not found\" });"
+        }
+      ],
+      "recommendation": "Return application/problem+json with type, title, and status.",
+      "effort": "medium",
+      "source": "llm"
+    },
+    {
+      "id": "API-521",
+      "severity": "high",
+      "title": "The product list endpoint is unbounded.",
+      "description": "GET /products accepts no paging input and returns the full array.",
+      "domain": "api-design",
+      "rule": "unbounded-list",
+      "confidence": 0.65,
+      "evidence": [
+        {
+          "file": "src/routes/products.ts",
+          "line": 7,
+          "snippet": "router.get(\"/products\", controller.list.bind(controller));"
+        },
+        {
+          "file": "src/controllers/product.controller.ts",
+          "line": 8,
+          "snippet": "const products = await productService.findAll();"
+        }
+      ],
+      "recommendation": "Add limit or cursor pagination and return metadata.",
+      "effort": "medium",
+      "source": "llm"
+    }
+  ]
+}

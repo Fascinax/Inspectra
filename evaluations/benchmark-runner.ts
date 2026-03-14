@@ -1,17 +1,17 @@
-/**
+﻿/**
  * Benchmark Runner — CLI scaffold for ADR-008 evaluation.
  *
  * Usage:
- *   npx tsx evaluations/benchmark-runner.ts --tier A --fixture bench-ts-express --output results/
- *   npx tsx evaluations/benchmark-runner.ts --all --output results/
+ *   npx tsx evaluations/benchmark-runner.ts --evaluate --audit-file runs/tier-a-express-run1.json
+ *   npx tsx evaluations/benchmark-runner.ts --evaluate --audit-file evaluations/fixtures/bench-ts-express/.inspectra/consolidated-report.json --tier C
+ *   npx tsx evaluations/benchmark-runner.ts --compare --results-dir evaluations/results/
  *
- * For now this is a scaffold: it loads ground truth, accepts a manually-produced
- * audit JSON, computes metrics, and writes the comparison report.
- * Actual tier runs require Copilot agents and will be triggered manually.
+ * The runner accepts either a normalized benchmark audit file or an
+ * Inspectra consolidated report and normalizes it before scoring.
  */
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs";
-import { resolve, join, basename } from "node:path";
+import { resolve, join, basename, dirname } from "node:path";
 import {
   loadGroundTruth,
   computeMetrics,
@@ -19,10 +19,15 @@ import {
   generateComparisonTable,
   generateMissedReport,
 } from "./benchmark-harness.js";
-import type { AuditOutput, MetricResults, AggregatedMetrics } from "./benchmark-harness.js";
+import type {
+  AuditFinding,
+  AuditOutput,
+  MetricResults,
+  AggregatedMetrics,
+} from "./benchmark-harness.js";
 import { BENCHMARK_CONFIG } from "./benchmark-config.js";
 
-// ─── CLI Parsing ────────────────────────────────────────────────────────────
+type BenchmarkTier = AuditOutput["tier"];
 
 interface CliArgs {
   mode: "evaluate" | "compare" | "help";
@@ -33,11 +38,30 @@ interface CliArgs {
   resultsDir?: string;
 }
 
+interface ConsolidatedDomainReport {
+  findings?: AuditFinding[];
+}
+
+interface ConsolidatedAuditReport {
+  metadata?: {
+    target?: string;
+    token_count?: number;
+    latency_ms?: number;
+  };
+  domain_reports?: ConsolidatedDomainReport[];
+}
+
+interface ResolvedAuditInput {
+  requestedPath: string;
+  inputPath: string;
+  usedFallback: boolean;
+}
+
 function parseArgs(argv: string[]): CliArgs {
   const args: CliArgs = { mode: "help", outputDir: "evaluations/results" };
 
-  for (let i = 2; i < argv.length; i++) {
-    switch (argv[i]) {
+  for (let index = 2; index < argv.length; index++) {
+    switch (argv[index]) {
       case "--evaluate":
         args.mode = "evaluate";
         break;
@@ -45,19 +69,19 @@ function parseArgs(argv: string[]): CliArgs {
         args.mode = "compare";
         break;
       case "--tier":
-        args.tier = argv[++i];
+        args.tier = argv[++index];
         break;
       case "--fixture":
-        args.fixture = argv[++i];
+        args.fixture = argv[++index];
         break;
       case "--audit-file":
-        args.auditFile = argv[++i];
+        args.auditFile = argv[++index];
         break;
       case "--output":
-        args.outputDir = argv[++i];
+        args.outputDir = argv[++index];
         break;
       case "--results-dir":
-        args.resultsDir = argv[++i];
+        args.resultsDir = argv[++index];
         break;
       case "--help":
         args.mode = "help";
@@ -68,58 +92,173 @@ function parseArgs(argv: string[]): CliArgs {
   return args;
 }
 
-// ─── Evaluate Mode ──────────────────────────────────────────────────────────
+function normalizeTier(rawTier?: string): BenchmarkTier | undefined {
+  const normalizedTier = rawTier?.trim().toUpperCase();
+  if (normalizedTier === "A" || normalizedTier === "B" || normalizedTier === "C") {
+    return normalizedTier;
+  }
 
-/**
- * Evaluate a single audit output against its ground truth.
- *
- * Expected workflow:
- * 1. Run a tier prompt manually in Copilot (Tier A, B, or C)
- * 2. Copy the JSON findings output into a file
- * 3. Run: npx tsx evaluations/benchmark-runner.ts --evaluate --audit-file path/to/output.json
- *
- * The audit file must conform to AuditOutput shape:
- * {
- *   "tier": "A",
- *   "fixture": "bench-ts-express",
- *   "findings": [...],
- *   "root_causes_reported": [...],  // optional
- *   "token_count": 12000,           // optional
- *   "latency_ms": 45000             // optional
- * }
- */
-function runEvaluate(args: CliArgs): void {
+  return undefined;
+}
+
+function inferTierFromPath(auditFilePath: string): BenchmarkTier | undefined {
+  const fileName = basename(auditFilePath);
+  const tierMatch = fileName.match(/(?:^|[-_])tier[-_]?([abc])(?:[-_.]|$)/i)
+    ?? fileName.match(/^(A|B|C)(?:[-_.]|$)/i);
+
+  return normalizeTier(tierMatch?.[1]);
+}
+
+function getFixtureTokens(fixtureName: string): string[] {
+  return fixtureName
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(token => token.length > 1 && !["bench", "ts", "java", "app"].includes(token));
+}
+
+function inferFixtureName(rawValue?: string): string | undefined {
+  if (!rawValue) {
+    return undefined;
+  }
+
+  const normalizedValue = rawValue.toLowerCase().replace(/\\/g, "/");
+  const exactFixture = BENCHMARK_CONFIG.fixtures.find(fixture => normalizedValue.includes(fixture.name.toLowerCase()));
+  if (exactFixture) {
+    return exactFixture.name;
+  }
+
+  let bestFixture: string | undefined;
+  let bestScore = 0;
+
+  for (const fixture of BENCHMARK_CONFIG.fixtures) {
+    const fixtureScore = getFixtureTokens(fixture.name)
+      .filter(token => normalizedValue.includes(token)).length;
+
+    if (fixtureScore > bestScore) {
+      bestFixture = fixture.name;
+      bestScore = fixtureScore;
+    }
+  }
+
+  return bestScore > 0 ? bestFixture : undefined;
+}
+
+function resolveAuditInput(args: CliArgs): ResolvedAuditInput {
   if (!args.auditFile) {
     console.error("Error: --audit-file is required for --evaluate mode");
     process.exit(1);
   }
 
-  const auditRaw = readFileSync(resolve(args.auditFile), "utf-8");
-  const auditOutput: AuditOutput = JSON.parse(auditRaw);
+  const requestedPath = resolve(args.auditFile);
+  if (existsSync(requestedPath)) {
+    return { requestedPath, inputPath: requestedPath, usedFallback: false };
+  }
 
-  const fixtureConfig = BENCHMARK_CONFIG.fixtures.find(f => f.name === auditOutput.fixture);
+  const inferredFixtureName = args.fixture ?? inferFixtureName(requestedPath);
+  const fixtureConfig = BENCHMARK_CONFIG.fixtures.find(fixture => fixture.name === inferredFixtureName);
   if (!fixtureConfig) {
-    console.error(`Error: Unknown fixture "${auditOutput.fixture}". Known: ${BENCHMARK_CONFIG.fixtures.map(f => f.name).join(", ")}`);
+    console.error(`Error: Audit file does not exist: ${requestedPath}`);
+    console.error("Tip: pass --fixture explicitly or use a file name that hints the fixture name.");
+    process.exit(1);
+  }
+
+  const fallbackPath = resolve(fixtureConfig.path, ".inspectra", "consolidated-report.json");
+  if (!existsSync(fallbackPath)) {
+    console.error(`Error: Audit file does not exist: ${requestedPath}`);
+    console.error(`Fallback report not found: ${fallbackPath}`);
+    process.exit(1);
+  }
+
+  console.warn(`Warning: ${requestedPath} not found. Falling back to ${fallbackPath}.`);
+  return { requestedPath, inputPath: fallbackPath, usedFallback: true };
+}
+
+function isAuditOutput(value: unknown): value is AuditOutput {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const candidate = value as Partial<AuditOutput>;
+  return typeof candidate.tier === "string"
+    && typeof candidate.fixture === "string"
+    && Array.isArray(candidate.findings);
+}
+
+function isConsolidatedAuditReport(value: unknown): value is ConsolidatedAuditReport {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  return Array.isArray((value as ConsolidatedAuditReport).domain_reports);
+}
+
+function normalizeAuditInput(rawInput: unknown, args: CliArgs, inputPath: string, requestedPath?: string): AuditOutput {
+  if (isAuditOutput(rawInput)) {
+    return rawInput;
+  }
+
+  if (!isConsolidatedAuditReport(rawInput)) {
+    console.error("Error: Unsupported audit file shape. Expected AuditOutput or Inspectra consolidated report JSON.");
+    process.exit(1);
+  }
+
+  const tier = normalizeTier(args.tier) ?? inferTierFromPath(requestedPath ?? inputPath) ?? inferTierFromPath(inputPath);
+  if (!tier) {
+    console.error("Error: Could not infer tier from the audit file. Pass --tier A|B|C explicitly.");
+    process.exit(1);
+  }
+
+  const fixture = args.fixture
+    ?? inferFixtureName(rawInput.metadata?.target)
+    ?? inferFixtureName(requestedPath ?? inputPath) ?? inferFixtureName(inputPath);
+  if (!fixture) {
+    console.error("Error: Could not infer fixture from the audit file. Pass --fixture <name> explicitly.");
+    process.exit(1);
+  }
+
+  const findings = (rawInput.domain_reports ?? []).flatMap(domainReport => domainReport.findings ?? []);
+
+  return {
+    tier,
+    fixture,
+    findings,
+    token_count: rawInput.metadata?.token_count,
+    latency_ms: rawInput.metadata?.latency_ms,
+  };
+}
+
+function runEvaluate(args: CliArgs): void {
+  const resolvedAuditInput = resolveAuditInput(args);
+  const auditRaw = readFileSync(resolvedAuditInput.inputPath, "utf-8");
+  const auditOutput = normalizeAuditInput(JSON.parse(auditRaw), args, resolvedAuditInput.inputPath, resolvedAuditInput.requestedPath);
+
+  if (resolvedAuditInput.usedFallback) {
+    mkdirSync(dirname(resolvedAuditInput.requestedPath), { recursive: true });
+    writeFileSync(resolvedAuditInput.requestedPath, `${JSON.stringify(auditOutput, null, 2)}\n`);
+    console.log(`Normalized audit snapshot written to ${resolvedAuditInput.requestedPath}`);
+  }
+
+  const fixtureConfig = BENCHMARK_CONFIG.fixtures.find(fixture => fixture.name === auditOutput.fixture);
+  if (!fixtureConfig) {
+    console.error(`Error: Unknown fixture "${auditOutput.fixture}". Known: ${BENCHMARK_CONFIG.fixtures.map(fixture => fixture.name).join(", ")}`);
     process.exit(1);
   }
 
   const groundTruth = loadGroundTruth(fixtureConfig.groundTruthPath);
   const metrics = computeMetrics(groundTruth, auditOutput);
 
-  // Write metrics JSON
-  const outDir = resolve(args.outputDir);
-  mkdirSync(outDir, { recursive: true });
+  const outputDirectory = resolve(args.outputDir);
+  mkdirSync(outputDirectory, { recursive: true });
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const outFile = join(outDir, `${auditOutput.tier}-${auditOutput.fixture}-${timestamp}.json`);
-  writeFileSync(outFile, JSON.stringify(metrics, null, 2));
+  const metricsFilePath = join(outputDirectory, `${auditOutput.tier}-${auditOutput.fixture}-${timestamp}.json`);
+  writeFileSync(metricsFilePath, JSON.stringify(metrics, null, 2));
 
-  // Write missed report
   const missedReport = generateMissedReport(groundTruth, metrics);
-  const missedFile = join(outDir, `${auditOutput.tier}-${auditOutput.fixture}-${timestamp}-missed.md`);
-  writeFileSync(missedFile, missedReport);
+  const missedReportPath = join(outputDirectory, `${auditOutput.tier}-${auditOutput.fixture}-${timestamp}-missed.md`);
+  writeFileSync(missedReportPath, missedReport);
 
-  // Summary to stdout
-  console.log(`\n═══ Evaluation: Tier ${metrics.tier} × ${metrics.fixture} ═══\n`);
+  console.log(`\n--- Evaluation: Tier ${metrics.tier} × ${metrics.fixture} ---\n`);
+  console.log(`  Input:            ${resolvedAuditInput.inputPath}`);
   console.log(`  Precision:        ${metrics.precision}`);
   console.log(`  Recall:           ${metrics.recall}`);
   console.log(`  Tool Recall:      ${metrics.toolRecall}`);
@@ -131,62 +270,55 @@ function runEvaluate(args: CliArgs): void {
   if (metrics.diagnosticValue != null) {
     console.log(`  Diagnostic Value: ${metrics.diagnosticValue}`);
   }
-  console.log(`\n  Results: ${outFile}`);
-  console.log(`  Missed:  ${missedFile}\n`);
+  console.log(`\n  Results: ${metricsFilePath}`);
+  console.log(`  Missed:  ${missedReportPath}\n`);
 }
 
-// ─── Compare Mode ───────────────────────────────────────────────────────────
-
-/**
- * Aggregate all result JSON files from a directory and produce a comparison table.
- *
- * npx tsx evaluations/benchmark-runner.ts --compare --results-dir evaluations/results/ --output evaluations/
- */
 function runCompare(args: CliArgs): void {
-  const resultsDir = resolve(args.resultsDir ?? args.outputDir);
-  if (!existsSync(resultsDir)) {
-    console.error(`Error: Results directory does not exist: ${resultsDir}`);
+  const resultsDirectory = resolve(args.resultsDir ?? args.outputDir);
+  if (!existsSync(resultsDirectory)) {
+    console.error(`Error: Results directory does not exist: ${resultsDirectory}`);
     process.exit(1);
   }
 
-  const files = readdirSync(resultsDir).filter(f => f.endsWith(".json") && !f.includes("-missed"));
+  const files = readdirSync(resultsDirectory).filter(file => file.endsWith(".json") && !file.includes("-missed"));
   if (files.length === 0) {
-    console.error("Error: No result JSON files found in", resultsDir);
+    console.error("Error: No result JSON files found in", resultsDirectory);
     process.exit(1);
   }
 
-  // Load all results and group by tier + fixture
-  const allResults: MetricResults[] = files.map(f => {
-    const raw = readFileSync(join(resultsDir, f), "utf-8");
+  const allResults: MetricResults[] = files.map(file => {
+    const raw = readFileSync(join(resultsDirectory, file), "utf-8");
     return JSON.parse(raw) as MetricResults;
   });
 
-  const groups = new Map<string, MetricResults[]>();
-  for (const r of allResults) {
-    const key = `${r.tier}:${r.fixture}`;
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push(r);
+  const groupedResults = new Map<string, MetricResults[]>();
+  for (const result of allResults) {
+    const groupKey = `${result.tier}:${result.fixture}`;
+    if (!groupedResults.has(groupKey)) {
+      groupedResults.set(groupKey, []);
+    }
+    groupedResults.get(groupKey)!.push(result);
   }
 
-  const aggregated: AggregatedMetrics[] = [];
-  for (const [, runs] of groups) {
-    aggregated.push(aggregateRuns(runs));
+  const aggregatedResults: AggregatedMetrics[] = [];
+  for (const [, runs] of groupedResults) {
+    aggregatedResults.push(aggregateRuns(runs));
   }
 
-  // Sort: by fixture, then tier
-  aggregated.sort((a, b) => a.fixture.localeCompare(b.fixture) || a.tier.localeCompare(b.tier));
+  aggregatedResults.sort((left, right) => left.fixture.localeCompare(right.fixture) || left.tier.localeCompare(right.tier));
 
-  const table = generateComparisonTable(aggregated);
+  const comparisonTable = generateComparisonTable(aggregatedResults);
   const report = [
     "# ADR-008 Benchmark Results\n",
     `Generated: ${new Date().toISOString()}\n`,
-    `Total runs: ${allResults.length} across ${groups.size} tier×fixture combinations\n`,
-    table,
+    `Total runs: ${allResults.length} across ${groupedResults.size} tier×fixture combinations\n`,
+    comparisonTable,
     "",
     "## Decision Gates\n",
     `- Min Precision: ${BENCHMARK_CONFIG.thresholds.minPrecision}`,
     `- Min Recall: ${BENCHMARK_CONFIG.thresholds.minRecall}`,
-    `- Max Variance (σ): ${BENCHMARK_CONFIG.thresholds.maxVariance}`,
+    `- Max Variance (s): ${BENCHMARK_CONFIG.thresholds.maxVariance}`,
     `- Min Actionability: ${BENCHMARK_CONFIG.thresholds.minActionability}`,
     "",
     "## Interpretation\n",
@@ -194,16 +326,14 @@ function runCompare(args: CliArgs): void {
     "ADR-008 recommends adopting the simpler architecture. See `docs/adr/008-benchmark-before-architecture.md`.",
   ].join("\n");
 
-  const outDir = resolve(args.outputDir);
-  mkdirSync(outDir, { recursive: true });
-  const reportFile = join(outDir, "benchmark-comparison.md");
-  writeFileSync(reportFile, report);
+  const outputDirectory = resolve(args.outputDir);
+  mkdirSync(outputDirectory, { recursive: true });
+  const reportFilePath = join(outputDirectory, "benchmark-comparison.md");
+  writeFileSync(reportFilePath, report);
 
-  console.log(table);
-  console.log(`\nFull report: ${reportFile}`);
+  console.log(comparisonTable);
+  console.log(`\nFull report: ${reportFilePath}`);
 }
-
-// ─── Help ───────────────────────────────────────────────────────────────────
 
 function printHelp(): void {
   console.log(`
@@ -215,28 +345,30 @@ Commands:
 
 Options:
   --audit-file <path>    Path to audit output JSON (required for --evaluate)
+  --tier <A|B|C>         Required when evaluating a consolidated report without a tier hint in its file name
+  --fixture <name>       Optional fixture override when the file name is ambiguous
   --results-dir <path>   Directory containing result JSONs (for --compare)
   --output <dir>         Output directory (default: evaluations/results/)
   --help                 Show this help
 
 Examples:
-  # Evaluate a Tier A run on bench-ts-express
-  npx tsx evaluations/benchmark-runner.ts --evaluate --audit-file runs/tier-a-express.json
+  # Evaluate a normalized run file
+  npx tsx evaluations/benchmark-runner.ts --evaluate --audit-file runs/tier-a-express-run1.json
+
+  # Evaluate directly from an Inspectra consolidated report
+  npx tsx evaluations/benchmark-runner.ts --evaluate --audit-file evaluations/fixtures/bench-ts-express/.inspectra/consolidated-report.json --tier C
 
   # Compare all results
   npx tsx evaluations/benchmark-runner.ts --compare --results-dir evaluations/results/
 
 Workflow:
   1. Run a tier prompt in Copilot (Tier A, B, or C) against a fixture repo
-  2. Save the JSON findings output to a file with this shape:
-     { "tier": "A", "fixture": "bench-ts-express", "findings": [...] }
+  2. Either save a normalized benchmark audit file or point the runner at .inspectra/consolidated-report.json
   3. Run --evaluate to compute metrics
   4. Repeat 3× per tier per fixture (as per ADR-008 protocol)
   5. Run --compare to generate the comparison table
 `);
 }
-
-// ─── Main ───────────────────────────────────────────────────────────────────
 
 const args = parseArgs(process.argv);
 
@@ -250,3 +382,6 @@ switch (args.mode) {
   default:
     printHelp();
 }
+
+
+

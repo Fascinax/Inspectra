@@ -1,0 +1,140 @@
+{
+  "fixture": "bench-java-spring",
+  "tier": "A",
+  "precision": 0.526,
+  "recall": 1,
+  "toolRecall": 1,
+  "llmOnlyRecall": 1,
+  "rootCauseHitRate": 1,
+  "actionabilityScore": 10,
+  "dedupEffectiveness": 0.993,
+  "findingCount": 38,
+  "truePositives": 20,
+  "falsePositives": 17,
+  "missedIssues": 0,
+  "tokenCount": null,
+  "latencyMs": null,
+  "diagnosticValue": null,
+  "matchDetails": [
+    {
+      "groundTruthId": "SEC-GT-001",
+      "matched": true,
+      "matchedFindingId": "SEC-001",
+      "matchType": "exact-file-line"
+    },
+    {
+      "groundTruthId": "SEC-GT-002",
+      "matched": true,
+      "matchedFindingId": "SEC-400",
+      "matchType": "exact-file-line"
+    },
+    {
+      "groundTruthId": "SEC-GT-003",
+      "matched": true,
+      "matchedFindingId": "SEC-401",
+      "matchType": "exact-file-line"
+    },
+    {
+      "groundTruthId": "SEC-GT-004",
+      "matched": true,
+      "matchedFindingId": "SEC-402",
+      "matchType": "exact-file-line"
+    },
+    {
+      "groundTruthId": "SEC-GT-005",
+      "matched": true,
+      "matchedFindingId": "SEC-002",
+      "matchType": "exact-file-line"
+    },
+    {
+      "groundTruthId": "SEC-GT-006",
+      "matched": true,
+      "matchedFindingId": "SEC-404",
+      "matchType": "exact-file-line"
+    },
+    {
+      "groundTruthId": "SEC-GT-007",
+      "matched": true,
+      "matchedFindingId": "SEC-403",
+      "matchType": "exact-file-line"
+    },
+    {
+      "groundTruthId": "SEC-GT-008",
+      "matched": true,
+      "matchedFindingId": "SEC-405",
+      "matchType": "exact-file-line"
+    },
+    {
+      "groundTruthId": "API-GT-001",
+      "matched": true,
+      "matchedFindingId": "API-001",
+      "matchType": "exact-file-line"
+    },
+    {
+      "groundTruthId": "API-GT-002",
+      "matched": true,
+      "matchedFindingId": "CNV-100",
+      "matchType": "exact-file-line"
+    },
+    {
+      "groundTruthId": "DEBT-GT-001",
+      "matched": true,
+      "matchedFindingId": "DEBT-403",
+      "matchType": "exact-file-line"
+    },
+    {
+      "groundTruthId": "DEBT-GT-002",
+      "matched": true,
+      "matchedFindingId": "DEBT-404",
+      "matchType": "exact-file-line"
+    },
+    {
+      "groundTruthId": "DEBT-GT-003",
+      "matched": true,
+      "matchedFindingId": "DEBT-405",
+      "matchType": "same-file-rule"
+    },
+    {
+      "groundTruthId": "DEBT-GT-004",
+      "matched": true,
+      "matchedFindingId": "DEBT-401",
+      "matchType": "exact-file-line"
+    },
+    {
+      "groundTruthId": "DEBT-GT-005",
+      "matched": true,
+      "matchedFindingId": "DEBT-400",
+      "matchType": "exact-file-line"
+    },
+    {
+      "groundTruthId": "OBS-GT-001",
+      "matched": true,
+      "matchedFindingId": "OBS-001",
+      "matchType": "exact-file-line"
+    },
+    {
+      "groundTruthId": "OBS-GT-002",
+      "matched": true,
+      "matchedFindingId": "DEBT-450",
+      "matchType": "exact-file-line"
+    },
+    {
+      "groundTruthId": "CNV-GT-001",
+      "matched": true,
+      "matchedFindingId": "API-002",
+      "matchType": "exact-file-line"
+    },
+    {
+      "groundTruthId": "CNV-GT-002",
+      "matched": true,
+      "matchedFindingId": "CNV-101",
+      "matchType": "exact-file-line"
+    },
+    {
+      "groundTruthId": "CNV-GT-003",
+      "matched": true,
+      "matchedFindingId": "CNV-102",
+      "matchType": "exact-file-line"
+    }
+  ]
+}

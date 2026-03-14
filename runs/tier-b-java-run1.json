@@ -1,0 +1,621 @@
+{
+  "tier": "B",
+  "fixture": "bench-java-spring",
+  "findings": [
+    {
+      "id": "SEC-001",
+      "severity": "critical",
+      "title": "Hardcoded database password in application properties",
+      "description": "A production-looking datasource password is committed in source control.",
+      "domain": "security",
+      "rule": "hardcoded-secret",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "file": "src/main/resources/application.properties",
+          "line": 3
+        }
+      ],
+      "effort": "small",
+      "source": "tool"
+    },
+    {
+      "id": "SEC-002",
+      "severity": "medium",
+      "title": "Missing validation on user creation request body",
+      "description": "UserController accepts @RequestBody User without @Valid, so bean validation is skipped.",
+      "domain": "security",
+      "rule": "missing-valid-annotation",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/controller/UserController.java",
+          "line": 36
+        }
+      ],
+      "effort": "small",
+      "source": "tool"
+    },
+    {
+      "id": "SEC-003",
+      "severity": "high",
+      "title": "Exception message returned to clients",
+      "description": "The exception handler returns e.getMessage() in 500 responses, leaking internal details.",
+      "domain": "security",
+      "rule": "error-info-leak",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/controller/UserController.java",
+          "line": 42
+        }
+      ],
+      "effort": "small",
+      "source": "tool"
+    },
+    {
+      "id": "SEC-004",
+      "severity": "critical",
+      "title": "All endpoints are publicly accessible",
+      "description": "SecurityConfig uses anyRequest().permitAll(), disabling authentication for the entire application.",
+      "domain": "security",
+      "rule": "no-permit-all",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/config/SecurityConfig.java",
+          "line": 24
+        }
+      ],
+      "effort": "medium",
+      "source": "tool"
+    },
+    {
+      "id": "SEC-005",
+      "severity": "high",
+      "title": "CSRF protection is disabled",
+      "description": "CSRF is explicitly disabled without evidence of a strictly stateless token-only model.",
+      "domain": "security",
+      "rule": "no-csrf-disable",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/config/SecurityConfig.java",
+          "line": 22
+        }
+      ],
+      "effort": "small",
+      "source": "tool"
+    },
+    {
+      "id": "SEC-006",
+      "severity": "high",
+      "title": "CORS wildcard origin with credentials enabled",
+      "description": "The CORS policy combines a wildcard origin with credentialed requests.",
+      "domain": "security",
+      "rule": "no-cors-wildcard-credentials",
+      "confidence": 0.92,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/config/SecurityConfig.java",
+          "line": 33
+        },
+        {
+          "file": "src/main/java/com/example/config/SecurityConfig.java",
+          "line": 34
+        }
+      ],
+      "effort": "small",
+      "source": "tool"
+    },
+    {
+      "id": "SEC-007",
+      "severity": "medium",
+      "title": "All actuator endpoints are exposed",
+      "description": "Actuator exposure is set to *, increasing information disclosure risk if management endpoints are reachable.",
+      "domain": "security",
+      "rule": "actuator-expose-all",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "file": "src/main/resources/application.properties",
+          "line": 5
+        }
+      ],
+      "effort": "small",
+      "source": "tool"
+    },
+    {
+      "id": "SEC-501",
+      "severity": "medium",
+      "title": "Stack traces and exception messages are always exposed",
+      "description": "Server error settings always include exception messages and stack traces in responses, exposing internals beyond the custom handler path.",
+      "domain": "security",
+      "rule": "error-stacktrace-exposed",
+      "confidence": 0.64,
+      "evidence": [
+        {
+          "file": "src/main/resources/application.properties",
+          "line": 6
+        },
+        {
+          "file": "src/main/resources/application.properties",
+          "line": 7
+        }
+      ],
+      "effort": "trivial",
+      "source": "llm"
+    },
+    {
+      "id": "SEC-502",
+      "severity": "high",
+      "title": "Direct entity binding enables mass assignment on user creation",
+      "description": "The public createUser endpoint binds a JPA User entity directly from request data, allowing clients to set sensitive fields like password, loginAttempts, active, and department.",
+      "domain": "security",
+      "rule": "mass-assignment",
+      "confidence": 0.66,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/controller/UserController.java",
+          "line": 36
+        },
+        {
+          "file": "src/main/java/com/example/entity/User.java",
+          "line": 17
+        },
+        {
+          "file": "src/main/java/com/example/entity/User.java",
+          "line": 19
+        },
+        {
+          "file": "src/main/java/com/example/entity/User.java",
+          "line": 23
+        },
+        {
+          "file": "src/main/java/com/example/entity/User.java",
+          "line": 24
+        }
+      ],
+      "effort": "medium",
+      "source": "llm"
+    },
+    {
+      "id": "ARC-501",
+      "severity": "medium",
+      "title": "Controllers expose JPA entities directly as HTTP contracts",
+      "description": "The REST controllers use persistence entities directly in request and response signatures. This couples the API contract to the JPA model and makes persistence concerns leak across the transport boundary instead of mapping to dedicated DTOs or application response models.",
+      "domain": "architecture",
+      "rule": "leaky-abstraction-entity-http-contract",
+      "confidence": 0.68,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/controller/UserController.java",
+          "line": 3,
+          "snippet": "import com.example.entity.User;"
+        },
+        {
+          "file": "src/main/java/com/example/controller/UserController.java",
+          "line": 23,
+          "snippet": "public List<User> getAllUsers() {"
+        },
+        {
+          "file": "src/main/java/com/example/controller/ProductController.java",
+          "line": 3,
+          "snippet": "import com.example.entity.Product;"
+        },
+        {
+          "file": "src/main/java/com/example/controller/ProductController.java",
+          "line": 22,
+          "snippet": "public Page<Product> list(Pageable pageable) {"
+        }
+      ],
+      "recommendation": "Introduce request and response DTOs for the HTTP layer and map entities to those DTOs in the controller or application layer before returning them.",
+      "effort": "medium",
+      "tags": [
+        "hexagonal-architecture",
+        "boundary",
+        "dto",
+        "api-contract"
+      ],
+      "source": "llm"
+    },
+    {
+      "id": "ARC-502",
+      "severity": "medium",
+      "title": "Domain model is largely anemic",
+      "description": "The entity classes are mostly persistence data holders with generated or trivial accessors, while domain validation and behavior sit in services. This weakens the domain model and concentrates business rules outside the entities that own the state.",
+      "domain": "architecture",
+      "rule": "anemic-domain-model",
+      "confidence": 0.62,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/entity/User.java",
+          "line": 7,
+          "snippet": "@Data"
+        },
+        {
+          "file": "src/main/java/com/example/entity/Product.java",
+          "line": 8,
+          "snippet": "@Getter"
+        },
+        {
+          "file": "src/main/java/com/example/entity/Department.java",
+          "line": 16,
+          "snippet": "public Long getId() { return id; }"
+        },
+        {
+          "file": "src/main/java/com/example/service/UserService.java",
+          "line": 32,
+          "snippet": "public User save(User user) {"
+        }
+      ],
+      "recommendation": "Move core invariants and behavior closer to the domain objects or introduce a clearer application/domain split where services orchestrate use cases and entities encapsulate state transitions.",
+      "effort": "large",
+      "tags": [
+        "domain-model",
+        "ddd",
+        "service-layer",
+        "entities"
+      ],
+      "source": "llm"
+    },
+    {
+      "id": "ARC-503",
+      "severity": "medium",
+      "title": "Package structure is framework-oriented rather than domain-oriented",
+      "description": "The top-level Java packages are organized by technical layer such as controller, service, repository, entity, and config. This makes the architecture scream Spring internals instead of the business capabilities of the system and increases cross-feature coupling as the codebase grows.",
+      "domain": "architecture",
+      "rule": "screaming-architecture-violation",
+      "confidence": 0.58,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/controller/UserController.java",
+          "line": 1,
+          "snippet": "package com.example.controller;"
+        },
+        {
+          "file": "src/main/java/com/example/service/UserService.java",
+          "line": 1,
+          "snippet": "package com.example.service;"
+        },
+        {
+          "file": "src/main/java/com/example/repository/UserRepository.java",
+          "line": 1,
+          "snippet": "package com.example.repository;"
+        },
+        {
+          "file": "src/main/java/com/example/entity/User.java",
+          "line": 1,
+          "snippet": "package com.example.entity;"
+        }
+      ],
+      "recommendation": "Reorganize packages around business features or bounded contexts, keeping technical concerns nested inside each feature instead of making the top-level structure purely framework-driven.",
+      "effort": "large",
+      "tags": [
+        "package-structure",
+        "screaming-architecture",
+        "modularity"
+      ],
+      "source": "llm"
+    },
+    {
+      "id": "ARC-504",
+      "severity": "low",
+      "title": "OrderService uses self-injection to reach its own proxied methods",
+      "description": "OrderService injects itself lazily and delegates to its own method through that injected reference. This creates hidden bean coupling and makes transactional or proxy behavior part of the service design instead of keeping the use case boundary explicit.",
+      "domain": "architecture",
+      "rule": "self-referential-service-dependency",
+      "confidence": 0.63,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/service/OrderService.java",
+          "line": 10,
+          "snippet": "private final OrderService self;"
+        },
+        {
+          "file": "src/main/java/com/example/service/OrderService.java",
+          "line": 12,
+          "snippet": "public OrderService(@Lazy OrderService self) {"
+        },
+        {
+          "file": "src/main/java/com/example/service/OrderService.java",
+          "line": 18,
+          "snippet": "self.doProcess(orderId);"
+        }
+      ],
+      "recommendation": "Extract the proxied behavior into a separate collaborator or application service so the class no longer depends on a lazily injected instance of itself.",
+      "effort": "medium",
+      "tags": [
+        "dependency-injection",
+        "spring",
+        "service-design",
+        "coupling"
+      ],
+      "source": "llm"
+    },
+    {
+      "id": "CNV-100",
+      "severity": "low",
+      "title": "TODO comment: add pagination",
+      "description": "A TODO marker remains in the users listing endpoint, indicating incomplete implementation in production code.",
+      "domain": "conventions",
+      "rule": "unresolved-todo",
+      "confidence": 1,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/controller/UserController.java",
+          "line": 21,
+          "snippet": "// TODO: add pagination"
+        }
+      ],
+      "recommendation": "Implement pagination for the endpoint or replace the TODO with a tracked issue reference.",
+      "effort": "small",
+      "tags": [
+        "tech-debt",
+        "todo"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "CNV-101",
+      "severity": "medium",
+      "title": "FIXME comment: this self-injection is a workaround for @Transactional proxy",
+      "description": "A FIXME marker documents a known workaround in service code, which signals unresolved maintainability debt in the current design.",
+      "domain": "conventions",
+      "rule": "unresolved-todo",
+      "confidence": 1,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/service/OrderService.java",
+          "line": 17,
+          "snippet": "// FIXME: this self-injection is a workaround for @Transactional proxy"
+        }
+      ],
+      "recommendation": "Replace the workaround with a clearer transactional design or track the workaround explicitly in the issue backlog.",
+      "effort": "small",
+      "tags": [
+        "tech-debt",
+        "fixme"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "CNV-102",
+      "severity": "low",
+      "title": "TODO comment: implement order processing logic",
+      "description": "Core order-processing behavior is still marked as TODO, leaving production code with unfinished intent.",
+      "domain": "conventions",
+      "rule": "unresolved-todo",
+      "confidence": 1,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/service/OrderService.java",
+          "line": 22,
+          "snippet": "// TODO: implement order processing logic"
+        }
+      ],
+      "recommendation": "Implement the order-processing behavior or move the placeholder into a tracked issue outside the code.",
+      "effort": "small",
+      "tags": [
+        "tech-debt",
+        "todo"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "CNV-501",
+      "severity": "medium",
+      "title": "Getter-style endpoint name hides session mutation",
+      "description": "The controller method is named like a pure retrieval operation, but it also mutates HTTP session state by recording the last viewed user. That side effect makes the name misleading and increases surprise for maintainers.",
+      "domain": "conventions",
+      "rule": "misleading-name",
+      "confidence": 0.66,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/controller/UserController.java",
+          "line": 28,
+          "snippet": "public ResponseEntity<User> getUser(@PathVariable Long id, HttpSession session) {"
+        },
+        {
+          "file": "src/main/java/com/example/controller/UserController.java",
+          "line": 29,
+          "snippet": "session.setAttribute(\"lastViewedUser\", id);"
+        }
+      ],
+      "recommendation": "Either move session tracking into a separate concern such as an interceptor/filter or rename the method to reflect the side effect explicitly.",
+      "effort": "small",
+      "tags": [
+        "naming",
+        "side-effects",
+        "clean-code"
+      ],
+      "source": "llm"
+    },
+    {
+      "id": "CNV-502",
+      "severity": "medium",
+      "title": "Repository lookup silently swallows exceptions",
+      "description": "UserService.findById catches every exception and returns Optional.empty(), while the controller also defines explicit error handling. This inconsistency obscures failures and makes service behavior harder to reason about.",
+      "domain": "conventions",
+      "rule": "inconsistent-error-handling",
+      "confidence": 0.68,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/service/UserService.java",
+          "line": 23,
+          "snippet": "public Optional<User> findById(Long id) {"
+        },
+        {
+          "file": "src/main/java/com/example/service/UserService.java",
+          "line": 26,
+          "snippet": "} catch (Exception e) {"
+        },
+        {
+          "file": "src/main/java/com/example/service/UserService.java",
+          "line": 28,
+          "snippet": "return Optional.empty();"
+        },
+        {
+          "file": "src/main/java/com/example/controller/UserController.java",
+          "line": 42,
+          "snippet": "return ResponseEntity.internalServerError().body(e.getMessage());"
+        },
+        {
+          "file": "src/main/java/com/example/service/ProductService.java",
+          "line": 24,
+          "snippet": "public Optional<Product> findById(Long id) {"
+        }
+      ],
+      "recommendation": "Use one consistent error-handling strategy across services: either let repository exceptions propagate to centralized handler code or wrap and log them with a domain-specific exception.",
+      "effort": "small",
+      "tags": [
+        "error-handling",
+        "consistency",
+        "clean-code"
+      ],
+      "source": "llm"
+    },
+    {
+      "id": "CNV-503",
+      "severity": "low",
+      "title": "Validation rules are embedded as unnamed numeric thresholds",
+      "description": "User validation uses literal thresholds for minimum name and password lengths directly in nested conditionals. The values have business meaning but are not named, which reduces readability and makes later changes harder.",
+      "domain": "conventions",
+      "rule": "magic-number",
+      "confidence": 0.55,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/service/UserService.java",
+          "line": 33,
+          "snippet": "if (user.getName() != null && user.getName().length() > 3) {"
+        },
+        {
+          "file": "src/main/java/com/example/service/UserService.java",
+          "line": 35,
+          "snippet": "if (user.getPassword() != null && user.getPassword().length() >= 8) {"
+        }
+      ],
+      "recommendation": "Extract named constants such as MIN_NAME_LENGTH and MIN_PASSWORD_LENGTH, or replace the manual checks with bean-validation annotations on the entity or request model.",
+      "effort": "trivial",
+      "tags": [
+        "magic-number",
+        "validation",
+        "readability"
+      ],
+      "source": "llm"
+    },
+    {
+      "id": "API-001",
+      "severity": "high",
+      "title": "HttpSession used in REST controller",
+      "description": "A REST controller injects HttpSession and writes request state into the server-side session. REST APIs should remain stateless; session-backed request handling makes horizontal scaling harder and couples clients to server affinity.",
+      "domain": "api-design",
+      "rule": "stateful-rest-controller",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/controller/UserController.java",
+          "line": 28,
+          "snippet": "public ResponseEntity<User> getUser(@PathVariable Long id, HttpSession session) {"
+        },
+        {
+          "file": "src/main/java/com/example/controller/UserController.java",
+          "line": 29,
+          "snippet": "session.setAttribute(\"lastViewedUser\", id);"
+        }
+      ],
+      "recommendation": "Remove HttpSession from the controller and carry caller context through stateless authentication or explicit request parameters instead of server-side session state.",
+      "effort": "large",
+      "tags": [
+        "api-design",
+        "rest",
+        "stateless",
+        "scalability"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "API-002",
+      "severity": "medium",
+      "title": "Unpaginated list endpoint",
+      "description": "The user collection endpoint returns a raw List without any pagination contract. As the dataset grows, this can create large responses, slow queries, and memory pressure for both the API and clients.",
+      "domain": "api-design",
+      "rule": "unpaginated-list-endpoint",
+      "confidence": 0.8,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/controller/UserController.java",
+          "line": 23,
+          "snippet": "public List<User> getAllUsers() {"
+        }
+      ],
+      "recommendation": "Accept Pageable on the collection endpoint and return a paginated type such as Page<User> with stable pagination metadata.",
+      "effort": "medium",
+      "tags": [
+        "api-design",
+        "rest",
+        "pagination",
+        "performance"
+      ],
+      "source": "tool"
+    },
+    {
+      "id": "API-502",
+      "severity": "critical",
+      "title": "UserController returns raw exception messages to clients",
+      "description": "The controller-level exception handler serializes Exception.getMessage() directly into a 500 response body. That leaks internal exception text to clients and does not provide a structured RFC 9457 Problem Details error contract with stable type, title, and status fields.",
+      "domain": "api-design",
+      "rule": "raw-exception-message-exposure",
+      "confidence": 0.68,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/controller/UserController.java",
+          "line": 40,
+          "snippet": "@ExceptionHandler(Exception.class)"
+        },
+        {
+          "file": "src/main/java/com/example/controller/UserController.java",
+          "line": 42,
+          "snippet": "return ResponseEntity.internalServerError().body(e.getMessage());"
+        }
+      ],
+      "recommendation": "Replace the string body with a sanitized Problem Details response, for example Spring ProblemDetail, and avoid returning raw exception messages from internal errors.",
+      "effort": "medium",
+      "source": "llm"
+    },
+    {
+      "id": "API-561",
+      "severity": "high",
+      "title": "POST creation endpoints return 200 OK instead of 201 Created",
+      "description": "Both creation handlers return ResponseEntity.ok(...) for successful POST requests. Resource creation should respond with 201 Created and, when feasible, include a Location header pointing to the new resource.",
+      "domain": "api-design",
+      "rule": "wrong-creation-status",
+      "confidence": 0.69,
+      "evidence": [
+        {
+          "file": "src/main/java/com/example/controller/UserController.java",
+          "line": 35,
+          "snippet": "@PostMapping"
+        },
+        {
+          "file": "src/main/java/com/example/controller/UserController.java",
+          "line": 37,
+          "snippet": "return ResponseEntity.ok(userService.save(user));"
+        },
+        {
+          "file": "src/main/java/com/example/controller/ProductController.java",
+          "line": 33,
+          "snippet": "@PostMapping"
+        },
+        {
+          "file": "src/main/java/com/example/controller/ProductController.java",
+          "line": 35,
+          "snippet": "return ResponseEntity.ok(productService.save(product));"
+        }
+      ],
+      "recommendation": "Return 201 Created for successful POST-based resource creation and add a Location header for the created resource URI.",
+      "effort": "small",
+      "source": "llm"
+    }
+  ]
+}
