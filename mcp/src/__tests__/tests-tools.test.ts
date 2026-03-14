@@ -201,6 +201,26 @@ describe("detectMissingTests", () => {
     expect(findings.length).toBe(0);
   });
 
+  it("skips transport wiring files such as controllers, routes, and middleware", async () => {
+    mkdirSync(join(tempDir, "src", "controllers"), { recursive: true });
+    mkdirSync(join(tempDir, "src", "routes"), { recursive: true });
+    mkdirSync(join(tempDir, "src", "middleware"), { recursive: true });
+    writeFileSync(join(tempDir, "src", "controllers", "user.controller.ts"), "export class UserController {}\n");
+    writeFileSync(join(tempDir, "src", "routes", "users.ts"), "export const usersRouter = {};\n");
+    writeFileSync(join(tempDir, "src", "middleware", "logger.ts"), "export function requestLogger() {}\n");
+
+    const findings = await detectMissingTests(tempDir);
+    expect(findings).toHaveLength(0);
+  });
+
+  it("skips root config modules like src/config.ts", async () => {
+    mkdirSync(join(tempDir, "src"), { recursive: true });
+    writeFileSync(join(tempDir, "src", "config.ts"), "export const config = {};\n");
+
+    const findings = await detectMissingTests(tempDir);
+    expect(findings).toHaveLength(0);
+  });
+
   it("skips index.ts and types files", async () => {
     const srcDir = join(tempDir, "src");
     mkdirSync(srcDir, { recursive: true });

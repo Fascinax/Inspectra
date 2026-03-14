@@ -85,6 +85,15 @@ describe("Integration: detectMissingTests on fixture project", () => {
     expect(missingFiles.some((f) => f.includes("auth.service"))).toBe(true);
   });
 
+  it("does not flag controller, route, middleware, or config wiring files on the fixture", async () => {
+    const findings = await detectMissingTests(FIXTURE_DIR);
+    const missingFiles = findings.map((f) => f.evidence[0]?.file ?? "");
+    expect(missingFiles.every((f) => !f.includes("src/controllers/"))).toBe(true);
+    expect(missingFiles.every((f) => !f.includes("src/routes/"))).toBe(true);
+    expect(missingFiles.every((f) => !f.includes("src/middleware/"))).toBe(true);
+    expect(missingFiles.every((f) => !f.includes("src/config.ts"))).toBe(true);
+  });
+
   it("does NOT flag math-utils.ts because math-utils.test.ts exists", async () => {
     const findings = await detectMissingTests(FIXTURE_DIR);
     const missingFiles = findings.map((f) => f.evidence[0]?.file ?? "");

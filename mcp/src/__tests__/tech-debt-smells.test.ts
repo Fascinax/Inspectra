@@ -260,4 +260,29 @@ describe("detectCodeSmells", () => {
     const findings = await detectCodeSmells(tempDir);
     expect(findings).toEqual([]);
   });
+
+  it("includes JPA mutating query findings through the aggregate entry point", async () => {
+    const repositoryDir = join(tempDir, "src", "main", "java", "com", "app", "repository");
+    mkdirSync(repositoryDir, { recursive: true });
+    writeFileSync(
+      join(repositoryDir, "UserRepository.java"),
+      `package com.app.repository;
+
+import org.springframework.data.jpa.repository.Query;
+
+public interface UserRepository {
+    @Query(
+        value = """
+            UPDATE User u
+            SET u.active = false
+            WHERE u.loginAttempts > 5
+            """
+    )
+    void deactivateInactiveUsers();
+  }`,
+    );
+
+    const findings = await detectCodeSmells(tempDir);
+    expect(findings.some((finding) => finding.rule === "jpa-missing-modifying")).toBe(true);
+  });
 });

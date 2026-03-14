@@ -206,8 +206,8 @@ Three tiers compete on the same repos, measured by the same expert panel:
 
 ### Phase 2 — Tool Quality Fixes (identified by benchmark)
 
-- [ ] Fix `inspectra_check_observability`: detect health endpoints + swallowed exceptions in Express/Node
-- [ ] Fix `inspectra_detect_code_smells`: ensure `@Query` without `@Modifying` detection triggers correctly
+- [x] Fix `inspectra_check_observability`: detect health endpoints + swallowed exceptions in Express/Node
+- [x] Fix `inspectra_detect_code_smells`: ensure `@Query` without `@Modifying` detection triggers correctly
 - [ ] Reduce false positive rate on Express (current: 0.27 precision for Tier B)
 
 ### Orchestrator Evolution

@@ -86,6 +86,18 @@ router.get('/api/v1/userProfiles', (req, res) => res.json([]));
     expect(findings.some((f) => f.rule === "non-kebab-case-path")).toBe(true);
   });
 
+  it("does not emit a duplicate casing finding for verb-based camelCase routes", async () => {
+    writeFileSync(
+      join(tempDir, "routes.ts"),
+      `const router = require('express').Router();
+router.get('/getUsers', (req, res) => res.json([]));
+`,
+    );
+    const findings = await checkRestConventions(tempDir);
+    expect(findings.filter((f) => f.rule === "verb-based-resource-name")).toHaveLength(1);
+    expect(findings.filter((f) => f.rule === "non-kebab-case-path")).toHaveLength(0);
+  });
+
   it("detects snake_case path segments", async () => {
     writeFileSync(
       join(tempDir, "routes.ts"),

@@ -105,7 +105,8 @@ export async function checkRestConventions(projectDir: string, ignoreDirs?: stri
         }
 
         // Check for CRUD verbs in route paths
-        if (CRUD_VERBS.test(route.path)) {
+        const hasVerbBasedResourceName = CRUD_VERBS.test(route.path);
+        if (hasVerbBasedResourceName) {
           findings.push({
             id: nextId(),
             severity: "medium",
@@ -128,6 +129,10 @@ export async function checkRestConventions(projectDir: string, ignoreDirs?: stri
         // Check for non-kebab-case path segments (camelCase, PascalCase, snake_case)
         const segments = route.path.split("/").filter((s) => s && !s.startsWith(":") && !s.startsWith("{"));
         for (const seg of segments) {
+          if (hasVerbBasedResourceName && CRUD_VERBS.test(`/${seg}`)) {
+            continue;
+          }
+
           if (NON_KEBAB_SEGMENT.test(seg)) {
             findings.push({
               id: nextId(),

@@ -5,12 +5,15 @@ import { collectSourceFiles } from "../utils/files.js";
 
 // ─── Node.js (Express, Fastify, Hapi, etc.) ─────────────────────────────────
 
-const NODE_HEALTH_PATTERN =
-  /["'`]\/(?:health|ready|readiness|liveness|ping|status)["'`]/i;
+const NODE_HEALTH_ROUTE_PATTERN =
+  /(?:\b(?:app|router|server|fastify)\s*\.\s*(?:get|use|head|all)|\b(?:get|head|all)\s*\()\s*\(?\s*["'`]\/(?:health|ready|readiness|liveness|ping|status)(?:[/?][^"'`]*)?["'`]/i;
+
+const NODE_HEALTH_HANDLER_PATTERN =
+  /(?:route|endpoint)\s*[:=]\s*["'`]\/(?:health|ready|readiness|liveness|ping|status)(?:[/?][^"'`]*)?["'`]/i;
 
 const nodeDetector: HealthDetector = {
   hasHealthEndpoint(content) {
-    return NODE_HEALTH_PATTERN.test(content);
+    return NODE_HEALTH_ROUTE_PATTERN.test(content) || NODE_HEALTH_HANDLER_PATTERN.test(content);
   },
   async hasHealthConfig() {
     return false;

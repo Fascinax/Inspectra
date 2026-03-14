@@ -5,6 +5,9 @@ import { createIdSequence } from "../utils/id.js";
 
 const SOURCE_EXTENSIONS = [".ts", ".js", ".java"];
 const TEST_PATTERNS = [/\.(test|spec)\.(ts|js|java)$/, /Test\.java$/];
+const CONFIG_FILE_PATTERN = /(?:^|[/\\])(?:[\w-]+\.)?config\.(?:ts|js|mjs|cjs|java)$/;
+const TEST_INFRA_PATH = /[/\\](?:__tests__|fixtures)[/\\]/;
+const TRANSPORT_WIRING_PATH = /[/\\](?:controllers|routes|middleware)[/\\]/;
 
 /**
  * Detects source files that have no corresponding test file based
@@ -28,14 +31,13 @@ export async function detectMissingTests(projectDir: string): Promise<Finding[]>
     }
   }
 
-  const CONFIG_FILE_PATTERN = /\.(?:config|setup)\.(?:ts|js|mjs|cjs)$/;
-  const TEST_INFRA_PATH = /[/\\](?:__tests__|fixtures)[/\\]/;
-
   for (const src of sourceFiles) {
+    const relativePath = relative(projectDir, src);
     const baseName = src.split(/[/\\]/).pop() ?? "";
     if (baseName === "index.ts" || baseName === "index.js" || baseName.startsWith("types")) continue;
-    if (CONFIG_FILE_PATTERN.test(baseName)) continue;
-    if (TEST_INFRA_PATH.test(relative(projectDir, src))) continue;
+    if (CONFIG_FILE_PATTERN.test(src)) continue;
+    if (TEST_INFRA_PATH.test(relativePath)) continue;
+    if (TRANSPORT_WIRING_PATH.test(relativePath)) continue;
 
     const hasCoverage =
       testStems.has(baseName) || [...testStems].some((stem) => stem.endsWith(`-${baseName}`));
@@ -44,11 +46,11 @@ export async function detectMissingTests(projectDir: string): Promise<Finding[]>
       findings.push({
         id: nextId(),
         severity: "medium",
-        title: `No test file for ${relative(projectDir, src)}`,
+        title: `No test file for ${relativePath}`,
         domain: "tests",
         rule: "missing-test-file",
         confidence: 0.7,
-        evidence: [{ file: relative(projectDir, src) }],
+        evidence: [{ file: relativePath }],
         recommendation: "Create a corresponding test file.",
         effort: "medium",
         tags: ["missing-test"],

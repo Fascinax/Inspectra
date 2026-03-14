@@ -93,7 +93,7 @@ Examples:
       title: "Detect Missing Tests",
       description: `Detect source files that lack a corresponding test file.
 
-Scans for .ts, .js, and .java source files and checks whether a matching .test.* or .spec.* file exists. Excludes test files, config files, and index re-exports from analysis.
+Scans for .ts, .js, and .java source files and checks whether a matching .test.* or .spec.* file exists. Excludes test files, config files, index re-exports, and common HTTP wiring layers such as routes, controllers, and middleware from analysis.
 
 Args:
   - projectDir (string): Absolute path to the project root.

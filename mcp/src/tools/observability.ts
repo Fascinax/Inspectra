@@ -7,8 +7,8 @@ import { getAllHealthDetectors } from "../strategies/health-detectors.js";
 
 // ─── Patterns ─────────────────────────────────────────────────────────────────
 
-/** Catch blocks that swallow errors (no log call inside) — search in a two-step approach */
-const CATCH_BLOCK = /catch\s*\([^)]*\)\s*\{([^}]*)\}/gs;
+/** Catch blocks that swallow errors (no log call and no re-throw inside). */
+const THROW_STATEMENT = /\bthrow\b/;
 
 /** Logger invocations (common logger patterns) */
 const LOGGER_CALL =
@@ -51,14 +51,11 @@ export async function checkObservability(projectDir: string, ignoreDirs?: string
       if (TRACING_SETUP.test(content)) hasTracingSetup = true;
 
       // Detect swallowed catch blocks
-      CATCH_BLOCK.lastIndex = 0;
-      for (const m of content.matchAll(CATCH_BLOCK)) {
-        const body = m[1] ?? "";
-        if (!LOGGER_CALL.test(body)) {
+      for (const catchBlock of findCatchBlocks(content)) {
+        if (!LOGGER_CALL.test(catchBlock.body) && !THROW_STATEMENT.test(catchBlock.body)) {
           swallowedCatchCount++;
           if (swallowedCatchSamples.length < 5) {
-            const line = content.slice(0, m.index ?? 0).split("\n").length;
-            swallowedCatchSamples.push({ file: relPath, line });
+            swallowedCatchSamples.push({ file: relPath, line: catchBlock.line });
           }
         }
       }
@@ -148,4 +145,61 @@ export async function checkObservability(projectDir: string, ignoreDirs?: string
   }
 
   return findings;
+}
+
+type CatchBlock = {
+  body: string;
+  line: number;
+};
+
+function findCatchBlocks(content: string): CatchBlock[] {
+  const blocks: CatchBlock[] = [];
+  const catchPattern = /\bcatch\b/g;
+
+  for (const match of content.matchAll(catchPattern)) {
+    const catchIndex = match.index ?? -1;
+    if (catchIndex < 0) continue;
+
+    let cursor = catchIndex + match[0].length;
+    while (cursor < content.length && /\s/.test(content[cursor] ?? "")) {
+      cursor++;
+    }
+
+    if ((content[cursor] ?? "") === "(") {
+      let parenDepth = 1;
+      cursor++;
+      while (cursor < content.length && parenDepth > 0) {
+        const char = content[cursor] ?? "";
+        if (char === "(") parenDepth++;
+        if (char === ")") parenDepth--;
+        cursor++;
+      }
+      while (cursor < content.length && /\s/.test(content[cursor] ?? "")) {
+        cursor++;
+      }
+    }
+
+    if ((content[cursor] ?? "") !== "{") continue;
+
+    const bodyStart = cursor + 1;
+    let braceDepth = 1;
+    cursor = bodyStart;
+
+    while (cursor < content.length && braceDepth > 0) {
+      const char = content[cursor] ?? "";
+      if (char === "{") braceDepth++;
+      if (char === "}") braceDepth--;
+      cursor++;
+    }
+
+    if (braceDepth !== 0) continue;
+
+    const bodyEnd = cursor - 1;
+    blocks.push({
+      body: content.slice(bodyStart, bodyEnd),
+      line: content.slice(0, catchIndex).split("\n").length,
+    });
+  }
+
+  return blocks;
 }

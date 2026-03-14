@@ -162,12 +162,17 @@ function checkMissingModifying(
 ): void {
   const lines = content.split("\n");
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i] ?? "";
-    if (!QUERY_MUTATION.test(line)) continue;
+  for (const match of content.matchAll(/@Query\s*\([\s\S]*?\)/g)) {
+    const queryAnnotation = match[0] ?? "";
+    if (!QUERY_MUTATION.test(queryAnnotation)) continue;
 
-    const prevLines = lines.slice(Math.max(0, i - 3), i + 1).join("\n");
-    if (MODIFYING_ANNOTATION.test(prevLines)) continue;
+    const queryIndex = match.index ?? 0;
+    const queryLine = content.slice(0, queryIndex).split("\n").length;
+    const annotationWindowStart = Math.max(0, queryIndex - 200);
+    const annotationWindow = content.slice(annotationWindowStart, queryIndex);
+    if (MODIFYING_ANNOTATION.test(annotationWindow)) continue;
+
+    const snippet = lines[queryLine - 1]?.trim() || queryAnnotation.replace(/\s+/g, " ").trim();
 
     findings.push({
       id: nextId(),
@@ -179,7 +184,7 @@ function checkMissingModifying(
       domain: "tech-debt",
       rule: "jpa-missing-modifying",
       confidence: 0.90,
-      evidence: [{ file: relPath, line: i + 1, snippet: line.trim().substring(0, MAX_SNIPPET) }],
+      evidence: [{ file: relPath, line: queryLine, snippet: snippet.substring(0, MAX_SNIPPET) }],
       recommendation: "Add @Modifying (and optionally @Transactional) above the @Query annotation.",
       effort: "trivial",
       tags: ["jpa", "spring-data", "repository"],

@@ -176,6 +176,28 @@ public interface CleanRepo {
     expect(findings.filter((f) => f.rule === "jpa-missing-modifying")).toHaveLength(0);
   });
 
+  it("detects missing @Modifying on multi-line mutating @Query", async () => {
+    writeJava("src/main/java/com/app/repository/MultiLineRepo.java", `
+package com.app.repository;
+
+import org.springframework.data.jpa.repository.Query;
+
+public interface MultiLineRepo {
+    @Query(
+        value = """
+            UPDATE Wire w
+            SET w.label = :label
+            WHERE w.id = :id
+            """
+    )
+    void updateLabel(Long id, String label);
+}
+`);
+
+    const findings = await detectJpaAntiPatterns(tempDir);
+    expect(findings.filter((finding) => finding.rule === "jpa-missing-modifying")).toHaveLength(1);
+  });
+
   it("detects @Lazy self-injection", async () => {
     writeJava("src/main/java/com/app/service/CircularService.java", `
 package com.app.service;
