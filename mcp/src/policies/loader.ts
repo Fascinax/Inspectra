@@ -15,6 +15,7 @@ import {
 import { loadDeduplicationRules, type DeduplicationAlias, type DeduplicationConfig } from "./deduplication.js";
 import { loadProfile, detectProfile } from "./profile.js";
 import { loadSeverityMatrix, type SeverityMatrixLevel, type SeverityMatrixConfig } from "./severity-matrix.js";
+import { loadRootCausePatterns, type RootCausePattern, type RootCauseCategory } from "./root-cause.js";
 import type { IgnoreRule } from "../utils/ignore.js";
 
 // ─── Re-exports ─────────────────────────────────────────────────────────────────────────────────
@@ -28,6 +29,8 @@ export type { DeduplicationAlias, DeduplicationConfig };
 export { loadProfile, detectProfile };
 export { loadSeverityMatrix };
 export type { SeverityMatrixLevel, SeverityMatrixConfig };
+export { loadRootCausePatterns };
+export type { RootCausePattern, RootCauseCategory };
 
 // ─── MergeOptions ─────────────────────────────────────────────────────────────
 export interface MergeOptions {

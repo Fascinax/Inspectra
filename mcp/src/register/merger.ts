@@ -6,12 +6,24 @@ import { jsonResponse, reportResponse, errorResponse, withErrorHandling } from "
 import { ScoreOutputSchema, ResponseFormatField, READ_ONLY_ANNOTATIONS } from "./schemas.js";
 import { mergeReports } from "../merger/merge-findings.js";
 import { scoreDomain } from "../merger/score.js";
-import { loadAllPolicies, loadScoringRules } from "../policies/loader.js";
-import { DomainReportSchema, FindingSchema } from "../types.js";
+import { loadAllPolicies, loadScoringRules, loadRootCausePatterns } from "../policies/loader.js";
+import { DomainReportSchema, FindingSchema, DOMAINS, SEVERITY_LEVELS } from "../types.js";
 import { setLatestReport } from "./resources.js";
 import { ParseError } from "../errors.js";
 import { loadIgnoreRules } from "../utils/ignore.js";
 import { detectHotspots } from "../merger/correlate.js";
+import { inferRootCauseClusters } from "../merger/root-cause.js";
+
+const HotspotInputSchema = z.object({
+  type: z.enum(["file", "module", "dependency", "pattern"]),
+  key: z.string().min(1),
+  label: z.string().min(1),
+  finding_count: z.number().int().nonnegative(),
+  domain_count: z.number().int().nonnegative(),
+  domains: z.array(z.enum(DOMAINS)),
+  severity_ceiling: z.enum(SEVERITY_LEVELS),
+  findings: z.array(FindingSchema),
+});
 
 /**
  * Registers the merger and scoring MCP tools on the given server instance.
@@ -139,7 +151,7 @@ Examples:
 Four hotspot types are detected:
   - **file**: a single file accumulates 3+ findings from 2+ different domains
   - **module**: a directory accumulates 5+ findings across 2+ files
-  - **dependency**: a dependency manifest (package.json, pom.xml, …) has 2+ findings from 2+ domains
+  - **dependency**: a dependency manifest (package.json, pom.xml, ...) has 2+ findings from 2+ domains
   - **pattern**: the same rule fires 5+ times across 2+ different files
 
 Results are sorted by severity ceiling (highest first), then by finding count, giving a ranked list of the most problematic areas in the codebase. Use this after merging domain reports to surface root-cause candidates for the LLM synthesis step.
@@ -147,7 +159,7 @@ Results are sorted by severity ceiling (highest first), then by finding count, g
 Args:
   - findingsJson (string): JSON string — array of Finding objects (from one or more domain reports).
 
-Returns: A CorrelationResult with a ranked \`hotspots\` array and metadata counts per hotspot type.
+Returns: A CorrelationResult with a ranked hotspots array and metadata counts per hotspot type.
 
 Error handling:
   - Returns isError: true if findingsJson fails Zod validation.
@@ -179,5 +191,59 @@ Examples:
       const result = detectHotspots(findings);
       return jsonResponse(result);
     }, "inspectra_correlate_findings"),
+  );
+
+  server.registerTool(
+    "inspectra_infer_root_causes",
+    {
+      title: "Infer Root Causes from Hotspots",
+      description: `Infer root-cause clusters from correlated hotspots using rule-based policy patterns.
+
+This tool consumes hotspots produced by inspectra_correlate_findings and maps them to a root-cause taxonomy:
+  - god-module
+  - missing-abstraction
+  - dependency-rot
+  - test-gap
+  - convention-drift
+  - misaligned-architecture
+  - security-shortcut
+  - documentation-debt
+  - isolated
+
+Inference strategy:
+  1. Deterministic rule matching from policies/root-cause-patterns.yml
+  2. Fallback inference for unmatched hotspots with confidence <= 0.6 (category: isolated)
+
+Args:
+  - hotspotsJson (string): JSON string — array of hotspot objects from inspectra_correlate_findings.
+
+Returns: RootCauseInferenceResult containing inferred clusters sorted by severity and finding concentration.
+
+Error handling:
+  - Returns isError: true if hotspotsJson fails Zod validation.`,
+      inputSchema: {
+        hotspotsJson: z.string().describe("JSON string — array of hotspot objects to infer root causes from"),
+        responseFormat: ResponseFormatField,
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    withErrorHandling(async ({ hotspotsJson }) => {
+      let hotspots;
+      try {
+        hotspots = z.array(HotspotInputSchema).parse(JSON.parse(hotspotsJson));
+      } catch (err) {
+        return errorResponse(
+          new ParseError(
+            `Invalid hotspotsJson: ${err instanceof Error ? err.message : String(err)}`,
+            "Ensure hotspotsJson is a valid JSON array of hotspot objects from inspectra_correlate_findings.",
+          ),
+          "inspectra_infer_root_causes",
+        );
+      }
+
+      const patterns = await loadRootCausePatterns(policiesDir);
+      const result = inferRootCauseClusters(hotspots, patterns);
+      return jsonResponse(result);
+    }, "inspectra_infer_root_causes"),
   );
 }

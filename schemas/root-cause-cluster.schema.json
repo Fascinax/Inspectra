@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://inspectra.dev/schemas/root-cause-cluster.schema.json",
+  "title": "Inspectra Root Cause Cluster",
+  "description": "Grouped root-cause cluster inferred from correlated hotspots.",
+  "type": "object",
+  "required": [
+    "category",
+    "source",
+    "confidence",
+    "rationale",
+    "hotspot_count",
+    "finding_count",
+    "domain_count",
+    "domains",
+    "severity_ceiling",
+    "hotspots"
+  ],
+  "properties": {
+    "category": {
+      "type": "string",
+      "enum": [
+        "god-module",
+        "missing-abstraction",
+        "dependency-rot",
+        "test-gap",
+        "convention-drift",
+        "misaligned-architecture",
+        "security-shortcut",
+        "documentation-debt",
+        "isolated"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "enum": ["tool", "llm"]
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "rationale": {
+      "type": "string",
+      "maxLength": 1000
+    },
+    "hotspot_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "finding_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "domain_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "domains": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "security",
+          "tests",
+          "architecture",
+          "conventions",
+          "performance",
+          "documentation",
+          "tech-debt",
+          "accessibility",
+          "api-design",
+          "observability",
+          "i18n",
+          "ux-consistency"
+        ]
+      }
+    },
+    "severity_ceiling": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low", "info"]
+    },
+    "hotspots": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["type", "key", "label", "finding_count", "domain_count", "domains", "severity_ceiling", "findings"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["file", "module", "dependency", "pattern"]
+          },
+          "key": { "type": "string" },
+          "label": { "type": "string" },
+          "finding_count": { "type": "integer", "minimum": 1 },
+          "domain_count": { "type": "integer", "minimum": 1 },
+          "domains": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string" }
+          },
+          "severity_ceiling": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low", "info"]
+          },
+          "findings": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "finding.schema.json" }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

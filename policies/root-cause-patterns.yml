@@ -1,0 +1,51 @@
+# Root-cause inference patterns for hotspot clusters.
+# Rules are evaluated top-to-bottom and first match wins.
+
+version: 1
+patterns:
+  - category: security-shortcut
+    confidence: 0.9
+    rationale: "Security findings dominate the same hotspots, indicating shortcuts in threat controls."
+    any_domains: [security]
+    min_findings: 2
+
+  - category: test-gap
+    confidence: 0.88
+    rationale: "Hotspots are clustered around missing or weak tests rather than isolated defects."
+    any_domains: [tests]
+    any_rules: [missing-test-file, missing-error-path-tests, shallow-assertions]
+
+  - category: convention-drift
+    confidence: 0.85
+    rationale: "Repeated naming/style violations indicate a drifting code convention baseline."
+    any_domains: [conventions]
+    any_rules: [non-kebab-case-path, naming-convention, function-too-long, too-many-params]
+
+  - category: dependency-rot
+    confidence: 0.87
+    rationale: "Dependency manifests and related findings indicate stale or vulnerable dependency governance."
+    hotspot_types: [dependency]
+
+  - category: missing-abstraction
+    confidence: 0.84
+    rationale: "Cross-domain hotspots in the same module suggest missing reusable abstractions."
+    hotspot_types: [module]
+    min_findings: 5
+    min_domains: 2
+
+  - category: god-module
+    confidence: 0.86
+    rationale: "A single file accumulates too many findings across domains and should be split."
+    hotspot_types: [file]
+    min_findings: 6
+    min_domains: 3
+
+  - category: misaligned-architecture
+    confidence: 0.84
+    rationale: "Architecture constraints are violated repeatedly across hotspots."
+    any_domains: [architecture]
+
+  - category: documentation-debt
+    confidence: 0.82
+    rationale: "Documentation findings converge, indicating process debt around docs and ADRs."
+    any_domains: [documentation]

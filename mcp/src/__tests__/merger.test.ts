@@ -16,5 +16,7 @@ describe("registerMergerTools", () => {
     registerMergerTools(mockServer as never, "/fake-policies");
     expect(registered).toContain("inspectra_merge_domain_reports");
     expect(registered).toContain("inspectra_score_findings");
+    expect(registered).toContain("inspectra_correlate_findings");
+    expect(registered).toContain("inspectra_infer_root_causes");
   });
 });

@@ -172,12 +172,12 @@ Three tiers compete on the same repos, measured by the same expert panel:
 
 ### Phase 3b — Root Cause Inference
 
-- [ ] Root cause taxonomy: god-module, missing-abstraction, dependency-rot, test-gap, convention-drift, misaligned-architecture, security-shortcut, documentation-debt, isolated
-- [ ] Rules-based pattern matching: `policies/root-cause-patterns.yml` maps hotspot signatures to root cause categories
-- [ ] LLM-assisted inference for hotspots that don't match known patterns (confidence ≤ 0.6)
-- [ ] Implement `mcp/src/merger/root-cause.ts` with `RootCauseCluster` structure
-- [ ] New MCP tool: `inspectra_infer_root_causes`
-- [ ] New schema: `schemas/root-cause-cluster.schema.json`
+- [x] Root cause taxonomy: god-module, missing-abstraction, dependency-rot, test-gap, convention-drift, misaligned-architecture, security-shortcut, documentation-debt, isolated
+- [x] Rules-based pattern matching: `policies/root-cause-patterns.yml` maps hotspot signatures to root cause categories
+- [x] LLM-assisted inference for hotspots that don't match known patterns (confidence ≤ 0.6)
+- [x] Implement `mcp/src/merger/root-cause.ts` with `RootCauseCluster` structure
+- [x] New MCP tool: `inspectra_infer_root_causes`
+- [x] New schema: `schemas/root-cause-cluster.schema.json`
 
 ### Phase 4 — Prioritization Engine
 
