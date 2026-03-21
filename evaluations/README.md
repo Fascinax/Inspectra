@@ -6,7 +6,7 @@ Empirical evaluation of three audit architectures, as defined in [ADR-008](../do
 
 | Tier | Architecture | Prompt |
 | --- | --- | --- |
-| **A** | Single-pass: all MCP tools → 1 LLM synthesis | `.github/prompts/audit-tier-a.prompt.md` |
+| **A** | Single-pass: all MCP tools → 1 LLM synthesis | `evaluations/prompts/audit-tier-a.prompt.md` |
 | **B** | Hybrid: all tools + conditional explorer on hotspot files | `.github/prompts/audit.prompt.md` |
 | **C** | Archived baseline from ADR-008 results | Historical results only |
 
@@ -38,10 +38,15 @@ Each fixture is a self-contained project under `fixtures/` with intentionally se
 
 ### Step 1: Run a Tier Prompt
 
-Open a Copilot chat and run one of the tier prompts against a fixture repo. For example, for Tier A on bench-ts-express:
+Open a Copilot chat and run one of the tier workflows against a fixture repo.
+
+For Tier A, copy the archived prompt from `evaluations/prompts/audit-tier-a.prompt.md` into chat.
+For Tier B, run the standard prompt command.
+
+Example for Tier B on bench-ts-express:
 
 ```text
-@workspace /audit-tier-a
+@workspace /audit
 
 Target: evaluations/fixtures/bench-ts-express
 ```

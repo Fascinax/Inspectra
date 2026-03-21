@@ -118,7 +118,7 @@ This is exactly what the data shows:
 - Finding contract (schemas) unchanged
 - Scoring engine unchanged
 - Report renderers unchanged
-- `audit-smart.prompt.md` now uses the same Tier B workflow with stack-aware tool selection
+- Active audit entry points are now `/audit`, `/audit-pr`, and `/audit-domain`
 - `audit-pr.prompt.md` now uses the same hybrid pattern for PR scope
 
 ### What the Domain Agents Become

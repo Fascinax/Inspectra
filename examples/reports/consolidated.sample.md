@@ -79,5 +79,5 @@ The codebase is functional but has notable quality gaps, particularly in **test 
 | ------- | ------- |
 | Target | `/workspace/my-project` |
 | Profile | java-angular-playwright |
-| Agents Invoked | audit-security, audit-tests, audit-architecture, audit-conventions |
+| Domains Audited | security, tests, architecture, conventions |
 | Duration | 12,540 ms |

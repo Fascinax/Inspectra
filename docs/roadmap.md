@@ -144,7 +144,7 @@ Three tiers compete on the same repos, measured by the same expert panel:
 | **C** | Legacy: 12 agents × (Phase 1 tools + Phase 2 LLM) | Highest | Kept only for benchmark reproducibility. |
 
 - [x] Establish ground truth: expert-written issue lists for 3-5 target repos (`evaluations/ground-truth/`)
-- [x] Tier A prompt: `.github/prompts/audit-tier-a.prompt.md` — single-pass orchestrator with all tools
+- [x] Tier A prompt: `evaluations/prompts/audit-tier-a.prompt.md` — single-pass orchestrator with all tools
 - [x] Tier B prompt: `.github/prompts/audit.prompt.md` — hybrid with conditional explorer
 - [x] Tier C runtime removed; benchmark evidence retained in `evaluations/results/`
 - [x] Evaluation harness: `evaluations/benchmark-harness.ts` — runs all tiers, collects metrics
@@ -200,7 +200,7 @@ Three tiers compete on the same repos, measured by the same expert panel:
 
 - [x] Benchmark verdict: Tier B (Hybrid) selected — [benchmark-results.md](../evaluations/benchmark-results.md)
 - [x] Promote Tier B workflow as default `/audit` prompt
-- [x] Update `audit-smart.prompt.md` to use Tier B workflow (single prompt + conditional explorer)
+- [x] Consolidate active audit entry points to `/audit`, `/audit-pr`, and `/audit-domain`
 - [x] Update `audit-pr.prompt.md` to use Tier B workflow for PR-scoped audits
 - [x] Update `/audit-domain` to use tool groups directly
 

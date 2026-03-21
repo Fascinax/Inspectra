@@ -1,6 +1,6 @@
 # Architecture Audit — Reference Material
 
-> This file is the authoritative reference companion for the `audit-architecture` agent.
+> This file is the authoritative reference companion for the architecture audit domain.
 > It covers Clean Architecture, Hexagonal Architecture, ADRs, dependency metrics, and architecture smells.
 >
 > | Pillar | Authority | Coverage |

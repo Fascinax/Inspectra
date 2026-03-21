@@ -74,7 +74,7 @@ export const BENCHMARK_CONFIG: BenchmarkConfig = {
     {
       id: "A",
       name: "Single-Pass",
-      promptPath: ".github/prompts/audit-tier-a.prompt.md",
+      promptPath: "evaluations/prompts/audit-tier-a.prompt.md",
       description: "All MCP tools + 1 LLM synthesis. No sub-agents.",
     },
     {

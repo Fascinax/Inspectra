@@ -139,7 +139,7 @@ For each, we establish a **ground truth document**: the 5-10 real issues a senio
 | Step | Deliverable | Depends on |
 | --- | --- | --- |
 | 1. Ground truth docs | `evaluations/ground-truth/<repo>.json` for each target repo | Expert time |
-| 2. Tier A prompt | `.github/prompts/audit-tier-a.prompt.md` — single-pass orchestrator | Existing MCP tools |
+| 2. Tier A prompt | `evaluations/prompts/audit-tier-a.prompt.md` — single-pass orchestrator | Existing MCP tools |
 | 3. Tier B prompt | `.github/prompts/audit.prompt.md` — hybrid with conditional explorer | Existing MCP tools |
 | 4. Eval harness | `evaluations/benchmark-harness.ts` — runs all tiers, collects metrics | Tier A + B prompts |
 | 5. Run benchmark | 3 tiers × 3-5 repos × 3 runs = 27-45 audit runs | Everything above |

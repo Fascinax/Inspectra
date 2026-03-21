@@ -49,7 +49,7 @@ The atomic unit of audit output. Every issue detected by any tool or agent is ex
 
 ## Domain Report
 
-Produced by each domain agent after completing its audit.
+Produced by each domain workflow pass after completing its audit.
 
 **Schema:** `schemas/domain-report.schema.json`
 
@@ -60,7 +60,7 @@ Produced by each domain agent after completing its audit.
   "summary": "1 high, 2 medium",
   "findings": [ /* Finding[] */ ],
   "metadata": {
-    "agent": "audit-security",
+    "agent": "tier-b-orchestrator",
     "timestamp": "2026-01-15T10:00:00.000Z",
     "duration_ms": 1200,
     "tools_used": ["inspectra_scan_secrets", "inspectra_check_deps_vulns"]

@@ -388,7 +388,7 @@ For Phase 2 (LLM) findings, calibrate confidence based on detected pattern:
 
 | Priority | Timeframe | Criteria |
 | ---------- | ----------- | ---------- |
-| **P0** | Immediate | Critical/high findings that affect correctness or security — often overlap with `audit-security` |
+| **P0** | Immediate | Critical/high findings that affect correctness or security — often overlap with the security domain |
 | **P1** | Sprint | High findings impacting team velocity — God classes, massive duplication, no test coverage for complex code |
 | **P2** | Quarter | Medium findings — magic numbers, inconsistent patterns, moderate function lengths |
 | **P3** | Backlog | Low/info findings — minor cleanups, style improvements, opportunistic refactoring (Boy Scout Rule) |

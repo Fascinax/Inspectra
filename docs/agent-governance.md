@@ -41,12 +41,12 @@ Contains the governance section with:
 Contains detailed behavioral guidance for:
 
 - **Rule #1: Never Fix Bad Output** — Diagnose → Reset → Fix → Re-run workflow
-- **Task Decomposition** — Multi-agent swarm pattern (coordinator → lead → scout → build → review)
+- **Task Decomposition** — Focused workflow decomposition with strict scope and handoff boundaries
 - **Specs: No Ambiguity** — Detailed spec template with input/output/scope/success criteria
 - **Quality Gates** — 7-point checklist for validating agent output
 - **Anti-Patterns** — Common mistakes and their corrections
 
-**Why a skill**: Skills are triggered contextually — this fires when working with multi-agent coordination, but doesn't pollute simple code editing sessions with irrelevant agent rules.
+**Why a skill**: Skills are triggered contextually — this fires for workflow orchestration and structured handoffs without polluting simple code editing sessions.
 
 ## MCP Governance Tools
 
@@ -73,13 +73,15 @@ These tools enforce the **Traceability** principle: every workflow action must b
 
 ✓✓ = primary enforcement layer, ✓ = reinforcing layer
 
-## Prompts
+## Prompt Structure
 
-### agent-task-spec
+Inspectra governance now centers on the three active audit prompts:
 
-**File**: `.github/prompts/agent-task-spec.prompt.md`
+- `.github/prompts/audit.prompt.md`
+- `.github/prompts/audit-pr.prompt.md`
+- `.github/prompts/audit-domain.prompt.md`
 
-A reusable prompt for writing unambiguous workflow task specifications. Follows the "Specs should leave NO ambiguity" principle with a structured template: Task → Input → Output → Scope → Success Criteria → Failure Protocol.
+All three follow the same governance principles: explicit scope, deterministic tool-first workflow, pagination discipline, and clear failure behavior.
 
 ## Adding New Principles
 
