@@ -1,6 +1,5 @@
 import Handlebars from "handlebars";
-import type { ConsolidatedReport, Finding } from "../types.js";
-import { SEVERITY_RANK } from "../types.js";
+import { SEVERITY_RANK, type ConsolidatedReport, type Finding } from "../types.js";
 import type { RootCauseCluster } from "../merger/root-cause.js";
 import type { PrioritizedCluster, RemediationPlan } from "../merger/prioritize.js";
 import { capitalize } from "../utils/strings.js";
