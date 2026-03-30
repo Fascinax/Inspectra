@@ -7,7 +7,7 @@ Inspectra is a hybrid code audit system built on GitHub Copilot prompt workflows
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                     User / CI                           │
-│            (prompt or issue assignment)                  │
+│            (prompt or issue assignment)                 │
 └──────────────────────┬──────────────────────────────────┘
                        │
                        ▼
@@ -21,33 +21,33 @@ Inspectra is a hybrid code audit system built on GitHub Copilot prompt workflows
 └──────────────────────────────┬──────────────────────────┘
                                │
                                ▼
-┌─────────────────────────────────────────────────────────┐
-│                  MCP Server (inspectra)                  │
-│                                                         │
-│  ┌─────────────┐ ┌────────────┐ ┌──────────────────┐   │
-│  │  Security   │ │   Tests    │ │  Architecture    │   │
-│  │  Tools      │ │   Tools    │ │  Tools           │   │
-│  │             │ │            │ │                  │   │
-│  │ inspectra_scan_secrets│ │parse-cover │ │ inspectra_check_layering  │   │
-│  │ check-deps  │ │parse-tests │ │ analyze-deps    │   │
-│  └─────────────┘ │detect-miss │ └──────────────────┘   │
-│                   └────────────┘                        │
-│  ┌─────────────┐ ┌────────────────────┐                │
-│  │ Code Quality│ │     Merger         │                │
-│  │             │ │                    │                │
-│  │ check-name  │ │ merge-domain-rpts  │                │
-│  │ check-length│ │ inspectra_score_findings     │                │
-│  │ inspectra_check_todos │ │ deduplicate        │                │
-│  └─────────────┘ └────────────────────┘                │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                  MCP Server (inspectra)                                         │
+│                                                                                 │
+│  ┌───────────────────────┐ ┌──────────────────┐ ┌───────────────────────────┐   │
+│  │  Security             │ │   Tests          │ │  Architecture             │   │
+│  │  Tools                │ │   Tools          │ │  Tools                    │   │
+│  │                       │ │                  │ │                           │   │
+│  │ inspectra_scan_secrets│ │parse-cover       │ │ inspectra_check_layering  │   │
+│  │ check-deps            │ │parse-tests       │ │ analyze-deps              │   │
+│  └───────────────────────┘ │detect-miss       │ └───────────────────────────┘   │
+│                            └──────────────────┘                                 │
+│  ┌───────────────────────┐ ┌─────────────────────────────┐                      │
+│  │ Code Quality          │ │     Merger                  │                      │
+│  │                       │ │                             │                      │
+│  │ check-name            │ │ merge-domain-rpts           │                      │
+│  │ check-length          │ │ inspectra_score_findings    │                      │
+│  │ inspectra_check_todos │ │ deduplicate                 │                      │
+│  └───────────────────────┘ └─────────────────────────────┘                      │
+└─────────────────────────────────────────────────────────────────────────────────┘
          │
          ▼
 ┌─────────────────────────────────────────────────────────┐
-│           Schemas (finding, domain-report,               │
-│               consolidated-report)                       │
+│           Schemas (finding, domain-report,              │
+│               consolidated-report)                      │
 │                                                         │
-│           Policies (severity-matrix,                     │
-│              scoring-rules, profiles)                    │
+│           Policies (severity-matrix,                    │
+│              scoring-rules, profiles)                   │
 └─────────────────────────────────────────────────────────┘
 ```
 
