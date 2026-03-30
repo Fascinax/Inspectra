@@ -24,7 +24,7 @@ Inspectra runs deterministic MCP tools across 12 audit domains, then performs a 
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
 
-### Partial support (Phase 2 LLM only)
+### Partial support (hotspot explorer only)
 
 ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
 ![Go](https://img.shields.io/badge/Go-00ADD8?style=flat-square&logo=go&logoColor=white)
@@ -35,7 +35,7 @@ Inspectra runs deterministic MCP tools across 12 audit domains, then performs a 
 ![Swift](https://img.shields.io/badge/Swift-F05138?style=flat-square&logo=swift&logoColor=white)
 
 > **Full support** = deterministic MCP tool scans (naming, file lengths, complexity, DRY, etc.) + conditional hotspot exploration.
-> **Partial support** = LLM exploration only — no tool-detected findings. More languages on the [roadmap](docs/roadmap.md).
+> **Partial support** = conditional hotspot explorer only — no dedicated MCP tool scans. More languages on the [roadmap](docs/roadmap.md).
 
 ---
 
@@ -289,6 +289,7 @@ docker compose up inspectra
 | API Design | API design audit | `inspectra_check_rest_conventions` | `API-` |
 | Observability | Observability audit | `inspectra_check_observability` | `OBS-` |
 | i18n | i18n audit | `inspectra_check_i18n` | `INT-` |
+| UX Consistency | UX consistency audit | `inspectra_check_ux_consistency` | `UX-` |
 
 ---
 
