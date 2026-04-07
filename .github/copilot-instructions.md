@@ -2,11 +2,15 @@
 
 ## Project Overview
 
-Inspectra is a hybrid code audit system. The default workflow runs deterministic MCP tools across 12 domains, performs optional hotspot exploration, then synthesizes the results in a single prompt across security, tests, architecture, conventions, performance, documentation, tech-debt, accessibility, api-design, observability, i18n, and ux-consistency.
+Inspectra is a hybrid code audit system. Two audit architectures are available:
+
+- **Tier B (Hybrid)**: Default. Deterministic MCP tools across 12 domains + single-prompt synthesis + conditional hotspot explorer.
+- **Map-Reduce (Multi-Agent)**: Orchestrator runs tools centrally, dispatches to 12 specialized domain agents in parallel, then performs cross-domain correlation. Use `@audit-orchestrator`.
 
 ## Architecture
 
 - **MCP Server** (`mcp/`): TypeScript server exposing audit tools via Model Context Protocol.
+- **Agents** (`.github/agents/`): 13 agent definitions — orchestrator + 12 domain agents (Map-Reduce mode).
 - **Schemas** (`schemas/`): JSON Schema contracts for findings and reports.
 - **Policies** (`policies/`): Scoring rules, severity matrix, and stack-specific profiles.
 - **Prompts** (`.github/prompts/`): Reusable entry points for common audit workflows.

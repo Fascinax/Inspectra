@@ -2,7 +2,9 @@
 description: "Run a full multi-domain audit on the target project"
 ---
 
-> Architecture: **Tier B (Hybrid)** — selected via [ADR-008 benchmark](../../evaluations/benchmark-results.md). All MCP tools + structured domain analysis + conditional explorer for hotspots. Replaces the previous 12-agent delegation (Tier C).
+> Architecture: **Tier B (Hybrid)** — selected via [ADR-008 benchmark](../../evaluations/benchmark-results.md). All MCP tools + structured domain analysis + conditional explorer for hotspots.
+>
+> **Multi-agent mode**: For deeper domain analysis, use `@audit-orchestrator` instead. It runs the same tools centrally, then dispatches to 12 specialized domain agents in parallel (Map-Reduce pattern). See `.github/agents/audit-orchestrator.agent.md`.
 
 Run a comprehensive code audit on the project in the current workspace, covering all 12 domains using deterministic MCP tools + structured single-prompt domain analysis + a conditional explorer for hotspot files.
 

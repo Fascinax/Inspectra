@@ -1,6 +1,9 @@
 # Inspectra
 
-Hybrid code audit system using MCP tools. Tier B is the default workflow: deterministic tools across 12 domains, optional hotspot exploration, then merged scoring.
+Hybrid code audit system using MCP tools. Two audit architectures:
+
+- **Tier B (Hybrid)**: Default. Single-prompt workflow: deterministic tools across 12 domains, optional hotspot exploration, then merged scoring. Use `/audit`.
+- **Map-Reduce (Multi-Agent)**: Orchestrator runs tools centrally, dispatches to 12 specialized domain agents in parallel, then cross-domain correlation. Use `@audit-orchestrator`.
 
 ## Quick Reference
 
@@ -14,6 +17,7 @@ npm run lint       # tsc --noEmit + ESLint
 ## Project Structure
 
 - `.github/prompts/` — `/audit`, `/audit-pr`, `/audit-domain`, and benchmark entry points
+- `.github/agents/` — 13 agent definitions: orchestrator + 12 domain agents (Map-Reduce mode)
 - `mcp/src/` — MCP server (TypeScript, ES2022, Node 20+)
   - `tools/` — domain tool implementations (one file per domain)
   - `register/` — tool registration with input/output schemas

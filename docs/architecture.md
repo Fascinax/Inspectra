@@ -2,7 +2,12 @@
 
 ## System Overview
 
-Inspectra is a hybrid code audit system built on GitHub Copilot prompt workflows and the Model Context Protocol (MCP).
+Inspectra is a hybrid code audit system built on GitHub Copilot prompt workflows and the Model Context Protocol (MCP). Two audit architectures are available:
+
+- **Tier B (Hybrid)**: Single-prompt workflow. Default, proven by benchmark.
+- **Map-Reduce (Multi-Agent)**: Orchestrator + 12 parallel domain agents. Deeper per-domain analysis.
+
+### Tier B (Default)
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -53,12 +58,24 @@ Inspectra is a hybrid code audit system built on GitHub Copilot prompt workflows
 
 ## Data Flow
 
+### Tier B (Default)
+
 1. User triggers an audit via a prompt file or issue assignment.
 2. The prompt workflow determines scope and runs the relevant MCP tools.
 3. Tool findings are grouped into domains and analyzed for hotspots.
 4. Hotspot files may receive a focused explorer pass.
 5. The workflow calls `inspectra_score_findings` and `inspectra_merge_domain_reports`.
 6. The final **consolidated report** is produced in Markdown, HTML, PDF, JSON, or SARIF.
+
+### Map-Reduce (Multi-Agent)
+
+1. User triggers an audit via `@audit-orchestrator`.
+2. The orchestrator runs ALL MCP tools centrally and collects findings.
+3. Hotspot detection identifies files with clustered findings across multiple domains.
+4. The orchestrator dispatches to 12 specialized domain agents in parallel, passing each agent its domain findings + hotspot files.
+5. Each domain agent synthesizes findings and explores hotspot files through its domain lens, returning a domain report.
+6. The orchestrator performs cross-domain correlation, root cause inference, and remediation planning.
+7. The final consolidated report is produced with per-agent attribution.
 
 ## Key Design Decisions
 

@@ -1,10 +1,17 @@
 # Agents
 
-Inspectra uses MCP tools and prompt workflows to perform structured code audits. `AGENTS.md` exists for Codex-compatible project instructions, not to declare runtime domain agents.
+Inspectra uses MCP tools and prompt workflows to perform structured code audits. Two audit architectures are available:
 
-## Workflow Overview
+- **Tier B (Hybrid)**: Single-prompt workflow (`/audit`). Default, proven by benchmark.
+- **Map-Reduce (Multi-Agent)**: Orchestrator + 12 parallel domain agents (`@audit-orchestrator`). Deeper per-domain analysis with cross-domain correlation preserved.
+
+## Workflow Overview — Tier B (Default)
 
 User prompt -> MCP tool scan -> hotspot detection -> optional explorer -> merge -> report
+
+## Workflow Overview — Map-Reduce (Multi-Agent)
+
+User prompt -> MCP tool scan -> hotspot detection -> dispatch 12 agents -> cross-domain correlation -> merge -> report
 
 1. The prompt workflow receives the audit request and selects the relevant tool groups.
 2. MCP tools gather deterministic findings across the requested domains.
@@ -51,7 +58,8 @@ User prompt -> MCP tool scan -> hotspot detection -> optional explorer -> merge 
 
 ## Orchestrator
 
-- Full audit (`/audit`): runs Tier B across all 12 domains.
+- Full audit (`/audit`): runs Tier B across all 12 domains (single-prompt).
+- Multi-agent audit (`@audit-orchestrator`): runs Map-Reduce across all 12 domains (parallel agents).
 - PR audit (`/audit-pr`): runs the Tier B workflow only on changed files.
 - Targeted audit (`/audit-domain`): runs only the requested domain's tool group.
 

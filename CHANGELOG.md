@@ -8,6 +8,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Added
+
+- **Multi-Agent**: Map-Reduce audit pipeline with 12 specialized domain agents dispatched in parallel by the orchestrator. Tools run centrally (no duplication), domain agents add depth through expert synthesis, orchestrator performs cross-domain correlation.
+- **Agents**: 13 agent definitions in `.github/agents/` — `audit-orchestrator` + 12 domain agents (`audit-security`, `audit-tests`, `audit-architecture`, `audit-conventions`, `audit-performance`, `audit-documentation`, `audit-tech-debt`, `audit-accessibility`, `audit-api-design`, `audit-observability`, `audit-i18n`, `audit-ux-consistency`).
+- **Architecture**: Map-Reduce pattern preserves Tier B's cross-domain correlation advantage while adding per-domain LLM exploration depth from specialized agents.
+
 ## [0.7.3] - 2026-03-10
 
 ### Added
