@@ -1,9 +1,10 @@
 # Agents
 
-Inspectra uses MCP tools and prompt workflows to perform structured code audits. Two audit architectures are available:
+Inspectra uses MCP tools and prompt workflows to perform structured code audits. Three audit architectures are available:
 
 - **Tier B (Hybrid)**: Single-prompt workflow (`/audit`). Default, proven by benchmark.
 - **Map-Reduce (Multi-Agent)**: Orchestrator + 12 parallel domain agents (`@audit-orchestrator`). Deeper per-domain analysis with cross-domain correlation preserved.
+- **Fusion (Maximum Recall)**: Combines Tier B + Map-Reduce in a single run, deduplicates cross-architecture findings (`@audit-fusion`). Maximizes finding recall at the cost of higher latency.
 
 ## Workflow Overview — Tier B (Default)
 
@@ -12,6 +13,10 @@ User prompt -> MCP tool scan -> hotspot detection -> optional explorer -> merge 
 ## Workflow Overview — Map-Reduce (Multi-Agent)
 
 User prompt -> MCP tool scan -> hotspot detection -> dispatch 12 agents -> cross-domain correlation -> merge -> report
+
+## Workflow Overview — Fusion (Maximum Recall)
+
+User prompt -> MCP tool scan -> hotspot detection -> Pass A (Tier B synthesis) + Pass B (12 agents) -> cross-architecture dedup -> correlation -> merge -> report
 
 1. The prompt workflow receives the audit request and selects the relevant tool groups.
 2. MCP tools gather deterministic findings across the requested domains.
@@ -24,6 +29,8 @@ User prompt -> MCP tool scan -> hotspot detection -> dispatch 12 agents -> cross
 ## Audit Modes
 
 - Full audit (`/audit`): runs Tier B across all 12 domains.
+- Fusion audit (`@audit-fusion`): runs both Tier B + Map-Reduce, deduplicates, maximum recall.
+- Multi-agent audit (`@audit-orchestrator`): runs Map-Reduce across all 12 domains.
 - PR audit (`/audit-pr`): runs the Tier B workflow only on changed files.
 - Targeted audit (`/audit-domain`): runs only the requested domain tool group.
 
@@ -59,6 +66,7 @@ User prompt -> MCP tool scan -> hotspot detection -> optional explorer -> merge 
 ## Orchestrator
 
 - Full audit (`/audit`): runs Tier B across all 12 domains (single-prompt).
+- Fusion audit (`@audit-fusion`): runs Tier B + Map-Reduce, deduplicates cross-architecture findings (maximum recall).
 - Multi-agent audit (`@audit-orchestrator`): runs Map-Reduce across all 12 domains (parallel agents).
 - PR audit (`/audit-pr`): runs the Tier B workflow only on changed files.
 - Targeted audit (`/audit-domain`): runs only the requested domain's tool group.

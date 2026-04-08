@@ -10,9 +10,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Added
 
+- **Fusion**: Maximum-recall audit mode (`@audit-fusion`) combining Tier B single-prompt synthesis with Map-Reduce parallel domain agents. Tools run once, both analysis passes produce findings, cross-architecture deduplication ensures no noise while maximizing finding recall.
 - **Multi-Agent**: Map-Reduce audit pipeline with 12 specialized domain agents dispatched in parallel by the orchestrator. Tools run centrally (no duplication), domain agents add depth through expert synthesis, orchestrator performs cross-domain correlation.
-- **Agents**: 13 agent definitions in `.github/agents/` — `audit-orchestrator` + 12 domain agents (`audit-security`, `audit-tests`, `audit-architecture`, `audit-conventions`, `audit-performance`, `audit-documentation`, `audit-tech-debt`, `audit-accessibility`, `audit-api-design`, `audit-observability`, `audit-i18n`, `audit-ux-consistency`).
-- **Architecture**: Map-Reduce pattern preserves Tier B's cross-domain correlation advantage while adding per-domain LLM exploration depth from specialized agents.
+- **Agents**: 14 agent definitions in `.github/agents/` — `audit-orchestrator` + `audit-fusion` + 12 domain agents (`audit-security`, `audit-tests`, `audit-architecture`, `audit-conventions`, `audit-performance`, `audit-documentation`, `audit-tech-debt`, `audit-accessibility`, `audit-api-design`, `audit-observability`, `audit-i18n`, `audit-ux-consistency`).
+- **Architecture**: Fusion mode preserves Tier B's holistic cross-domain synthesis while adding Map-Reduce's specialized per-domain depth. Provenance tracking (tier-b / map-reduce / both) on every finding.
 
 ## [0.7.3] - 2026-03-10
 
